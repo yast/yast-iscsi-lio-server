@@ -1,0 +1,73 @@
+/**
+ * File:	clients/iscsi-server.ycp
+ * Package:	Configuration of iscsi-server
+ * Summary:	Main file
+ * Authors:	Michal Zugec <mzugec@suse.cz>
+ *
+ * $Id$
+ *
+ * Main file for iscsi-server configuration. Uses all other files.
+ */
+
+{
+
+/***
+ * <h3>Configuration of iscsi-server</h3>
+ */
+
+textdomain "iscsi-server";
+
+/* The main () */
+y2milestone ("----------------------------------------");
+y2milestone ("IscsiServer module started");
+
+import "Progress";
+import "Report";
+import "Summary";
+
+import "CommandLine";
+include "iscsi-server/wizards.ycp";
+
+map cmdline_description = $[
+    "id" 	: "iscsi-server",
+    /* Command line help text for the Xiscsi-server module */
+    "help"	: _("Configuration of an iSCSI target"),
+    "guihandler"        : IscsiServerSequence,
+    "initialize"        : IscsiServer::Read,
+    "finish"            : IscsiServer::Write,
+    "actions"           : $[
+	// FIXME TODO: fill the functionality description here
+    ],
+    "options"		: $[
+	// FIXME TODO: fill the option descriptions here
+    ],
+    "mappings"		: $[
+	// FIXME TODO: fill the mappings of actions and options here
+    ]
+];
+
+/* is this proposal or not? */
+boolean propose = false;
+list args = WFM::Args();
+if(size(args) > 0) {
+    if(is(WFM::Args(0), path) && WFM::Args(0) == .propose) {
+        y2milestone("Using PROPOSE mode");
+        propose = true;
+    }
+}
+
+/* main ui function */
+any ret = nil;
+
+if(propose) ret = IscsiServerAutoSequence();
+else ret = CommandLine::Run(cmdline_description);
+y2debug("ret=%1", ret);
+
+/* Finish */
+y2milestone("IscsiServer module finished");
+y2milestone("----------------------------------------");
+
+return ret;
+
+/* EOF */
+}

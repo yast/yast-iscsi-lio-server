@@ -1,0 +1,32 @@
+@HEADER-COMMENT@
+
+
+@HEADER@
+BuildRequires: docbook-xsl-stylesheets doxygen libxslt perl-XML-Writer popt-devel sgml-skel update-desktop-files yast2 yast2-devtools yast2-packagemanager-devel yast2-perl-bindings yast2-testsuite
+Requires:	yast2
+
+BuildArchitectures:	noarch
+
+Summary:	Configuration of iSCSI target
+
+%description
+-
+
+@PREP@
+
+@BUILD@
+
+@INSTALL@
+
+@CLEAN@
+
+%files
+%defattr(-,root,root)
+%dir @yncludedir@/iscsi-server
+@yncludedir@/iscsi-server/*
+@clientdir@/iscsi-server.ycp
+@clientdir@/iscsi-server_*.ycp
+@moduledir@/IscsiServer*
+@desktopdir@/iscsi-server.desktop
+@scrconfdir@/ietd.scr
+%doc @docdir@

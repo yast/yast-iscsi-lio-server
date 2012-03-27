@@ -1,0 +1,13 @@
+{
+
+// testedfiles: IscsiServer.ycp
+
+include "testsuite.ycp";
+TESTSUITE_INIT([], nil);
+
+import "IscsiServer";
+
+DUMP("IscsiServer::Modified");
+TEST(``(IscsiServer::Modified()), [], nil);
+
+}

@@ -1,0 +1,87 @@
+/**
+ * File:	clients/iscsi-server_proposal.ycp
+ * Package:	Configuration of iscsi-server
+ * Summary:	Proposal function dispatcher.
+ * Authors:	Michal Zugec <mzugec@suse.cz>
+ *
+ * $Id$
+ *
+ * Proposal function dispatcher for iscsi-server configuration.
+ * See source/installation/proposal/proposal-API.txt
+ */
+
+{
+
+textdomain "iscsi-server";
+
+import "IscsiServer";
+import "Progress";
+
+/* The main () */
+y2milestone("----------------------------------------");
+y2milestone("IscsiServer proposal started");
+
+string func = (string) WFM::Args(0);
+map param = (map) WFM::Args(1);
+map ret = $[];
+
+/* create a textual proposal */
+if(func == "MakeProposal") {
+    string proposal = "";
+    string warning = nil;
+    symbol warning_level = nil;
+    boolean force_reset = param["force_reset"]:false;
+
+    if(force_reset || !IscsiServer::proposal_valid) {
+        IscsiServer::proposal_valid = true;
+	boolean progress_orig = Progress::set (false);
+	IscsiServer::Read();
+	Progress::set (progress_orig);
+    }
+    list sum = IscsiServer::Summary();
+    proposal = sum[0]:"";
+
+    ret = $[
+	"preformatted_proposal" : proposal,
+	"warning_level" : warning_level,
+	"warning" : warning,
+    ];
+}
+/* run the module */
+else if(func == "AskUser") {
+    map stored = IscsiServer::Export();
+    symbol seq = (symbol) WFM::CallFunction("iscsi-server", [.propose]);
+    if(seq != `next) IscsiServer::Import(stored);
+    y2debug("stored=%1",stored);
+    y2debug("seq=%1",seq);
+    ret = $[
+	"workflow_sequence" : seq
+    ];
+}
+/* create titles */
+else if(func == "Description") {
+    ret = $[
+	/* Rich text title for IscsiServer in proposals */
+	"rich_text_title" : _("iSCSI Target"),
+	/* Menu title for IscsiServer in proposals */
+	"menu_title" : _("&iSCSI Target"),
+	"id" : "iscsi-server",
+    ];
+}
+/* write the proposal */
+else if(func == "Write") {
+    IscsiServer::Write();
+}
+/* unknown function */
+else {
+    y2error("unknown function: %1", func);
+}
+
+/* Finish */
+y2debug("ret=%1",ret);
+y2milestone("IscsiServer proposal finished");
+y2milestone("----------------------------------------");
+return ret;
+
+/* EOF */
+}

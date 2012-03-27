@@ -1,0 +1,620 @@
+{
+
+textdomain "iscsi-server";
+import "IscsiServerFunctions";
+import "Label";
+import "IP";
+//	**************** global funcions and variables *****
+string curr_target = "";
+string modify_record = "";
+map inc_auth = $[];
+
+map<string, any> parseRow(string value){
+ map<string, any> ret=$[];
+ // if nothing only LUN
+ if (find(value, " ")==-1){
+  return $["lun":value];
+ }
+ // extract Lun
+ integer pos=find(value, " ");
+ ret["lun"]=substring(value, 0, pos);
+ value=substring(value, pos, size(value));
+ // extract Type
+ pos=find(value, "Type=");
+ integer pos2=findfirstof( substring(value, pos, size(value)), " ,");
+ string type = substring(value, pos+size("Type="), (pos2!=nil)? pos2-size("Type=") : size(value));
+ if (pos!=-1)
+  if (type=="fileio"){ ret["fileio"]=true; ret["nullio"]=false;}
+	else { ret["fileio"]=false; ret["nullio"]=true;}
+ // extract Path
+ pos=find(value, "Path=");
+ pos2=findfirstof( substring(value, pos, size(value)), " ,");
+ if (pos!=-1) ret["path"] = substring(value, pos+size("Path="), (pos2!=nil)? pos2-size("Path=") : size(value));
+ //  extract ScsiId
+ pos=find(value, "ScsiId=");
+ pos2=findfirstof( substring(value, pos, size(value)), " ,");
+ if (pos!=-1) ret["scsi_id"] = substring(value, pos+size("ScsiId="), (pos2!=nil)? pos2-size("ScsiId=") : size(value));
+ //  extract ScsiId
+ pos=find(value, "Sectors=");
+ pos2=findfirstof( substring(value, pos, size(value)), " ,");
+ if (pos!=-1) ret["sectors"] = substring(value, pos+size("Sectors="), (pos2!=nil)? pos2-size("Sectors=") : size(value));
+ return ret;
+}
+
+
+map <string, any> LUNDetailDialog(map<string, any> values_before){
+	map<string, any> previous=parseRow(values_before["VALUE"]:"");
+	map <string, any> ret_map = $[];
+	term lun_dialog =
+                 `VBox(
+			`Left( `HWeight(3,  `InputField( `id( `lun ), `opt(`hstretch), "LUN", previous["lun"]:"0" )) ),
+			`VSpacing(2),
+			`RadioButtonGroup(`id(`rb),                           `VBox(
+			   `Left( `RadioButton(`id(`fileio), `opt(`notify), "Type=fileio", previous["fileio"]:true) ),
+			   `HBox(
+				`InputField( `id( `file_path ), `opt(`hstretch), _("Path:"), previous["path"]:""),
+				 `VBox(
+				  `Label(""),
+				  `PushButton(`id(`browse), _("Browse"))
+				 )
+				),
+			   `InputField( `id( `scsi_id ), `opt(`hstretch), "ScsiId:", previous["scsi_id"]:"" ),
+			`VSpacing(2),
+
+			   `Left( `RadioButton(`id(`nullio), `opt(`notify), "Type=nullio", previous["nullio"]:false) ),
+			   `InputField( `id( `sectors ), `opt(`hstretch), _("Sectors:"), previous["sectors"]:"" )
+			  )
+			 ),
+			`Left( `HBox( `PushButton(`id(`ok), Label::OKButton() ), `PushButton(`id(`cancel), Label::CancelButton() )))
+		  );
+	    UI::OpenDialog(lun_dialog);
+	    UI::ChangeWidget(`id(`lun), `ValidChars, "0123456789" );
+	    symbol ret = `nil;
+	    while(ret != `ok && ret !=`cancel){
+		 boolean enable=false;
+		 if ((boolean)UI::QueryWidget(`fileio, `Value)==true) enable=true;
+
+		  UI::ChangeWidget(`file_path, `Enabled, enable);
+		  UI::ChangeWidget(`browse, `Enabled, enable);
+		  UI::ChangeWidget(`scsi_id, `Enabled, enable);
+		  UI::ChangeWidget(`sectors, `Enabled, !enable);
+
+		 if (ret == `browse){
+		  string file = UI::AskForExistingFile("/", "", _("Select file or device"));
+		  if (file!=nil) UI::ChangeWidget(`file_path, `Value, file);
+		 }
+	     ret = (symbol)UI::UserInput();
+	    }
+ if (ret == `cancel) ret_map = $[];
+	else {
+		string lun=(string)UI::QueryWidget(`lun, `Value);
+		string value=lun;
+		if ((boolean)UI::QueryWidget(`fileio, `Value)==true){
+		 value=sformat("%1 Path=%2,Type=fileio", value, (string)UI::QueryWidget(`file_path, `Value));
+		 string scsi_id=(string)UI::QueryWidget(`scsi_id, `Value);
+		 if (size(scsi_id)>0) value=sformat("%1,ScsiId=%2", value, scsi_id);
+		} else {
+			 value=sformat("%1 Type=nullio", value);
+			 string sectors=(string)UI::QueryWidget(`sectors, `Value);
+			 if (size(sectors)>0) value=sformat("%1,Sectors=%2", value, sectors);
+			}
+		ret_map = $["KEY":"Lun", "VALUE":value];
+		}
+ UI::CloseDialog();
+ return ret_map;
+}
+
+// set incoming authentication enabled/disabled status
+void setAuthIn(boolean status){
+ y2milestone("Status of AuthIncoming %1", status);
+ UI::ChangeWidget(`id(`incoming_table),`Enabled, status );
+ UI::ChangeWidget(`id(`auth_in),`Value, status );
+
+ UI::ChangeWidget(`id(`add),`Enabled, status );
+ UI::ChangeWidget(`id(`edit),`Enabled, status );
+ UI::ChangeWidget(`id(`delete),`Enabled, status );
+
+ if(status) UI::ChangeWidget(`id(`auth_none),`Value, !status );
+}
+
+// set outgoing authentication enabled/disabled status
+void setAuthOut(boolean status){
+ y2milestone("Status of AuthOutgoing %1", status);
+ UI::ChangeWidget(`id(`user_out),`Enabled, status );
+ UI::ChangeWidget(`id(`pass_out),`Enabled, status );
+ UI::ChangeWidget(`id(`auth_out),`Value, status );
+ if(status) UI::ChangeWidget(`id(`auth_none),`Value, !status );
+}
+
+// get values for incoming authentication
+list<string> getIncomingValues(){
+ list <string> values = [];
+ if ((boolean)UI::QueryWidget(`id(`auth_in), `Value) == true){
+ integer count = -1;
+ while (count<size(inc_auth)-1){
+   count = count+1;
+   values=add(values, sformat("%1 %2", inc_auth[count, "USER"]:"", inc_auth[count, "PASS"]:""));
+  }
+  return values;
+ } else return [];
+}
+
+// get values for outgoing authentication
+string getOutgoingValues(){
+ if ((boolean)UI::QueryWidget(`id(`auth_out), `Value) == true){
+   string values = sformat("%1 %2", UI::QueryWidget(`id(`user_out), `Value), UI::QueryWidget(`id(`pass_out), `Value) );
+   return values;
+ } else return "";
+}
+
+// dialog to add/modify user and password
+list <string> getDialogValues(string user, string pass){
+ UI::OpenDialog( `VBox(
+		   `InputField(`id(`p_user), `opt(`hstretch), _("Username"), user),
+		   `Password(`id(`p_pass), _("Password"), pass),
+		   `HBox(
+			`PushButton(`id(`ok), _("OK")),
+			`PushButton(`id(`cancel),_("Cancel")))
+			)
+                );
+	boolean cycle = true;
+	while(cycle){
+	switch((symbol) UI::UserInput()){
+	 case(`ok):
+		user = tostring( UI::QueryWidget(`id(`p_user), `Value) );
+		pass = tostring( UI::QueryWidget(`id(`p_pass), `Value) );
+		UI::CloseDialog();
+		cycle = false;
+		break;
+	 case(`cancel):
+		cycle = false;
+		UI::CloseDialog();
+		break;
+	 }
+	}
+ if (size(user)>0 && size(pass)>0) return [user, pass];
+	else return [];
+}
+
+
+symbol saveConfiguration(string key, map event){
+  if (is(event["ID"]:nil, string) && event["ID"]:"" == "save"){
+        any filename = UI::AskForSaveFileName("/",  "*", _("Save as..."));
+        if ( filename != nil && (string)filename!="")
+        {
+            if ( IscsiServerFunctions::SaveIntoFile( (string)filename ))
+            {
+                Popup::Message(sformat(_("File %1 was saved successfully."), filename));
+                list pathComponents = splitstring(  (string)filename, "/");
+                integer s = size(pathComponents) - 1;
+                string base = pathComponents[s]:"default";
+            }
+            else
+            {
+                Popup::Warning(_("An error occurred while saving the file."));
+            }
+        }
+  }
+ return nil;
+}
+
+
+
+
+//	**************** Server Dialog	*********************
+// dialog with targets
+
+// initialize target dialog
+void initTable (string key) ``{
+    integer count = 0;
+    list <term> inc_items = [];
+ // create items from targets
+ if (size(IscsiServerFunctions::getTargets())>0){
+    foreach(string key, any value, IscsiServerFunctions::getTargets(), {
+     inc_items = add(inc_items, `item(`id(count), key));
+     count = count + 1;
+    });
+  }
+  // put it into table
+  UI::ChangeWidget(`id(`server), `Items, inc_items);
+}
+
+symbol handleTable (string table, map event){
+ symbol ret = nil;
+ if(event["EventReason"]:"" == "Activated"){
+ switch((symbol)event["ID"]:nil){
+  case(`add)        :
+		// goto  AddDialog() (initAddTarget)
+                ret = `add;
+                break;
+  case(`delete)        :
+		// add a new item
+                if (Popup::ContinueCancel(_("Really delete this item?"))){
+                 integer del=tointeger( UI::QueryWidget(`id(`server), `CurrentItem) );
+		 string target = ((term)UI::QueryWidget(`id(`server), `Item(del)))[1]:"";
+                 IscsiServerFunctions::setDelChanges( target );
+                 IscsiServerFunctions::removeTarget( ((term)UI::QueryWidget(`id(`server), `Item(del)))[1]:"" );
+		 initTable("");
+                }
+                break;
+  case(`edit)	:
+		// edit new item
+		integer edit=tointeger( UI::QueryWidget(`id(`server), `CurrentItem) );
+		curr_target = ((term)UI::QueryWidget(`id(`server), `Item(edit)))[1]:"";
+		if (IscsiServerFunctions::setModifChanges( curr_target ) == 0) y2milestone("modified %1", curr_target);
+			else y2error("%1 already modified", curr_target);
+		// goto EditDialog() (initModify)
+		ret = `edit;
+		break;
+  }
+ }
+ if (size((list)UI::QueryWidget(`server, `Items))==0){
+  UI::ChangeWidget(`edit, `Enabled, false);
+  UI::ChangeWidget(`delete,  `Enabled, false);
+ } else {
+	  UI::ChangeWidget(`edit, `Enabled, true);
+	  UI::ChangeWidget(`delete,  `Enabled, true);
+	}
+ return ret;
+}
+
+// create items for incoming table
+list <term> getAuthItems(){
+ list <term> inc_items = [];
+ integer count = -1;
+ while (count<size(inc_auth)-1){
+  count = count+1;
+  inc_items = add(inc_items, `item(`id(count),inc_auth[count, "USER"]:"", "*****"));
+ }
+ return inc_items;
+}
+
+void initiSNS (string key) ``{
+boolean ac=false;
+string ip = "";
+foreach(map<string, any> row, IscsiServerFunctions::getConfig()["iSNS"]:[], {
+ if(row["KEY"]:""=="iSNSAccessControl") ac=(row["VALUE"]:"No"=="Yes") ? true : false;
+ if(row["KEY"]:""=="iSNSServer") ip=row["VALUE"]:"";
+});
+UI::ChangeWidget(`isns_ac, `Value, ac);
+UI::ChangeWidget(`isns_ip, `Value, ip);
+}
+
+boolean validateiSNS(string key, map event){
+ string ip = (string)UI::QueryWidget(`isns_ip, `Value);
+ boolean valid=true;
+ if (size(ip)>0) valid = IP::Check(ip);
+	else valid= true;
+ if (!valid)Popup::Error (_("Invalid IP address."));
+ return valid;
+}
+
+void storeiSNS(string option_id, map option_map){
+ string ip="";
+ if ((boolean)UI::QueryWidget(`isns_ac, `Value))
+  {
+   ip = (string)UI::QueryWidget(`isns_ip, `Value);
+  }
+   string ac=((boolean)UI::QueryWidget(`isns_ac, `Value))?"Yes":"No";
+   if (ip=="") ac="";
+   IscsiServerFunctions::setiSNS(ip, ac);
+}
+
+
+//	**************** Global Dialog	*********************
+void initGlobalValues(list<map<string, any> > values){
+  setAuthIn(false);
+  setAuthOut(false);
+   string user = "";
+   string pass = "";
+   // incoming authentication
+   inc_auth = $[];
+   integer count = 0;
+   foreach(map<string,any> auth, values, {
+    if (auth["KEY"]:"" == "IncomingUser") {
+	user = splitstring(auth["VALUE"]:"", " ")[0]:"";
+	pass = splitstring(auth["VALUE"]:"", " ")[1]:"";
+	inc_auth[count] = $["USER":user, "PASS":pass];
+	count = count + 1;
+	setAuthIn(true);
+    }
+    if (auth["KEY"]:"" == "OutgoingUser") {
+	UI::ChangeWidget(`id(`user_out), `Value, splitstring(auth["VALUE"]:"", " ")[0]:"");
+	UI::ChangeWidget(`id(`pass_out), `Value, splitstring(auth["VALUE"]:"", " ")[1]:"");
+	setAuthOut(true);
+    }
+   });
+   UI::ChangeWidget(`id(`incoming_table), `Items, getAuthItems() );
+}
+
+// initialize discovery authentication or authentication for given target
+void initGlobal (string key){
+ if (size(curr_target)>0) initGlobalValues(IscsiServerFunctions::getConfig()[curr_target]:[]);
+	else /*if (size(IscsiServerFunctions::getConfig()["auth"]:[])>0)*/ initGlobalValues(IscsiServerFunctions::getConfig()["auth"]:[]);
+}
+
+// save discovery authentication or authentication for given target
+void storeGlobal(string option_id, map option_map){
+   if (size(curr_target)>0){
+
+    IscsiServerFunctions::setTargetAuth( curr_target, getIncomingValues(), getOutgoingValues() );
+    IscsiServerFunctions::saveNewTarget(curr_target);
+
+   } else{
+	IscsiServerFunctions::setAuth( getIncomingValues(), getOutgoingValues() );
+   }
+}
+
+// validate functions checks the secret for incoming and outgoing cannot be same
+boolean validateGlobal(string key, map event){
+ boolean ret=false;
+ if (!contains(getIncomingValues(), getOutgoingValues())) ret=true;
+	else Popup::Error(_("Cannot use the same secret for incoming and outgoing authentication."));
+ return ret;
+}
+//	************** Add Target Dialog	******************
+// initialize function for create new target
+void initAddTarget(string key){
+// some proposed values
+ string target = "iqn";
+ string date = ((map<string, any>)SCR::Execute(.target.bash_output, "date +%Y-%m"))["stdout"]:"";
+ string domain = ((map<string, any>)SCR::Execute(.target.bash_output, "dnsdomainname"))["stdout"]:"";
+ string uuid = ((map<string, any>)SCR::Execute(.target.bash_output, "uuidgen"))["stdout"]:"";
+ uuid = deletechars(uuid, "\n");
+ if (size(domain)>0){
+  domain = (splitstring(domain, "\n"))[0]:"";
+  list<string> tmp_list=splitstring(domain, ".");
+  domain = sformat("%1.%2", tmp_list[1]:"", tmp_list[0]:"");
+ } else domain="com.example";
+ target = deletechars(sformat("%1.%2.%3", target, date, domain), "\n");
+ y2milestone("init values for add_target %1", target);
+ UI::ChangeWidget(`id(`target), `Value, target);
+ UI::ChangeWidget(`id(`identifier), `Value, uuid);
+// UI::ChangeWidget(`id(`lun), `Value, tostring(IscsiServerFunctions::getNextLun()) );
+}
+
+/*
+symbol handleAddTarget (string table, map event){
+ symbol ret = nil;
+ if(event["EventReason"]:"" == "Activated"){
+  switch((symbol)event["ID"]:nil){
+   case(`add)        : y2internal("add");
+			return `lun_add;
+   case(`edit)        : y2internal("edit");
+			break;
+   case(`delete)        : y2internal("delete");
+			break;
+   case(`expert)        : y2internal("expert");
+			return `expert;
+
+  }
+ }
+}
+*/
+
+// save values
+void storeAddTarget(string option_id, map option_map){
+ list<map<string, any> > old = [];
+ string target = tostring( sformat("%1:%2",UI::QueryWidget(`id(`target), `Value), UI::QueryWidget(`id(`identifier), `Value)) );
+// string lun = sformat("%1 Path=%2,Type=fileio",UI::QueryWidget(`id(`lun), `Value), UI::QueryWidget(`id(`path), `Value) );
+// add/modify that values
+ list<map<string, any> > items = [];
+ foreach(term row, (list<term>)UI::QueryWidget(`lun_table, `Items), {
+  items = add(items, $["KEY":row[1]:"", "VALUE":row[2]:""]);
+ });
+ y2milestone("Add target %1", target);
+ IscsiServerFunctions::addNewTarget(target, items);
+ curr_target = target;
+}
+
+// validate function checks if target/lun are unique and not empty
+boolean validateAddTarget(string key, map event){
+ string target = tostring( UI::QueryWidget(`id(`target), `Value)    );
+// string lun = tostring(    UI::QueryWidget(`id(`lun), `Value)       );
+ string type = "no";
+ if (( size(target)==0 && (Popup::Error(_("The target cannot be empty."))==nil) ) ||
+        ( IscsiServerFunctions::ifExists("Target", target) && (Popup::Error(_("The target already exists."))==nil) )){
+  UI::SetFocus(`id(`target));
+  return false;
+ }
+/*
+ if ((size(lun)==0 && (Popup::Error(_("The logical unit definition cannot be empty."))==nil))||
+        ( IscsiServerFunctions::ifExists("Lun", lun) && (Popup::Error(_("The logical unit already exists."))==nil))){
+  UI::SetFocus(`id(`lun));
+  return false;
+ }
+*/
+ return true;
+}
+
+//	**************** Target Auth	*******************
+// handle authentication dialog
+symbol handleAuth(string key, map event){
+ if (event["EventReason"]:"" == "ValueChanged"){
+ boolean status = false;
+// enable/disable none/incoming/outgoing authentication
+ switch((symbol)event["ID"]:nil){
+  case(`auth_none):
+                status = (boolean)UI::QueryWidget(`id(`auth_none), `Value);
+                setAuthIn(!status);
+                setAuthOut(!status);
+                break;
+  case(`auth_in):
+                status = (boolean)UI::QueryWidget(`id(`auth_in), `Value);
+                setAuthIn(status);
+                break;
+  case(`auth_out):
+                status = (boolean)UI::QueryWidget(`id(`auth_out), `Value);
+                setAuthOut(status);
+                break;
+  }
+ }
+// add/edit/delete incoming authentication
+ if (event["EventReason"]:"" == "Activated"){
+ switch((symbol)event["ID"]:nil){
+  case(`add)	:
+		list<string> values = getDialogValues("", "");
+		y2milestone("Add authentication values");
+		if (size(values)==2 ){
+		string user = values[0]:"";
+		string pass = values[1]:"";
+		 integer count = size((list)UI::QueryWidget(`id (`incoming_table),`Items));
+
+		inc_auth[size(inc_auth)]= $["USER":user, "PASS":pass];
+		 UI::ChangeWidget (`id (`incoming_table), `Items, getAuthItems());
+		}
+
+		break;
+  case(`edit)	:
+		integer curr = tointeger( UI::QueryWidget(`id (`incoming_table),`CurrentItem) );
+		y2milestone("Modify authentication values");
+		if (curr!=nil){
+		 string user = inc_auth[curr, "USER"]:"";
+		 string pass = inc_auth[curr, "PASS"]:"";
+		 list<string> values = getDialogValues(user, pass);
+
+                 if (size(values)==2 ){
+                  string user = values[0]:"";
+                  string pass = values[1]:"";
+
+		  list<term> rows = (list<term>)UI::QueryWidget(`id (`incoming_table),`Items);
+		  inc_auth[curr] = $["USER":user, "PASS":pass];
+		  UI::ChangeWidget (`id (`incoming_table), `Items, getAuthItems());
+                 }
+
+		}
+		break;
+  case(`delete)	:
+		any del = UI::QueryWidget(`id (`incoming_table),`CurrentItem);
+		y2milestone("Delete authentication value");
+		if (del != nil){
+		 if (Popup::ContinueCancel(_("Really delete the selected item?")))
+		  {
+		   integer count = 0;
+			map<integer, any> temp_map = $[];
+			while(count<size(inc_auth)){
+			 if (count<del) temp_map[count]=inc_auth[count]:nil;
+				else if (count==del) {}
+					else temp_map[count-1]=inc_auth[count]:nil;
+			 count = count+1;
+			}
+			inc_auth = temp_map;
+		  UI::ChangeWidget(`id(`incoming_table), `Items, getAuthItems());
+		  } else y2milestone("Delete canceled");
+		}
+		break;
+  }
+ }
+ if (size((list)UI::QueryWidget(`incoming_table, `Items))==0){
+  UI::ChangeWidget(`edit, `Enabled, false);
+  UI::ChangeWidget(`delete,  `Enabled, false);
+ } else {
+	  UI::ChangeWidget(`edit, `Enabled, true);
+	  UI::ChangeWidget(`delete,  `Enabled, true);
+	}
+
+ return nil;
+}
+
+//	**************** Edit Dialog	*****************************
+
+// init values for modifying target (read it from stored map)
+void initModify (string key) ``{
+    list <term> inc_items = [];
+ foreach( map<string, any> row, (list<map<string, any> >) IscsiServerFunctions::editTarget( curr_target ), {
+  switch(row["KEY"]:""){
+   case("Target")       :
+		UI::ChangeWidget( `id(`target),`Value, (splitstring(row["VALUE"]:"", ":"))[0]:"");
+                UI::ChangeWidget( `id(`target),`Enabled, false);
+		UI::ChangeWidget( `id(`identifier), `Value, (splitstring(row["VALUE"]:"", ":"))[1]:"");
+                UI::ChangeWidget( `id(`identifier), `Enabled, false);
+
+                break;
+   case("Lun")          :
+     inc_items = add(inc_items, `item(`id(size(inc_items)), row["KEY"]:"", row["VALUE"]:""));
+     // put it into table
+     UI::ChangeWidget(`id(`lun_table), `Items, inc_items);
+
+                break;
+  }
+ });
+}
+
+symbol handleModify(string key, map event){
+ if ( event["EventReason"]:"" == "Activated" ){
+  switch((symbol)event["WidgetID"]:nil){
+   case `delete:
+                any del = UI::QueryWidget(`id (`lun_table),`CurrentItem);
+                if (del != nil){
+                 if (Popup::ContinueCancel(_("Really delete the selected item?")))
+                  {
+                   y2milestone("Delete LUN %1 from table", del);
+		   list items=[];
+		   integer count=0;
+		   foreach(term row, (list<term>)UI::QueryWidget(`lun_table, `Items), {
+		    if (count!=del){
+			items=add(items, `item(`id(size(items)),row[1]:"", row[2]:""));
+		    }
+		    count = count + 1;
+		   });
+                  UI::ChangeWidget(`id(`lun_table), `Items, items);
+                  } else y2milestone("Delete canceled");
+                }
+	break;
+   case `edit:
+	    list<term> items = (list<term>)UI::QueryWidget(`lun_table, `Items);
+	    integer edit_pos=tointeger(UI::QueryWidget(`lun_table, `CurrentItem));
+	    map<string, any> ret_map = LUNDetailDialog($["KEY":"Lun", "VALUE":items[edit_pos, 2]:""]);
+	    if (ret_map!=$[]){
+		items[edit_pos]=`item(`id(edit_pos), ret_map["KEY"]:"", ret_map["VALUE"]:"");
+		UI::ChangeWidget(`lun_table, `Items, items);
+	       }
+	break;
+   case `add:
+	    map<string, any> add_map = LUNDetailDialog($["KEY":"Lun", "VALUE":tostring(size((list<term>)UI::QueryWidget(`lun_table, `Items)))]);
+	    if (add_map!=$[]){
+		list items = (list)UI::QueryWidget(`lun_table, `Items);
+		items=add(items, `item(`id(size(items)), add_map["KEY"]:"", add_map["VALUE"]:""));
+		UI::ChangeWidget(`lun_table, `Items, items);
+	       }
+	break;
+  }
+ }
+ if (size((list)UI::QueryWidget(`lun_table, `Items))==0){
+  UI::ChangeWidget(`edit, `Enabled, false);
+  UI::ChangeWidget(`delete,  `Enabled, false);
+ } else {
+	  UI::ChangeWidget(`edit, `Enabled, true);
+	  UI::ChangeWidget(`delete,  `Enabled, true);
+	}
+}
+
+void storeModify(string option_id, map option_map){
+ list<map<string, any> > items = [];
+ foreach(term row, (list<term>)UI::QueryWidget(`lun_table, `Items), {
+  items = add(items, $["KEY":row[1]:"", "VALUE":row[2]:""]);
+ });
+ IscsiServerFunctions::setLUN(curr_target, items);
+}
+
+//	************** LUN Detail Dialog ****************************
+symbol handleLUN(string key, map event){
+ boolean enable=false;
+ if ((boolean)UI::QueryWidget(`fileio, `Value)==true) enable=true;
+
+  UI::ChangeWidget(`file_path, `Enabled, enable);
+  UI::ChangeWidget(`browse, `Enabled, enable);
+  UI::ChangeWidget(`scsi_id, `Enabled, enable);
+  UI::ChangeWidget(`sectors, `Enabled, !enable);
+
+ if (event["EventReason"]:"" == "Activated" && event["WidgetID"]:nil == `browse){
+  string file = UI::AskForExistingFile("/", "", _("Select file or device"));
+  if (file!=nil) UI::ChangeWidget(`file_path, `Value, file);
+ }
+}
+
+void storeLUN(string option_id, map option_map){
+ string lun=(string)UI::QueryWidget(`lun, `Value);
+}
+
+}

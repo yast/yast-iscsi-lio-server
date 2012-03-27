@@ -1,0 +1,106 @@
+/**
+ * File:	clients/iscsi-server_auto.ycp
+ * Package:	Configuration of iscsi-server
+ * Summary:	Client for autoinstallation
+ * Authors:	Michal Zugec <mzugec@suse.cz>
+ *
+ * $Id$
+ *
+ * This is a client for autoinstallation. It takes its arguments,
+ * goes through the configuration and return the setting.
+ * Does not do any changes to the configuration.
+ */
+
+/**
+ * @param function to execute
+ * @param map/list of iscsi-server settings
+ * @return map edited settings, Summary or boolean on success depending on called function
+ * @example map mm = $[ "FAIL_DELAY" : "77" ];
+ * @example map ret = WFM::CallFunction ("iscsi-server_auto", [ "Summary", mm ]);
+ */
+
+{
+
+textdomain "iscsi-server";
+
+y2milestone("----------------------------------------");
+y2milestone("IscsiServer auto started");
+
+import "IscsiServer";
+include "iscsi-server/wizards.ycp";
+
+any ret = nil;
+string func = "";
+map param = $[];
+
+/* Check arguments */
+if(size(WFM::Args()) > 0 && is(WFM::Args(0), string)) {
+    func = (string)WFM::Args(0);
+    if(size(WFM::Args()) > 1 && is(WFM::Args(1), map))
+	param = (map) WFM::Args(1);
+}
+y2debug("func=%1", func);
+y2debug("param=%1", param);
+
+/* Create a summary*/
+if(func == "Summary") {
+    ret = select(IscsiServer::Summary(), 0, "");
+}
+/* Reset configuration */
+else if (func == "Reset") {
+    IscsiServer::Import($[]);
+    ret = $[];
+}
+/* Change configuration (run AutoSequence) */
+else if (func == "Change") {
+    ret = IscsiServerAutoSequence();
+}
+/* Import configuration */
+else if (func == "Import") {
+    ret = IscsiServer::Import(param);
+}
+/* Return actual state */
+else if (func == "Export") {
+    ret = IscsiServer::Export();
+}
+/* Return needed packages */
+else if (func == "Packages") {
+    ret = IscsiServer::AutoPackages();
+}
+/* Read current state */
+else if (func == "Read") {
+    import "Progress";
+    boolean progress_orig = Progress::set (false);
+    ret = IscsiServer::Read();
+    Progress::set (progress_orig);
+}
+/* Write given settings */
+else if (func == "Write") {
+    import "Progress";
+    boolean progress_orig = Progress::set (false);
+    IscsiServer::write_only = true;
+    ret = IscsiServer::Write();
+    Progress::set (progress_orig);
+}
+
+else if (func == "GetModified"){
+ ret = IscsiServer::modified;
+}
+else if (func == "SetModified"){
+ IscsiServer::modified = true;
+ ret = true;
+}
+/* Unknown function */
+else {
+    y2error("Unknown function: %1", func);
+    ret = false;
+}
+
+y2debug("ret=%1", ret);
+y2milestone("IscsiServer auto finished");
+y2milestone("----------------------------------------");
+
+return ret;
+
+/* EOF */
+}

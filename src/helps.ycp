@@ -1,0 +1,131 @@
+/**
+ * File:	include/iscsi-server/helps.ycp
+ * Package:	Configuration of iscsi-server
+ * Summary:	Help texts of all the dialogs
+ * Authors:	Michal Zugec <mzugec@suse.cz>
+ *
+ * $Id$
+ */
+
+{
+
+textdomain "iscsi-server";
+
+/**
+ * All helps are here
+ */
+map HELPS = $[
+
+    /* Read dialog help 1/2 */
+    "read" : _("<p><b><big>Initializing iSCSI Target Configuration</big></b><br>
+Please wait...<br></p>
+") +
+
+    /* Read dialog help 2/2 */
+    _("<p><b><big>Aborting Initialization</big></b><br>
+Safely abort the configuration utility by pressing <b>Abort</b> now.</p>
+"),
+
+    /* Write dialog help 1/2 */
+    "write" : _("<p><b><big>Saving iSCSI Target Configuration</big></b><br>
+Please wait...<br></p>
+") +
+
+    /* Write dialog help 2/2 */
+_("<p><b><big>Aborting Saving:</big></b><br>
+Abort the save procedure by pressing <b>Abort</b>.
+An additional dialog informs whether it is safe to do so.
+</p>
+"),
+
+    "save_configuration" : _("<p><b>Save</b> button will export some information about
+targets into selected file.</p>"),
+
+
+    /* Summary dialog help 1/3 */
+    "summary" : _("<p><b><big>iSCSI Target Configuration</big></b><br>
+Configure an iSCSI target here.<br></p>
+") +
+
+    /* Summary dialog help 2/3 */
+    _("<p><b><big>Adding an iSCSI Target</big></b><br>
+Choose an iSCSI target from the list of detected iSCSI targets.
+If your target was not detected, use <b>Other (not detected)</b>.
+Then press <b>Configure</b>.</p>
+") +
+
+    /* Summary dialog help 3/3 */
+    _("<p><b><big>Editing or Deleting</big></b><br>
+If you press <b>Edit</b>, an additional dialog in which to change
+the configuration opens.</p>
+"),
+
+    /* Ovreview dialog help 1/3 */
+    "overview" : _("<p><b><big>iSCSI Target Configuration Overview</big></b><br>
+Obtain an overview of installed iSCSI targets. Additionally
+edit their configurations.<br></p>
+") +
+
+    /* Ovreview dialog help 2/3 */
+_("<p><b><big>Adding an iSCSI Target</big></b><br>
+Press <b>Add</b> to configure an iSCSI target.</p>") +
+
+    /* Ovreview dialog help 3/3 */
+_("<p><b><big>Editing or Deleting</big></b><br>
+Choose an iSCSI target to change or remove.
+Then press <b>Edit</b> or <b>Delete</b> as desired.</p>
+"),
+
+    /* Configure1 dialog help 1/2 */
+    "c1" : _("<p><b><big>Configuration Part One</big></b><br>
+Press <b>Next</b> to continue.
+<br></p>") +
+
+    /* Configure1 dialog help 2/2 */
+_("<p><b><big>Selecting Something</big></b><br>
+It is not possible. You must code it first. :-)
+</p>"),
+
+    /* Configure2 dialog help 1/2 */
+    "c2" : _("<p><b><big>Configuration Part Two</big></b><br>
+Press <b>Next</b> to continue.
+<br></p>
+") +
+
+    /* Configure2 dialog help 2/2 */
+_("<p><b><big>Selecting Something</big></b><br>
+It is not possible. You must code it first. :-)
+</p>"),
+
+	// discovery authentication
+	"global_config"	: _(
+"Select the type of authentication. Use <b>No Authentication</b> or one of <b>Incoming</b> and <b>Outgoing</b> (can be both together). Then insert <b>User</b> and <b>Password</b>.\n"
+"For incoming authentication, it is possible to <b>Add</b> more  pairs or <b>Edit</b> or <b>Delete</b> them."),
+
+	// target dialog
+	"server_table" :_(
+"List of offered targets. Create a new target by clicking <b>Add</b>. \n"
+"To delete or modify an item, select it and press <b>Modify</b> or <b>Delete</b>."
+),
+
+	// edit target
+	"target-modify":	_("<h1>iSCSI Target</h1>") + _("It is possible to change the <b>Path</b> to block devices, regular files, LVM, or RAID.
+"),
+
+	// add target
+	"target-add":	_("<h1>iSCSI Target</h1>") + _(
+"Create a new target. Replace template values with the correct values.\n"
+"For <b>Target</b>, use the format iqn.yyyy-mm.<reversed domain name>.\n"
+"For <b>Path</b>, use block devices, regular files, LVM, or RAID.\n")
++_("<b>Add</b> one or more LUNs.\nIf you need any extra options, push <b>Expert Settings</b>."),
+
+
+	// expert dialog
+	"expert":	_("<h1>iSCSI Target</h1>") + _("It is possible to <b>add</b>, <b>edit</b> or <b>delete</b> all additional configuration options."),
+	// LUN details
+	"lun-details":	_("<h1>iSCSI Target</h1>") + _("Edit <b>LUN</b> number if needed, set <b>Type</b> (nullio is for testing purposes). \n"
+"If Type=fileio set <b>Path</b> to disk device or file.<b>SCSI ID</b> and <b>Sectors</b> are optional."),
+];
+
+/* EOF */
+}

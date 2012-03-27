@@ -1,0 +1,284 @@
+-------------------------------------------------------------------
+Thu Aug  4 14:02:26 CEST 2011 - fehr@suse.de
+
+- do not remove tgt package, just stop and disable tgtd service, 
+  this way possible tgt config files do not get lost (bnc#706580)
+- 2.17.10
+
+-------------------------------------------------------------------
+Thu Jun 30 16:16:50 CEST 2011 - fehr@suse.de
+
+- fix typos in translatable texts (bnc#703125)
+
+-------------------------------------------------------------------
+Mon May 16 11:29:53 CEST 2011 - fehr@suse.de
+
+- allow only integer values in lun input field (bnc#693683)
+- 2.17.9
+
+-------------------------------------------------------------------
+Tue Nov  3 12:52:14 CET 2009 - mzugec@suse.cz
+
+- export credentials for target (fate#301932)
+- 2.17.8 
+
+-------------------------------------------------------------------
+Thu May 21 09:19:02 CEST 2009 - mzugec@suse.cz
+
+- handle correctly when tgt is already installed (bnc#501375)
+- 2.17.7 
+
+-------------------------------------------------------------------
+Mon Mar 23 17:51:33 CET 2009 - mzugec@suse.de
+
+- correctly work with firewall (bnc#462006)
+- 2.17.6 
+
+-------------------------------------------------------------------
+Mon Mar 23 17:49:21 CET 2009 - mzugec@suse.de
+
+- handle exceptions - thanks to ajohansson@novell.com (bnc#481379)
+- 2.17.5 
+
+-------------------------------------------------------------------
+Fri Dec  5 10:51:24 CET 2008 - mzugec@suse.cz
+
+- align button (bnc#447558)
+- 2.17.4 
+
+-------------------------------------------------------------------
+Mon Nov 10 16:09:30 CET 2008 - mzugec@suse.cz
+
+- fixed iSNS option problem (bnc#442670)
+- 2.17.3 
+
+-------------------------------------------------------------------
+Mon Sep 29 09:18:47 CEST 2008 - mzugec@suse.de
+
+- fixed menu category for gnome (bnc#429431)
+- 2.17.2 
+
+-------------------------------------------------------------------
+Mon Sep  8 13:05:01 CEST 2008 - mzugec@suse.cz
+
+- proofread
+- 2.17.1 
+
+-------------------------------------------------------------------
+Fri Sep  5 15:20:34 CEST 2008 - mzugec@suse.cz
+
+- changed rpm description 
+
+-------------------------------------------------------------------
+Fri May 16 16:40:22 CEST 2008 - jsrain@suse.cz
+
+- added categories Settings and System into desktop file
+  (bnc #382778)
+
+-------------------------------------------------------------------
+Mon Mar 17 12:43:32 CET 2008 - jsrain@suse.cz
+
+- added 'StartupNotify=true' to the desktop file (bnc #304964)
+- 2.16.1
+
+-------------------------------------------------------------------
+Mon Feb 24 15:55:37 CET 2008 - mzugec@suse.de
+
+- check if network is running
+- 2.16.0 
+
+-------------------------------------------------------------------
+Thu Jan 10 19:19:10 CET 2008 - mzugec@suse.cz
+
+- added iSNS support (FaTE #302083)
+- 2.14.4 
+
+-------------------------------------------------------------------
+Fri Nov  9 10:29:58 CET 2007 - mzugec@suse.cz
+
+- fixed description in file dialogs 
+
+-------------------------------------------------------------------
+Tue Mar  6 12:51:49 CET 2007 - mzugec@suse.cz
+
+- iscsi-server writes to stdout (#250628) 
+
+-------------------------------------------------------------------
+Wed Feb  7 16:27:01 CET 2007 - mzugec@suse.de
+
+- disable edit and delete buttons in empty table (#241804)
+- 2.14.3 
+
+-------------------------------------------------------------------
+Tue Feb  6 10:39:19 CET 2007 - mzugec@suse.de
+
+- remove spaces as separators between parameters in /etc/ietd.conf (#239555)
+- 2.14.2 
+
+-------------------------------------------------------------------
+Mon Jan 15 16:37:54 CET 2007 - mzugec@suse.cz
+
+- fate #300631 - Support Several LUNs for Target 
+
+-------------------------------------------------------------------
+Thu Jun  1 10:55:13 CEST 2006 - mzugec@suse.cz
+
+- fixed #180205 - because of gettext problem, 
+  one string wasn't mark for translation
+- 2.14.0
+
+-------------------------------------------------------------------
+Fri May 19 16:43:52 CEST 2006 - mzugec@suse.cz
+
+- fixed #177060 incorrect storing data between dialogs 
+
+-------------------------------------------------------------------
+Thu May 18 15:31:47 CEST 2006 - mzugec@suse.cz
+
+- fixed #176724 - duplicates configuration entry
+
+-------------------------------------------------------------------
+Thu May 18 13:10:49 CEST 2006 - mzugec@suse.cz
+
+- fixed #148968 - do not restart unchanged targets
+
+-------------------------------------------------------------------
+Wed May 17 17:48:38 CEST 2006 - mzugec@suse.cz
+
+- fixed #176186 - service status after YaST2 exit
+
+-------------------------------------------------------------------
+Tue May  9 11:18:05 CEST 2006 - mzugec@suse.cz
+
+- fixed #173818 - support for autoyast
+
+-------------------------------------------------------------------
+Mon Apr 24 11:13:41 CEST 2006 - mzugec@suse.cz
+
+- fixed #168732 - deleted values from auth are stored 
+
+-------------------------------------------------------------------
+Mon Apr 24 08:37:10 CEST 2006 - mzugec@suse.cz
+
+- comments, logs, testsuite 
+
+-------------------------------------------------------------------
+Tue Apr 11 12:58:08 CEST 2006 - mzugec@suse.cz
+
+- fixed #157643 - reload server 
+
+-------------------------------------------------------------------
+Fri Apr  7 08:26:27 CEST 2006 - mzugec@suse.cz
+
+- fixed #163999 - iscsi target - identifier contains '\n' 
+
+-------------------------------------------------------------------
+Wed Apr  5 17:50:29 CEST 2006 - mzugec@suse.cz
+
+- fixed #157648 - when modify target, can edit LUN 
+
+-------------------------------------------------------------------
+Wed Apr  5 17:16:42 CEST 2006 - mzugec@suse.cz
+
+- fixed #163299 - Iscsi->iSCSI
+
+-------------------------------------------------------------------
+Wed Apr  5 17:06:10 CEST 2006 - mzugec@suse.cz
+
+- fixed #158546 cannot set the same user/pass fot incoming and outgoing auth 
+
+-------------------------------------------------------------------
+Thu Mar 23 16:11:20 CET 2006 - mzugec@suse.cz
+
+- fixed #160315 - check if user is root 
+
+-------------------------------------------------------------------
+Tue Mar 21 09:23:22 CET 2006 - mzugec@suse.cz
+
+- changed group to Net_advanced 
+
+-------------------------------------------------------------------
+Fri Mar 17 18:54:54 CET 2006 - mzugec@suse.cz
+
+- fixed #158540 - hide passwords 
+
+-------------------------------------------------------------------
+Thu Mar 16 17:20:11 CET 2006 - mzugec@suse.cz
+
+- fixed #158538 - write before restart server 
+
+-------------------------------------------------------------------
+Tue Mar 14 14:49:37 CET 2006 - mzugec@suse.cz
+
+- fixed #157645 LUN counting starts from zero 
+
+-------------------------------------------------------------------
+Tue Mar 14 14:40:49 CET 2006 - mzugec@suse.cz
+
+- fixed #157653 - use UUID with iqn 
+
+-------------------------------------------------------------------
+Mon Mar  6 10:26:07 CET 2006 - mzugec@suse.cz
+
+- #155273 - IscsiServer -> Iscsi Target 
+
+-------------------------------------------------------------------
+Fri Feb 24 14:54:03 CET 2006 - mzugec@suse.cz
+
+- fixed #152916 - immediately write configuration in Write() 
+
+-------------------------------------------------------------------
+Tue Feb 21 11:19:50 CET 2006 - mzugec@suse.cz
+
+- workarround for #148968 - warning before restart server, proofread
+
+-------------------------------------------------------------------
+Fri Feb 17 14:42:23 CET 2006 - mzugec@suse.cz
+
+- fixed #149050 - enable/disable firewall
+
+-------------------------------------------------------------------
+Wed Feb 15 13:20:10 CET 2006 - mzugec@suse.cz
+
+- improved #148971 - remove \n 
+
+-------------------------------------------------------------------
+Tue Feb 14 10:23:03 CET 2006 - mzugec@suse.cz
+
+- fixed #148971 - offer iqn 
+
+-------------------------------------------------------------------
+Thu Feb  9 14:01:04 CET 2006 - mzugec@suse.cz
+
+- fixed #149034 - service start 
+
+-------------------------------------------------------------------
+Mon Feb  6 14:05:54 CET 2006 - mvidner@suse.cz
+
+- Authentication fix (mzugec)
+- 2.13.4
+
+-------------------------------------------------------------------
+Tue Jan 31 12:45:38 CET 2006 - mzugec@suse.cz
+
+- new dialogs 
+
+-------------------------------------------------------------------
+Mon Jan 23 11:06:20 CET 2006 - mzugec@suse.cz
+
+- fixed general params
+
+-------------------------------------------------------------------
+Mon Jan 16 18:58:45 CET 2006 - mzugec@suse.cz
+
+- changed specfile 
+
+-------------------------------------------------------------------
+Mon Jan 16 18:44:30 CET 2006 - mzugec@suse.cz
+
+- without write, without modify 
+
+-------------------------------------------------------------------
+Wed Jan 11 15:39:03 2006 - mzugec@suse.cz
+
+- initial version

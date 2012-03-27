@@ -1,0 +1,132 @@
+/**
+ * File:	include/iscsi-server/wizards.ycp
+ * Package:	Configuration of iscsi-server
+ * Summary:	Wizards definitions
+ * Authors:	Michal Zugec <mzugec@suse.cz>
+ *
+ * $Id$
+ */
+
+{
+
+textdomain "iscsi-server";
+
+import "Sequencer";
+import "Wizard";
+
+include "iscsi-server/complex.ycp";
+include "iscsi-server/dialogs.ycp";
+
+
+/**
+ * Main workflow of the iscsi-server configuration
+ * @return sequence result
+ */
+any MainSequence() {
+
+    /* FIXME: adapt to your needs */
+    map aliases = $[
+	"summary"	:   ``( SummaryDialog() ),
+	"add"		:   ``( AddDialog() ),
+	"edit"		:   ``( EditDialog() ),
+	"auth"		:   ``( AuthDialog() ),
+	"expert"	:   ``( ExpertDialog())
+    ];
+
+    /* FIXME: adapt to your needs */
+    map sequence = $[
+	"ws_start" : "summary",
+	"summary" : $[
+	    `abort	: `abort,
+	    `next	: `next,
+	    `add	: "add",
+	    `edit	: "edit"
+	],
+	"add"	: $[
+	    `abort	: `abort,
+	    `next	: "auth",
+	    `back	: `back,
+	    `expert	: "expert",
+	],
+	"expert"	: $[
+	    `abort	: `abort,
+	    `next	: "add",
+	    `back	: `back
+	],
+	"edit"	: $[
+	    `abort	: `abort,
+	    `next	: "auth",
+	    `back	: `back
+	],
+	"auth"	: $[
+           `abort      : `abort,
+            `next       : "summary",
+            `back       : `back
+	]
+    ];
+
+    any ret = Sequencer::Run(aliases, sequence);
+
+    return ret;
+}
+
+/**
+ * Whole configuration of iscsi-server
+ * @return sequence result
+ */
+any IscsiServerSequence() {
+
+    map aliases = $[
+	"read"	: [ ``( ReadDialog() ), true ],
+	"main"	:   ``( MainSequence() ),
+	"write"	: [ ``( WriteDialog() ), true ]
+    ];
+
+    map sequence = $[
+	"ws_start" : "read",
+	"read" : $[
+	    `abort	: `abort,
+	    `next	: "main"
+	],
+	"main" : $[
+	    `abort	: `abort,
+	    `next	: "write"
+	],
+	"write" : $[
+	    `abort	: `abort,
+	    `next	: `next
+	]
+    ];
+
+    Wizard::CreateDialog();
+
+    any ret = Sequencer::Run(aliases, sequence);
+
+    UI::CloseDialog();
+    return ret;
+}
+
+/**
+ * Whole configuration of iscsi-server but without reading and writing.
+ * For use with autoinstallation.
+ * @return sequence result
+ */
+any IscsiServerAutoSequence() {
+
+    /* Initialization dialog caption */
+    string caption = _("iSCSI Target Configuration");
+    /* Initialization dialog contents */
+    term contents = `Label(_("Initializing..."));
+
+    Wizard::CreateDialog();
+    Wizard::SetContentsButtons(caption, contents, "",
+	    Label::BackButton(), Label::NextButton());
+
+    any ret = MainSequence();
+
+    UI::CloseDialog();
+    return ret;
+}
+
+/* EOF */
+}
