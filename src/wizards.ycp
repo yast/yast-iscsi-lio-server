@@ -1,25 +1,25 @@
 /**
- * File:	include/iscsi-server/wizards.ycp
- * Package:	Configuration of iscsi-server
+ * File:	include/iscsi-lio-server/wizards.ycp
+ * Package:	Configuration of iscsi-lio-server
  * Summary:	Wizards definitions
- * Authors:	Michal Zugec <mzugec@suse.cz>
+ * Authors:	Thomas Fehr <fehr@suse.de>
  *
  * $Id$
  */
 
 {
 
-textdomain "iscsi-server";
+textdomain "iscsi-lio-server";
 
 import "Sequencer";
 import "Wizard";
 
-include "iscsi-server/complex.ycp";
-include "iscsi-server/dialogs.ycp";
+include "iscsi-lio-server/complex.ycp";
+include "iscsi-lio-server/dialogs.ycp";
 
 
 /**
- * Main workflow of the iscsi-server configuration
+ * Main workflow of the iscsi-lio-server configuration
  * @return sequence result
  */
 any MainSequence() {
@@ -71,10 +71,10 @@ any MainSequence() {
 }
 
 /**
- * Whole configuration of iscsi-server
+ * Whole configuration of iscsi-lio-server
  * @return sequence result
  */
-any IscsiServerSequence() {
+any IscsiLioServerSequence() {
 
     map aliases = $[
 	"read"	: [ ``( ReadDialog() ), true ],
@@ -107,14 +107,14 @@ any IscsiServerSequence() {
 }
 
 /**
- * Whole configuration of iscsi-server but without reading and writing.
+ * Whole configuration of iscsi-lio-server but without reading and writing.
  * For use with autoinstallation.
  * @return sequence result
  */
-any IscsiServerAutoSequence() {
+any IscsiLioServerAutoSequence() {
 
     /* Initialization dialog caption */
-    string caption = _("iSCSI Target Configuration");
+    string caption = _("iSCSI LIO Target Configuration");
     /* Initialization dialog contents */
     term contents = `Label(_("Initializing..."));
 

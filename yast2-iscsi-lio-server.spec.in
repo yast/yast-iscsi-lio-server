@@ -7,7 +7,7 @@ Requires:	yast2
 
 BuildArchitectures:	noarch
 
-Summary:	Configuration of iSCSI target
+Summary:	Configuration of iSCSI LIO target
 
 %description
 -
@@ -22,11 +22,11 @@ Summary:	Configuration of iSCSI target
 
 %files
 %defattr(-,root,root)
-%dir @yncludedir@/iscsi-server
-@yncludedir@/iscsi-server/*
-@clientdir@/iscsi-server.ycp
-@clientdir@/iscsi-server_*.ycp
-@moduledir@/IscsiServer*
-@desktopdir@/iscsi-server.desktop
+%dir @yncludedir@/iscsi-lio-server
+@yncludedir@/iscsi-lio-server/*
+@clientdir@/iscsi-lio-server.ycp
+@clientdir@/iscsi-lio-server_*.ycp
+@moduledir@/IscsiLioServer*
+@desktopdir@/iscsi-lio-server.desktop
 @scrconfdir@/ietd.scr
 %doc @docdir@

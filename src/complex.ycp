@@ -1,34 +1,34 @@
 /**
- * File:	include/iscsi-server/complex.ycp
- * Package:	Configuration of iscsi-server
+ * File:	include/iscsi-lio-server/complex.ycp
+ * Package:	Configuration of iscsi-lio-server
  * Summary:	Dialogs definitions
- * Authors:	Michal Zugec <mzugec@suse.cz>
+ * Authors:	Thomas Fehr <fehr@suse.de>
  *
  * $Id$
  */
 
 {
 
-textdomain "iscsi-server";
+textdomain "iscsi-lio-server";
 
 import "Label";
 import "Popup";
 import "Wizard";
 import "Wizard_hw";
-import "IscsiServer";
+import "IscsiLioServer";
 
-include "iscsi-server/helps.ycp";
+include "iscsi-lio-server/helps.ycp";
 
 /**
  * Return a modification status
  * @return true if data was modified
  */
 boolean Modified() {
-    return IscsiServer::Modified();
+    return IscsiLioServer::Modified();
 }
 
 boolean ReallyAbort() {
-    return !IscsiServer::Modified() || Popup::ReallyAbort(true);
+    return !IscsiLioServer::Modified() || Popup::ReallyAbort(true);
 }
 
 boolean PollAbort() {
@@ -41,8 +41,8 @@ boolean PollAbort() {
  */
 symbol ReadDialog() {
     Wizard::RestoreHelp(HELPS["read"]:"");
-    // IscsiServer::AbortFunction = PollAbort;
-    boolean ret = IscsiServer::Read();
+    // IscsiLioServer::AbortFunction = PollAbort;
+    boolean ret = IscsiLioServer::Read();
     return ret ? `next : `abort;
 }
 
@@ -52,8 +52,8 @@ symbol ReadDialog() {
  */
 symbol WriteDialog() {
     Wizard::RestoreHelp(HELPS["write"]:"");
-    // IscsiServer::AbortFunction = PollAbort;
-    boolean ret = IscsiServer::Write();
+    // IscsiLioServer::AbortFunction = PollAbort;
+    boolean ret = IscsiLioServer::Write();
     return ret ? `next : `abort;
 }
 

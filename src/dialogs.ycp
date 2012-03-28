@@ -1,34 +1,29 @@
 /**
- if (size((list)UI::QueryWidget(`server, `Items))==0){
-  UI::ChangeWidget(`edit, `Enabled, false);
-  UI::ChangeWidget(`delete,  `Enabled, false);
- } else {
-	  UI::ChangeWidget(`edit, `Enabled, true);
-	  UI::ChangeWidget(`delete,  `Enabled, true);
-	}
- * File:	include/iscsi-server/dialogs.ycp
- * Package:	Configuration of iscsi-server
+ * File:	include/iscsi-lio-server/dialogs.ycp
+ * Package:	Configuration of iscsi-lio-server
  * Summary:	Dialogs definitions
- * Authors:	Michal Zugec <mzugec@suse.cz>
+ * Authors:	Thomas Fehr <fehr@suse.de>
  *
  * $Id$
  */
 
 {
 
-textdomain "iscsi-server";
+textdomain "iscsi-lio-server";
 
 import "Label";
+import "String";
 import "Wizard";
-import "IscsiServer";
+import "IscsiLioServer";
+import "IscsiLioData";
 import "CWMTab";
 import "CWM";
 import "CWMServiceStart";
 import "CWMFirewallInterfaces";
 import "TablePopup";
 
-include "iscsi-server/helps.ycp";
-include "iscsi-server/widgets.ycp";
+include "iscsi-lio-server/helps.ycp";
+include "iscsi-lio-server/widgets.ycp";
 
 // store current here
 string current_tab = "service";
@@ -46,8 +41,6 @@ map tabs_descr = $[
                             `VBox(
                                 "auto_start_up",
                                 `VSpacing (2),
-                                "isns",
-                                `VSpacing (2),
                                 "firewall",
                                 `VSpacing (2),
 				"save",
@@ -58,7 +51,7 @@ map tabs_descr = $[
                               ),
                           `VStretch()
                         ),
-         "widget_names" : [ "auto_start_up", "isns", "firewall", "save" ]
+         "widget_names" : [ "auto_start_up", "firewall", "save" ]
          ],
 // second tab - global authentication
         "global":$[
@@ -102,26 +95,31 @@ map tabs_descr = $[
         ],
 	"target-details":$[
 	  "contents" :
-                 `VBox(
+            `HBox( 
+              `HWeight( 2, `Empty() ),
+              `HWeight( 4,
+                `VBox(
 		  `HBox(
-			  `InputField(`id(`target), `opt(`hstretch), _("Target"), "iqn.2001-04.com.example"),
-			  `InputField(`id(`identifier), `opt(`hstretch), _("Identifier"), "test")
-			),
-                        `VBox(
-				`Table(`id(`lun_table),
-					`header(_("LUN"), _("Value")),
-					 []
-				),
-			  `Left(
-			     `HBox(
-				`PushButton(`id(`add), _("Add")),
-				`PushButton(`id(`edit), _("Edit")),
-				`PushButton(`id(`delete), _("Delete"))
-				)
-			      )
-                          ),
-			`Left( `PushButton(`id(`expert),`opt(`disabled),  _("Expert Settings")) )
-                 ),
+                    `HWeight(3,`InputField(`id(`target), `opt(`hstretch), _("Target"), "iqn.2001-04.com.example")),
+		    `HWeight(3,`InputField(`id(`identifier), `opt(`hstretch), _("Identifier"), "test")),
+		    `HWeight(1,`InputField(`id(`tpg), _("Portal group"), "1"))
+		       ),
+		  `HBox(
+                    `HWeight(3,`ComboBox(`id(`ipaddr), `opt(`hstretch), _("Ip address"), 
+                                         IscsiLioData::GetIpAddr())),
+		    `HWeight(1,`InputField(`id(`port), _("Port number"), "3260"))
+		       ),
+                  `Table(`id(`lun_table),
+                         `header(_("LUN"), _("Name"), _("Path")), []),
+                  `Left(
+                    `HBox(
+                      `PushButton(`id(`add), _("Add")),
+                      `PushButton(`id(`edit), _("Edit")),
+                      `PushButton(`id(`delete), _("Delete"))
+                         )),
+                  `Left( `PushButton(`id(`expert),`opt(`disabled),  _("Expert Settings")) )
+                     )),
+              `HWeight( 2, `Empty() ))
 
 	],
 	"auth": $[
@@ -157,16 +155,16 @@ map tabs_descr = $[
 
 map<string, map <string, any> > widgets = $[
             "auto_start_up" : CWMServiceStart::CreateAutoStartWidget ($[
-                "get_service_auto_start" : IscsiServer::GetStartService,
-                "set_service_auto_start" : IscsiServer::SetStartService,
+                "get_service_auto_start" : IscsiLioServer::GetStartService,
+                "set_service_auto_start" : IscsiLioServer::SetStartService,
                 // radio button (starting iscsitarget service - option 1)
                 "start_auto_button" : _("When &Booting"),
-                // radio button (starting iscsitarget service - option 2)
+                // radio button (starting LIO target service - option 2)
                 "start_manual_button" : _("&Manually"),
                 "help" : sformat (CWMServiceStart::AutoStartHelpTemplate (),
-                    // part of help text, used to describe radiobuttons (matching starting iscsitarget service but without "&")
+                    // part of help text, used to describe radiobuttons (matching starting LIO target service but without "&")
                     _("When Booting"),
-                    // part of help text, used to describe radiobuttons (matching starting iscsitarget service but without "&")
+                    // part of help text, used to describe radiobuttons (matching starting LIO target service but without "&")
                     _("Manually")
                 ),
             ]),
@@ -216,7 +214,7 @@ map<string, map <string, any> > widgets = $[
 		"custom_widget" :
 		`VBox(
 			`Table(`id(`server),
-				`header(_("Targets")),
+				`header(_("Targets"), `Right(_("Portal group"))),
 				[]),
 		 `Left(
 		  `HBox(
@@ -268,17 +266,6 @@ map<string, map <string, any> > widgets = $[
         "help" : HELPS["expert"]:""
         ],
 
-	// dialog for LUN details
-/*
-     "lun-details" : $[
-        "widget" : `custom,
-        "custom_widget" : tabs_descr["lun-details", "contents"]:nil,
-//        "init"   : initLUN,
-        "handle" : handleLUN,
-        "store"  : storeLUN,
-        "help" : HELPS["lun-details"]:""
-        ],
-*/
 	// dialog for add/edit authentication for target
      "target-auth" : $[
         "widget" : `custom,
@@ -311,7 +298,7 @@ map<string, map <string, any> > widgets = $[
  */
 // Main dialog - tabbed
 any SummaryDialog() {
-    string caption = _("iSCSI Target Overview");
+    string caption = _("LIO iSCSI Target Overview");
     curr_target = "";
     map widget_descr = $[
         "tab": CWMTab::CreateWidget($[

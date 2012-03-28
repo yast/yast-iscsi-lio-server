@@ -1,40 +1,40 @@
 /**
- * File:	clients/iscsi-server.ycp
- * Package:	Configuration of iscsi-server
+ * File:	clients/iscsi-lio-server.ycp
+ * Package:	Configuration of iscsi-lio-server
  * Summary:	Main file
- * Authors:	Michal Zugec <mzugec@suse.cz>
+ * Authors:	Thomas Fehr <fehr@suse.de>
  *
  * $Id$
  *
- * Main file for iscsi-server configuration. Uses all other files.
+ * Main file for iscsi-lio-server configuration. Uses all other files.
  */
 
 {
 
 /***
- * <h3>Configuration of iscsi-server</h3>
+ * <h3>Configuration of iscsi-lio-server</h3>
  */
 
-textdomain "iscsi-server";
+textdomain "iscsi-lio-server";
 
 /* The main () */
 y2milestone ("----------------------------------------");
-y2milestone ("IscsiServer module started");
+y2milestone ("IscsiLioServer module started");
 
 import "Progress";
 import "Report";
 import "Summary";
 
 import "CommandLine";
-include "iscsi-server/wizards.ycp";
+include "iscsi-lio-server/wizards.ycp";
 
 map cmdline_description = $[
-    "id" 	: "iscsi-server",
-    /* Command line help text for the Xiscsi-server module */
-    "help"	: _("Configuration of an iSCSI target"),
-    "guihandler"        : IscsiServerSequence,
-    "initialize"        : IscsiServer::Read,
-    "finish"            : IscsiServer::Write,
+    "id" 	: "iscsi-lio-server",
+    /* Command line help text for the iscsi-lio-server module */
+    "help"	: _("Configuration of an iSCSI target via LIO"),
+    "guihandler"        : IscsiLioServerSequence,
+    "initialize"        : IscsiLioServer::Read,
+    "finish"            : IscsiLioServer::Write,
     "actions"           : $[
 	// FIXME TODO: fill the functionality description here
     ],
@@ -59,12 +59,12 @@ if(size(args) > 0) {
 /* main ui function */
 any ret = nil;
 
-if(propose) ret = IscsiServerAutoSequence();
+if(propose) ret = IscsiLioServerAutoSequence();
 else ret = CommandLine::Run(cmdline_description);
 y2debug("ret=%1", ret);
 
 /* Finish */
-y2milestone("IscsiServer module finished");
+y2milestone("IscsiLioServer module finished");
 y2milestone("----------------------------------------");
 
 return ret;

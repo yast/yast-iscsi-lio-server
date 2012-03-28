@@ -1,19 +1,19 @@
 /**
- * File:	modules/IscsiServer.ycp
- * Package:	Configuration of iscsi-server
- * Summary:	IscsiServer settings, input and output functions
- * Authors:	Michal Zugec <mzugec@suse.cz>
+ * File:	modules/IscsiLioServer.ycp
+ * Package:	Configuration of iscsi-lio-server
+ * Summary:	IscsiLioServer settings, input and output functions
+ * Authors:	Thomas Fehr <fehr@suse.de>
  *
  * $Id$
  *
- * Representation of the configuration of iscsi-server.
+ * Representation of the configuration of iscsi-lio-server.
  * Input and output routines.
  */
 
 {
 
-module "IscsiServer";
-textdomain "iscsi-server";
+module "IscsiLioServer";
+textdomain "iscsi-lio-server";
 
 import "Progress";
 import "Report";
@@ -24,7 +24,7 @@ import "Package";
 import "Popup";
 import "SuSEFirewall";
 import "Confirm";
-import "IscsiServerFunctions";
+import "IscsiLioData";
 import "Mode";
 import "NetworkService";
 import "PackageSystem";
@@ -83,7 +83,7 @@ global boolean Modified() {
 
 
 
-// Settings: Define all variables needed for configuration of iscsi-server
+// Settings: Define all variables needed for configuration of iscsi-lio-server
 // TODO FIXME: Define all the variables necessary to hold
 // TODO FIXME: the configuration here (with the appropriate
 // TODO FIXME: description)
@@ -98,39 +98,32 @@ global boolean Modified() {
 
 // read configuration file /etc/ietd.conf
 global boolean readConfig(){
+ IscsiLioData::SetData( IscsiLioData::ParseConfigLio() );
+ return true;
+}
+
+// read configuration file /etc/ietd.conf
+global map readIetdConfig(){
  map<string, any> read_values =  (map<string, any>)SCR::Read(.etc.ietd.all);
- IscsiServerFunctions::parseConfig( read_values );
- return true;
+ return IscsiLioData::ParseConfigIetd( read_values );
+}
+
+global boolean activateIetdConfig( map ietd ){
+ return IscsiLioData::ActivateConfigIetd( ietd );
 }
 
 
-// write configuration file /etc/ietd.conf
+// dummy function since LIO has no config file 
 boolean writeConfig(){
- // prepare map, because perl->ycp lost information about data types (integers in this case)
- map <string, any> config_file = IscsiServerFunctions::writeConfig();
- config_file["type"]=tointeger(config_file["type"]:"1");
- config_file["file"]=tointeger(config_file["file"]:"1");
- list <map<string, any> > value = [];
- foreach(map<string, any> row, config_file["value"]:[], {
-  row["type"]=tointeger(row["type"]:"1");
-  row["file"]=tointeger(row["file"]:"1");
-  value = add(value, row);
- });
-
- config_file["value"] = value;
- y2milestone("config_file to write %1", config_file);
- // write it
- SCR::Write(.etc.ietd.all, config_file);
- SCR::Write(.etc.ietd, nil);
  return true;
 }
 
-// test if required package ("iscsitarget") is installed
+// test if required package ("lio-utils") is installed
 boolean installed_packages(){
- if (!PackageSystem::PackageInstalled("iscsitarget")){
+ if (!PackageSystem::PackageInstalled("lio-utils")){
   y2milestone("Not installed, will install");
   boolean confirm = Popup::AnyQuestionRichText(
-        "", _("Can't continue without installing iscsitarget package"), 40, 10,
+        "", _("Can't continue without installing lio-utils package"), 40, 10,
         Label::InstallButton(), Label::CancelButton (), `focus_yes
     );
 
@@ -138,24 +131,27 @@ boolean installed_packages(){
    string service = "tgtd";
    if (Service::Status(service)==0) Service::Stop(service);
    Service::Disable(service);
-   PackageSystem::DoInstall(["iscsitarget"]);
-    if (PackageSystem::PackageInstalled("iscsitarget")) return true;
+   service = "iscsitarget";
+   if (Service::Status(service)==0) Service::Stop(service);
+   Service::Disable(service);
+   PackageSystem::DoInstall(["lio-utils"]);
+    if (PackageSystem::PackageInstalled("lio-utils")) return true;
 	else return false;
   }
   return false;
  } else return true;
 }
 
-// check status of iscsitarget service
+// check status of target service
 // if not enabled, start it manually
 boolean getServiceStatus(){
  boolean ret = true;
- if (Service::Status("iscsitarget") == 0) {
+ if (Service::Status("target") == 0) {
 	 statusOnStart=true;
 	 serviceStatus=true;
 	}
 y2milestone("Service status = %1", statusOnStart);
- if (!statusOnStart) Service::Start("iscsitarget");
+ if (!statusOnStart) Service::Start("target");
  return ret;
 }
 
@@ -165,12 +161,12 @@ boolean setServiceStatus(){
  if (!serviceStatus) start = statusOnStart;
 
  if (!start) {
-	 y2milestone("Stop iscsitarget service");
-	 Service::Stop("iscsitarget");
+	 y2milestone("Stop target service");
+	 Service::Stop("target");
 	} else {
-		y2milestone("Start iscsitarget service");
+		y2milestone("Start target service");
 		serviceStatus=true;
-		Service::Start("iscsitarget");
+		Service::Start("target");
 		}
  return true;
 }
@@ -182,12 +178,12 @@ boolean reloadServer(){
 if (Popup::YesNo(_( "If changes have been made, the iSCSI target is not able
 to reload current configuration. It can only restart.
 When restarting, all sessions are aborted.
-Restart the iscsitarget service?
-"))) Service::Restart("iscsitarget");
+Restart the target service?
+"))) Service::Restart("target");
  else {
 	// get changes from perl module
-	 map<string, any> changes = IscsiServerFunctions::getChanges();
-	 list<string> connected = IscsiServerFunctions::getConnected();
+	 map<string, any> changes = IscsiLioData::GetChanges();
+	 list<string> connected = IscsiLioData::GetConnected();
 	// plus add there all targets except with active sessions (it means delete and create as new each target)
 /*
          foreach(string key,any value, IscsiServerFunctions::getTargets(), {
@@ -225,7 +221,7 @@ Restart the iscsitarget service?
 	 list<string> lun = [];
 	 list <string> secret = [];
 	// add authentication to target
-	   foreach( map<string, any> conf_row, (list<map<string, any> >) IscsiServerFunctions::getConfig()[row]:[], {
+	   foreach( map<string, any> conf_row, (list<map<string, any> >) IscsiLioData::GetConfig()[row]:[], {
 	    switch (conf_row["KEY"]:""){
 		case("Lun") : lun = splitstring(conf_row["VALUE"]:"", " ");
 				break;
@@ -252,13 +248,13 @@ Restart the iscsitarget service?
 
 
 /**
- * Read all iscsi-server settings
+ * Read all iscsi-lio-server settings
  * @return true on success
  */
 global boolean Read() {
 
-    /* IscsiServer read dialog caption */
-    string caption = _("Initializing iSCSI Target Configuration");
+    /* IscsiLioServer read dialog caption */
+    string caption = _("Initializing LIO iSCSI Target Configuration");
 
     // TODO FIXME Set the right number of stages
     integer steps = 4;
@@ -292,22 +288,36 @@ global boolean Read() {
     if(!Confirm::MustBeRoot()) return false;
     if(!NetworkService::RunningNetworkPopup()) return false;
     Progress::NextStage();
-    // check if required packages ("iscsitarget") are installed
+    // check if required packages ("lio-utils") are installed
     if(!installed_packages()) return false;
     sleep(sl);
 
     if(Abort()) return false;
     Progress::NextStep();
-    // get status of iscsitarget init script
+    // get status of target init script
     if(!getServiceStatus()) return false;
     sleep(sl);
 
     if(Abort()) return false;
     Progress::NextStage();
     // read configuration (/etc/ietd.conf)
-    if(!readConfig()) {
-	 Report::Error(Message::CannotReadCurrentSettings());
-	 return false;
+    readConfig();
+    if(size(IscsiLioData::GetTargets())==0) 
+        {
+        map ietd = readIetdConfig();
+        string msg = _(
+"You have currently no active LIO targets but there seems 
+to be a valid config in /etc/ietd.conf. Should the module 
+try to import setting from /etc/ietd.conf into LIO?" );
+        if( size(ietd["tgt"]:$[])>0 && Report::yesno_message_settings["show"]:true &&
+            Popup::YesNo( msg ))
+            {
+            if( !activateIetdConfig( ietd ))
+                {
+                string err = _( "Errors during import. Check LIO state!" );
+                Report::Error( err );
+                }
+            }
 	}
     sleep(sl);
 
@@ -333,13 +343,13 @@ global boolean Read() {
 }
 
 /**
- * Write all iscsi-server settings
+ * Write all iscsi-lio-server settings
  * @return true on success
  */
 global boolean Write() {
 
-    /* IscsiServer write dialog caption */
-    string caption = _("Saving iSCSI Target Configuration");
+    /* IscsiLioServer write dialog caption */
+    string caption = _("Saving iSCSI LIO Target Configuration");
 
     // TODO FIXME And set the right number of stages
     integer steps = 2;
@@ -371,8 +381,6 @@ global boolean Write() {
         Progress::set(true);
 
     Progress::NextStage();
-    // write configuration (/etc/ietd.conf)
-    if(!writeConfig()) Report::Error (_("Cannot write settings."));
     sleep(sl);
 
 
@@ -387,13 +395,13 @@ global boolean Write() {
     Progress::NextStage();
     sleep(sl);
 
-    // set iscsitarget initscript status
+    // set target initscript status
     if(!setServiceStatus()) return false;
     return true;
 }
 
 /**
- * Get all iscsi-server settings from the first parameter
+ * Get all iscsi-lio-server settings from the first parameter
  * (For use by autoinstallation.)
  * @param settings The YCP structure to be imported.
  * @return boolean True on success
@@ -411,11 +419,11 @@ global boolean Import (map settings) {
 	 if (row["KEY"]:""=="IncomingUser") incom = add(incom, row["VALUE"]:"");
 		else outgoin = row["VALUE"]:"";
 	});
-		IscsiServerFunctions::setAuth(incom, outgoin);
-		break;
+        IscsiLioData::SetAuth("",0,incom, outgoin);
+        break;
    case("targets") :
 	string name = "";
-	list<map<string, any> > lun = [];
+	list<string> lun = [];
 	list<string> inc = [];
 	string out = "";
 	foreach(list< map<string, any> > val, (list<list<map<string, any> > >)value, {
@@ -423,13 +431,19 @@ global boolean Import (map settings) {
 	lun=[];
 	inc=[];
 	out="";
+        integer tpg = 1;
 	 foreach(map<string, any> row, val, {
 	  switch(row["KEY"]:""){
 	   case("Target"):
 			name = row["VALUE"]:"";
 			break;
+	   case("Tpg"):
+			tpg = tointeger(row["VALUE"]:"1");
+                        if( tpg==nil )
+                            tpg = 1;
+			break;
 	   case("Lun"):
-			lun = add(lun, row);
+			lun = add(lun, row["VALUE"]:"");
 			break;
 	   case("IncomingUser"):
 			inc = add(inc, row["VALUE"]:"");
@@ -439,8 +453,8 @@ global boolean Import (map settings) {
 			break;
 	  }
 	 });
-	 IscsiServerFunctions::addNewTarget(name, lun);
-	 IscsiServerFunctions::setTargetAuth(name, inc, out);
+	 IscsiLioData::AddNewTarget(name, tpg, lun);
+	 IscsiLioData::SetAuth(name, tpg, inc, out);
 	});
 		break;
   }
@@ -451,95 +465,85 @@ global boolean Import (map settings) {
 }
 
 /**
- * Dump the iscsi-server settings to a single map
+ * Dump the iscsi-lio-server settings to a single map
  * (For use by autoinstallation.)
  * @return map Dumped settings (later acceptable by Import ())
  */
 global map Export () {
  list targets = [];
- foreach(string k, any v, IscsiServerFunctions::getTargets(), {
+ foreach(string k, any v, IscsiLioData::GetExportTargets(), {
   targets = add(targets, v);
  });
 
  map result = $[
 	       "version" : "1.0",
 	       "service" : serviceStatus,
-	       "auth"	 : IscsiServerFunctions::getConfig()["auth"]:[],
+	       "auth"	 : IscsiLioData::GetExportAuth("",0),
 	       "targets" : targets
  		];
   configured = true;
     return result;
 }
 
-boolean noAuth(list<map<string,any> > config){
- boolean ret = true;
- foreach(map<string, any> row, config, {
-  if (row["KEY"]:""=="IncomingUser" || row["KEY"]:""=="OutgoingUser") ret=false;
- });
- return ret;
-}
-
-boolean authIn(list<map<string,any> > config){
- boolean ret = false;
- foreach(map<string, any> row, config, {
-  if (row["KEY"]:""=="IncomingUser") ret=true;
- });
- return ret;
-}
-
-boolean authOut(list<map<string,any> > config){
- boolean ret = false;
- foreach(map<string, any> row, config, {
-  if (row["KEY"]:""=="OutgoingUser") ret=true;
- });
- return ret;
-}
-
-string getLun(list<map<string,any> > config){
- string ret = "";
- foreach(map<string, any> row, config, {
-  if (row["KEY"]:""=="Lun") ret=row["VALUE"]:"";
- });
- return ret;
-}
+string getLunDesc(map<integer,map> lun)
+    {
+    string ret = "";
+    foreach(integer l, map m, lun, 
+        {
+        if( size(ret)>0 )
+            ret = ret + ", ";
+        ret = ret + IscsiLioData::GetExportLun( l, m );
+        });
+    return ret;
+    }
 
 /**
  * Create a textual summary and a list of unconfigured cards
  * @return summary of the current configuration
  */
-global list Summary() {
- string summary = _("Configuration summary...");
-  if (configured){
+global list Summary() 
+    {
+    string summary = _("Configuration summary...");
+    if (configured)
+        {
 	summary = Summary::AddHeader("", _("Global"));
-	if (serviceStatus) summary = Summary::AddLine(summary, _("When Booting"));
-		else summary = Summary::AddLine(summary, _("Manually"));
-	if (noAuth(IscsiServerFunctions::getConfig()["auth"]:[])) summary = Summary::AddLine(summary, _("No Authentication"));
-	 else {
-	  if(authIn(IscsiServerFunctions::getConfig()["auth"]:[])) summary = Summary::AddLine(summary, _("Incoming Authentication"));
-	  if(authOut(IscsiServerFunctions::getConfig()["auth"]:[])) summary = Summary::AddLine(summary, _("Outgoing Authentication"));
-	 }
+	if (serviceStatus) 
+            summary = Summary::AddLine(summary, _("When Booting"));
+        else 
+            summary = Summary::AddLine(summary, _("Manually"));
+	if( !IscsiLioData::HasAuth( "",0 )) 
+            summary = Summary::AddLine(summary, _("No Authentication"));
+	else 
+            {
+            if(IscsiLioData::HasIncomingAuth("",0)) summary = Summary::AddLine(summary, _("Incoming Authentication"));
+            if(IscsiLioData::HasOutgoingAuth("",0)) summary = Summary::AddLine(summary, _("Outgoing Authentication"));
+            }
 	summary = Summary::AddHeader(summary, _("Targets"));
 	summary = Summary::OpenList(summary);
-	foreach(string key, any value, IscsiServerFunctions::getTargets(), {
-	 summary = Summary::AddListItem(summary, key);
-	 summary = Summary::AddLine(summary, getLun((list<map<string, any> >)value));
-         if (noAuth((list<map<string, any> >)value)) summary = Summary::AddLine(summary, _("No Authentication"));
-          else {
-           if(authIn((list<map<string, any> >)value)) summary = Summary::AddLine(summary, _("Incoming Authentication"));
-           if(authOut((list<map<string, any> >)value)) summary = Summary::AddLine(summary, _("Outgoing Authentication"));
-         }
-
-	});
+	foreach(list keys, IscsiLioData::GetTargets(), 
+            {
+            summary = Summary::AddListItem(summary, keys[0]:"");
+            summary = Summary::AddLine(summary, getLunDesc(IscsiLioData::GetLun(keys[0]:"",keys[1]:1)));
+            if (!IscsiLioData::HasAuth(keys[0]:"",keys[1]:1)) 
+                summary = Summary::AddLine(summary, _("No Authentication"));
+            else 
+                {
+                if(IscsiLioData::HasIncomingAuth(keys[0]:"",keys[1]:1)) 
+                    summary = Summary::AddLine(summary, _("Incoming Authentication"));
+                if(IscsiLioData::HasOutgoingAuth(keys[0]:"",keys[1]:1)) 
+                    summary = Summary::AddLine(summary, _("Outgoing Authentication"));
+                }
+            });
 	summary = Summary::CloseList(summary);
-
-
-   } else {
+        } 
+    else 
+        {
 	summary = Summary::NotConfigured();
 	}
     // TODO FIXME: your code here...
     /* Configuration summary text for autoyast */
     return [ summary, [] ];
-}
+    }
 
 /**
  * Create an overview table with all configured cards
@@ -564,16 +568,16 @@ global map AutoPackages() {
 
 // get/set service accessors for CWMService component
 global boolean GetStartService() {
- boolean status = Service::Enabled("iscsitarget");
- y2milestone("iscsitarget service status %1", status);
+ boolean status = Service::Enabled("target");
+ y2milestone("target service status %1", status);
  return status;
 }
 
 global void SetStartService(boolean status) {
  y2milestone("Set service status %1", status);
  serviceStatus = status;
- if (status == true) Service::Enable("iscsitarget");
-        else Service::Disable("iscsitarget");
+ if (status == true) Service::Enable("target");
+        else Service::Disable("target");
 }
 
 

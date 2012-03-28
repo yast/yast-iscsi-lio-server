@@ -1,8 +1,8 @@
 /**
- * File:	clients/iscsi-server_auto.ycp
- * Package:	Configuration of iscsi-server
+ * File:	clients/iscsi-lio-server_auto.ycp
+ * Package:	Configuration of iscsi-lio-server
  * Summary:	Client for autoinstallation
- * Authors:	Michal Zugec <mzugec@suse.cz>
+ * Authors:	Thomas Fehr <fehr@suse.de>
  *
  * $Id$
  *
@@ -13,21 +13,21 @@
 
 /**
  * @param function to execute
- * @param map/list of iscsi-server settings
+ * @param map/list of iscsi-lio-server settings
  * @return map edited settings, Summary or boolean on success depending on called function
  * @example map mm = $[ "FAIL_DELAY" : "77" ];
- * @example map ret = WFM::CallFunction ("iscsi-server_auto", [ "Summary", mm ]);
+ * @example map ret = WFM::CallFunction ("iscsi-lio-server_auto", [ "Summary", mm ]);
  */
 
 {
 
-textdomain "iscsi-server";
+textdomain "iscsi-lio-server";
 
 y2milestone("----------------------------------------");
-y2milestone("IscsiServer auto started");
+y2milestone("IscsiLioServer auto started");
 
-import "IscsiServer";
-include "iscsi-server/wizards.ycp";
+import "IscsiLioServer";
+include "iscsi-lio-server/wizards.ycp";
 
 any ret = nil;
 string func = "";
@@ -44,50 +44,50 @@ y2debug("param=%1", param);
 
 /* Create a summary*/
 if(func == "Summary") {
-    ret = select(IscsiServer::Summary(), 0, "");
+    ret = IscsiLioServer::Summary()[0]:"";
 }
 /* Reset configuration */
 else if (func == "Reset") {
-    IscsiServer::Import($[]);
+    IscsiLioServer::Import($[]);
     ret = $[];
 }
 /* Change configuration (run AutoSequence) */
 else if (func == "Change") {
-    ret = IscsiServerAutoSequence();
+    ret = IscsiLioServerAutoSequence();
 }
 /* Import configuration */
 else if (func == "Import") {
-    ret = IscsiServer::Import(param);
+    ret = IscsiLioServer::Import(param);
 }
 /* Return actual state */
 else if (func == "Export") {
-    ret = IscsiServer::Export();
+    ret = IscsiLioServer::Export();
 }
 /* Return needed packages */
 else if (func == "Packages") {
-    ret = IscsiServer::AutoPackages();
+    ret = IscsiLioServer::AutoPackages();
 }
 /* Read current state */
 else if (func == "Read") {
     import "Progress";
     boolean progress_orig = Progress::set (false);
-    ret = IscsiServer::Read();
+    ret = IscsiLioServer::Read();
     Progress::set (progress_orig);
 }
 /* Write given settings */
 else if (func == "Write") {
     import "Progress";
     boolean progress_orig = Progress::set (false);
-    IscsiServer::write_only = true;
-    ret = IscsiServer::Write();
+    IscsiLioServer::write_only = true;
+    ret = IscsiLioServer::Write();
     Progress::set (progress_orig);
 }
 
 else if (func == "GetModified"){
- ret = IscsiServer::modified;
+ ret = IscsiLioServer::modified;
 }
 else if (func == "SetModified"){
- IscsiServer::modified = true;
+ IscsiLioServer::modified = true;
  ret = true;
 }
 /* Unknown function */
@@ -97,7 +97,7 @@ else {
 }
 
 y2debug("ret=%1", ret);
-y2milestone("IscsiServer auto finished");
+y2milestone("IscsiLioServer auto finished");
 y2milestone("----------------------------------------");
 
 return ret;

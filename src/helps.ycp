@@ -1,15 +1,15 @@
 /**
- * File:	include/iscsi-server/helps.ycp
- * Package:	Configuration of iscsi-server
+ * File:	include/iscsi-lio-server/helps.ycp
+ * Package:	Configuration of iscsi-lio-server
  * Summary:	Help texts of all the dialogs
- * Authors:	Michal Zugec <mzugec@suse.cz>
+ * Authors:	Thomas Fehr <fehr@suse.de>
  *
  * $Id$
  */
 
 {
 
-textdomain "iscsi-server";
+textdomain "iscsi-lio-server";
 
 /**
  * All helps are here
@@ -17,7 +17,7 @@ textdomain "iscsi-server";
 map HELPS = $[
 
     /* Read dialog help 1/2 */
-    "read" : _("<p><b><big>Initializing iSCSI Target Configuration</big></b><br>
+    "read" : _("<p><b><big>Initializing iSCSI LIO Target Configuration</big></b><br>
 Please wait...<br></p>
 ") +
 

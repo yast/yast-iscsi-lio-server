@@ -1,108 +1,120 @@
 {
 
-textdomain "iscsi-server";
+textdomain "iscsi-lio-server";
 import "IscsiServerFunctions";
+import "IscsiLioData";
 import "Label";
 import "IP";
 //	**************** global funcions and variables *****
 string curr_target = "";
+integer curr_tpg = 1;
 string modify_record = "";
 map inc_auth = $[];
 
-map<string, any> parseRow(string value){
- map<string, any> ret=$[];
- // if nothing only LUN
- if (find(value, " ")==-1){
-  return $["lun":value];
- }
- // extract Lun
- integer pos=find(value, " ");
- ret["lun"]=substring(value, 0, pos);
- value=substring(value, pos, size(value));
- // extract Type
- pos=find(value, "Type=");
- integer pos2=findfirstof( substring(value, pos, size(value)), " ,");
- string type = substring(value, pos+size("Type="), (pos2!=nil)? pos2-size("Type=") : size(value));
- if (pos!=-1)
-  if (type=="fileio"){ ret["fileio"]=true; ret["nullio"]=false;}
-	else { ret["fileio"]=false; ret["nullio"]=true;}
- // extract Path
- pos=find(value, "Path=");
- pos2=findfirstof( substring(value, pos, size(value)), " ,");
- if (pos!=-1) ret["path"] = substring(value, pos+size("Path="), (pos2!=nil)? pos2-size("Path=") : size(value));
- //  extract ScsiId
- pos=find(value, "ScsiId=");
- pos2=findfirstof( substring(value, pos, size(value)), " ,");
- if (pos!=-1) ret["scsi_id"] = substring(value, pos+size("ScsiId="), (pos2!=nil)? pos2-size("ScsiId=") : size(value));
- //  extract ScsiId
- pos=find(value, "Sectors=");
- pos2=findfirstof( substring(value, pos, size(value)), " ,");
- if (pos!=-1) ret["sectors"] = substring(value, pos+size("Sectors="), (pos2!=nil)? pos2-size("Sectors=") : size(value));
- return ret;
-}
+boolean CheckLun( integer l, list<term> other, boolean silent )
+    {
+    string s = tostring(l);
+    boolean ret = size(filter( term i, other, ``(i[1]:""==s)))==0;
+    y2milestone( "CheckLun other:%1", other );
+    y2milestone( "CheckLun l:%1 ret:%2", l, ret );
+    if( !ret && !silent )
+        Popup::Error( _("Selected Lun is already in use!") );
+    return( ret );
+    }
 
+boolean CheckName( string n, list<term> other )
+    {
+    boolean ret = size(filter( term i, other, ``(i[2]:""==n)))==0;
+    if( !ret )
+        Popup::Error( _("Selected Name is already in use!") );
+    return( ret );
+    }
 
-map <string, any> LUNDetailDialog(map<string, any> values_before){
-	map<string, any> previous=parseRow(values_before["VALUE"]:"");
-	map <string, any> ret_map = $[];
-	term lun_dialog =
-                 `VBox(
-			`Left( `HWeight(3,  `InputField( `id( `lun ), `opt(`hstretch), "LUN", previous["lun"]:"0" )) ),
-			`VSpacing(2),
-			`RadioButtonGroup(`id(`rb),                           `VBox(
-			   `Left( `RadioButton(`id(`fileio), `opt(`notify), "Type=fileio", previous["fileio"]:true) ),
-			   `HBox(
-				`InputField( `id( `file_path ), `opt(`hstretch), _("Path:"), previous["path"]:""),
-				 `VBox(
-				  `Label(""),
-				  `PushButton(`id(`browse), _("Browse"))
-				 )
-				),
-			   `InputField( `id( `scsi_id ), `opt(`hstretch), "ScsiId:", previous["scsi_id"]:"" ),
-			`VSpacing(2),
+boolean CheckPath( string p, list<term> other )
+    {
+    boolean ret = IscsiLioData::CheckPath( p )[0]:false;
+    if( !ret )
+        Popup::Error( _("Selected Path must be either block device or normal file!") );
+    if( ret && size(filter( term i, other, ``(i[3]:""==p)))>0 )
+        {
+        Popup::Error( _("Selected Path is already in use!") );
+        ret = false;
+        }
+    return( ret );
+    }
 
-			   `Left( `RadioButton(`id(`nullio), `opt(`notify), "Type=nullio", previous["nullio"]:false) ),
-			   `InputField( `id( `sectors ), `opt(`hstretch), _("Sectors:"), previous["sectors"]:"" )
-			  )
-			 ),
-			`Left( `HBox( `PushButton(`id(`ok), Label::OKButton() ), `PushButton(`id(`cancel), Label::CancelButton() )))
-		  );
-	    UI::OpenDialog(lun_dialog);
-	    UI::ChangeWidget(`id(`lun), `ValidChars, "0123456789" );
-	    symbol ret = `nil;
-	    while(ret != `ok && ret !=`cancel){
-		 boolean enable=false;
-		 if ((boolean)UI::QueryWidget(`fileio, `Value)==true) enable=true;
-
-		  UI::ChangeWidget(`file_path, `Enabled, enable);
-		  UI::ChangeWidget(`browse, `Enabled, enable);
-		  UI::ChangeWidget(`scsi_id, `Enabled, enable);
-		  UI::ChangeWidget(`sectors, `Enabled, !enable);
-
-		 if (ret == `browse){
-		  string file = UI::AskForExistingFile("/", "", _("Select file or device"));
-		  if (file!=nil) UI::ChangeWidget(`file_path, `Value, file);
-		 }
-	     ret = (symbol)UI::UserInput();
-	    }
- if (ret == `cancel) ret_map = $[];
-	else {
-		string lun=(string)UI::QueryWidget(`lun, `Value);
-		string value=lun;
-		if ((boolean)UI::QueryWidget(`fileio, `Value)==true){
-		 value=sformat("%1 Path=%2,Type=fileio", value, (string)UI::QueryWidget(`file_path, `Value));
-		 string scsi_id=(string)UI::QueryWidget(`scsi_id, `Value);
-		 if (size(scsi_id)>0) value=sformat("%1,ScsiId=%2", value, scsi_id);
-		} else {
-			 value=sformat("%1 Type=nullio", value);
-			 string sectors=(string)UI::QueryWidget(`sectors, `Value);
-			 if (size(sectors)>0) value=sformat("%1,Sectors=%2", value, sectors);
-			}
-		ret_map = $["KEY":"Lun", "VALUE":value];
-		}
- UI::CloseDialog();
- return ret_map;
-}
+term LUNDetailDialog( integer pos, list<term> items )
+    {
+    y2milestone( "LUNDetailDialog pos:%1 items:%2", pos, items );
+    list<term> other = (pos>=0)?remove(items,pos):items;
+    y2milestone( "LUNDetailDialog other:%1", other );
+    term previous= items[pos]:`Empty();
+    term ret = `Empty();
+    string lun_def = "99";
+    if( pos<0 )
+        {
+        integer count=0;
+        while( !CheckLun(count,other,true) )
+            {
+            count = count+1;
+            }
+        lun_def = tostring(count);
+        }
+    term lun_dialog =
+        `VBox(
+            `Left( `InputField( `id( `lun ), `opt(`hstretch), "LUN", previous[1]:lun_def ) ),
+            `VSpacing(1),
+            `HBox(
+                `InputField( `id( `path ), `opt(`hstretch), _("Path:"), previous[3]:""),
+                `VBox( `Label(""), `PushButton(`id(`browse), _("Browse")))),
+            `InputField( `id( `name ), `opt(`hstretch), "Name (autogenerated when empty):", previous[2]:"" ),
+            `VSpacing(1),
+            `Left( `HBox( 
+                `PushButton(`id(`ok), `opt(`default), Label::OKButton() ), 
+                `PushButton(`id(`cancel), Label::CancelButton() )))
+            );
+    UI::OpenDialog(lun_dialog);
+    UI::ChangeWidget(`id(`lun), `ValidChars, "0123456789" );
+    symbol sym = `nil;
+    while(sym != `ok && sym !=`cancel)
+        {
+        sym = (symbol)UI::UserInput();
+        if(sym==`browse)
+            {
+            string file = UI::AskForExistingFile("/", "", _("Select file or device"));
+            if (file!=nil && CheckPath( file, other ) )
+                UI::ChangeWidget(`path, `Value, file);
+            }
+        else if( sym==`path )
+            {
+            CheckPath( (string)UI::QueryWidget(`path,`Value), other );
+            }
+        if(sym == `ok) 
+            {
+            integer lun=tointeger(UI::QueryWidget(`lun, `Value));
+            string name = (string)UI::QueryWidget(`name,`Value);
+            string pth = (string)UI::QueryWidget(`path,`Value);
+            y2milestone( "LUNDetailDialog lun:%1 name:%2 path:%3", lun, name, pth );
+            if( !CheckPath( pth, other ) || !CheckLun( lun, other, false ) ||
+                !CheckName( name, other ))
+                sym = `again;
+            if( sym==`ok )
+                {
+                if( size(name)==0 )
+                    {
+                    list<string> used = maplist( term i, other, ``(i[2]:""));
+                    y2milestone( "LUNDetailDialog used:%1", used );
+                    name = IscsiLioData::CreateLunName( used, pth );
+                    }
+                ret = `item( `id(pos>=0?pos:size(other)), lun, name, pth );
+                y2milestone( "LUNDetailDialog ret:%1", ret );
+                }
+            }
+        }
+    UI::CloseDialog();
+    y2milestone( "LUNDetailDialog ret:%1", ret );
+    return ret;
+    }
 
 // set incoming authentication enabled/disabled status
 void setAuthIn(boolean status){
@@ -208,55 +220,61 @@ symbol saveConfiguration(string key, map event){
 void initTable (string key) ``{
     integer count = 0;
     list <term> inc_items = [];
- // create items from targets
- if (size(IscsiServerFunctions::getTargets())>0){
-    foreach(string key, any value, IscsiServerFunctions::getTargets(), {
-     inc_items = add(inc_items, `item(`id(count), key));
-     count = count + 1;
-    });
-  }
-  // put it into table
-  UI::ChangeWidget(`id(`server), `Items, inc_items);
-}
+    // create items from targets
+    list<list> tgt = IscsiLioData::GetTargets();
+    foreach(list l, tgt, 
+        {
+        inc_items = add(inc_items, `item(`id(count), l[0]:"", tostring(l[1]:0)));
+        count = count + 1;
+        });
+    // put it into table
+    UI::ChangeWidget(`id(`server), `Items, inc_items);
+    }
 
-symbol handleTable (string table, map event){
- symbol ret = nil;
- if(event["EventReason"]:"" == "Activated"){
- switch((symbol)event["ID"]:nil){
-  case(`add)        :
-		// goto  AddDialog() (initAddTarget)
+symbol handleTable (string table, map event)
+    {
+    symbol ret = nil;
+    if(event["EventReason"]:"" == "Activated")
+        {
+        switch((symbol)event["ID"]:nil)
+            {
+            case(`add):
+                // goto  AddDialog() (initAddTarget)
                 ret = `add;
                 break;
-  case(`delete)        :
-		// add a new item
-                if (Popup::ContinueCancel(_("Really delete this item?"))){
-                 integer del=tointeger( UI::QueryWidget(`id(`server), `CurrentItem) );
-		 string target = ((term)UI::QueryWidget(`id(`server), `Item(del)))[1]:"";
-                 IscsiServerFunctions::setDelChanges( target );
-                 IscsiServerFunctions::removeTarget( ((term)UI::QueryWidget(`id(`server), `Item(del)))[1]:"" );
-		 initTable("");
-                }
+            case(`delete):
+                // add a new item
+                if (Popup::ContinueCancel(_("Really delete this item?")))
+                    {
+                    integer del=tointeger( UI::QueryWidget(`id(`server), `CurrentItem) );
+                    string target = ((term)UI::QueryWidget(`id(`server), `Item(del)))[1]:"";
+                    IscsiServerFunctions::setDelChanges( target );
+                    IscsiServerFunctions::removeTarget( ((term)UI::QueryWidget(`id(`server), `Item(del)))[1]:"" );
+                    initTable("");
+                    }
                 break;
-  case(`edit)	:
-		// edit new item
-		integer edit=tointeger( UI::QueryWidget(`id(`server), `CurrentItem) );
-		curr_target = ((term)UI::QueryWidget(`id(`server), `Item(edit)))[1]:"";
-		if (IscsiServerFunctions::setModifChanges( curr_target ) == 0) y2milestone("modified %1", curr_target);
-			else y2error("%1 already modified", curr_target);
-		// goto EditDialog() (initModify)
-		ret = `edit;
-		break;
-  }
- }
- if (size((list)UI::QueryWidget(`server, `Items))==0){
-  UI::ChangeWidget(`edit, `Enabled, false);
-  UI::ChangeWidget(`delete,  `Enabled, false);
- } else {
-	  UI::ChangeWidget(`edit, `Enabled, true);
-	  UI::ChangeWidget(`delete,  `Enabled, true);
-	}
- return ret;
-}
+            case(`edit):
+                // edit new item
+                integer edit=tointeger( UI::QueryWidget(`id(`server), `CurrentItem) );
+                term t = (term)UI::QueryWidget(`id(`server), `Item(edit));
+                y2milestone("handleTable num:%1 t:%2", edit, t);
+                curr_target = t[1]:"";
+                curr_tpg = tointeger(t[2]:"");
+                y2milestone("handleTable tgt:%1 tpg:%2", curr_target, curr_tpg );
+                if (IscsiServerFunctions::setModifChanges( curr_target ) == 0) 
+                    y2milestone("modified %1", curr_target);
+                else 
+                    y2error("%1 already modified", curr_target);
+                // goto EditDialog() (initModify)
+                ret = `edit;
+                break;
+            }
+        }
+    boolean empt = size((list)UI::QueryWidget(`server, `Items))==0;
+    UI::ChangeWidget(`edit, `Enabled, !empt);
+    UI::ChangeWidget(`delete,  `Enabled, !empt);
+    return ret;
+    }
 
 // create items for incoming table
 list <term> getAuthItems(){
@@ -328,10 +346,13 @@ void initGlobalValues(list<map<string, any> > values){
 }
 
 // initialize discovery authentication or authentication for given target
-void initGlobal (string key){
- if (size(curr_target)>0) initGlobalValues(IscsiServerFunctions::getConfig()[curr_target]:[]);
-	else /*if (size(IscsiServerFunctions::getConfig()["auth"]:[])>0)*/ initGlobalValues(IscsiServerFunctions::getConfig()["auth"]:[]);
-}
+void initGlobal (string key)
+    {
+    if (size(curr_target)>0) 
+        initGlobalValues(IscsiServerFunctions::getConfig()[curr_target]:[]);
+    else 
+        initGlobalValues(IscsiServerFunctions::getConfig()["auth"]:[]);
+    }
 
 // save discovery authentication or authentication for given target
 void storeGlobal(string option_id, map option_map){
@@ -370,7 +391,14 @@ void initAddTarget(string key){
  y2milestone("init values for add_target %1", target);
  UI::ChangeWidget(`id(`target), `Value, target);
  UI::ChangeWidget(`id(`identifier), `Value, uuid);
-// UI::ChangeWidget(`id(`lun), `Value, tostring(IscsiServerFunctions::getNextLun()) );
+ UI::ChangeWidget(`id(`tpg), `ValidChars, String::CDigit());
+ UI::ChangeWidget(`id(`tpg), `Value, "1");
+ list<term> ip = (list<term>)UI::QueryWidget(`id(`ipaddr), `Items);
+ string s =ip[0,1]:"";
+ y2milestone("initAddTarget ip:%1", s );
+ UI::ChangeWidget(`id(`ipaddr), `Value, s);
+ UI::ChangeWidget(`id(`port), `ValidChars, String::CDigit());
+ UI::ChangeWidget(`id(`port), `Value, "3260");
 }
 
 /*
@@ -492,12 +520,14 @@ symbol handleAuth(string key, map event){
 		  {
 		   integer count = 0;
 			map<integer, any> temp_map = $[];
-			while(count<size(inc_auth)){
-			 if (count<del) temp_map[count]=inc_auth[count]:nil;
-				else if (count==del) {}
-					else temp_map[count-1]=inc_auth[count]:nil;
-			 count = count+1;
-			}
+			while(count<size(inc_auth))
+                            {
+                            if (count<del) 
+                                temp_map[count]=inc_auth[count]:nil;
+                            else if (count>del)
+                                temp_map[count-1]=inc_auth[count]:nil;
+                            count = count+1;
+                            }
 			inc_auth = temp_map;
 		  UI::ChangeWidget(`id(`incoming_table), `Items, getAuthItems());
 		  } else y2milestone("Delete canceled");
@@ -519,102 +549,115 @@ symbol handleAuth(string key, map event){
 //	**************** Edit Dialog	*****************************
 
 // init values for modifying target (read it from stored map)
-void initModify (string key) ``{
+void initModify (string key) 
+    {
     list <term> inc_items = [];
- foreach( map<string, any> row, (list<map<string, any> >) IscsiServerFunctions::editTarget( curr_target ), {
-  switch(row["KEY"]:""){
-   case("Target")       :
-		UI::ChangeWidget( `id(`target),`Value, (splitstring(row["VALUE"]:"", ":"))[0]:"");
-                UI::ChangeWidget( `id(`target),`Enabled, false);
-		UI::ChangeWidget( `id(`identifier), `Value, (splitstring(row["VALUE"]:"", ":"))[1]:"");
-                UI::ChangeWidget( `id(`identifier), `Enabled, false);
+    y2milestone( "initModify %1 %2", curr_target, curr_tpg );
+    UI::ChangeWidget( `id(`target), `Value, (splitstring(curr_target, ":"))[0]:"");
+    UI::ChangeWidget( `id(`target),`Enabled, false);
+    UI::ChangeWidget( `id(`identifier), `Value, (splitstring(curr_target, ":"))[1]:"");
+    UI::ChangeWidget( `id(`identifier), `Enabled, false);
+    UI::ChangeWidget( `id(`tpg), `Value, tostring(curr_tpg) );
+    UI::ChangeWidget( `id(`tpg), `Enabled, false);
+    string ipp = IscsiLioData::GetNetworkPortal( curr_target, curr_tpg )[0]:"";
+    y2milestone( "initModify ipp:%1", ipp );
+    UI::ChangeWidget( `id(`ipaddr), `Value, (splitstring(ipp, ":"))[0]:"");
+    UI::ChangeWidget( `id(`ipaddr), `Enabled, true);
+    UI::ChangeWidget( `id(`port), `Value, (splitstring(ipp, ":"))[1]:"3260");
+    UI::ChangeWidget( `id(`port), `Enabled, true);
+    list lun = IscsiLioData::GetLunList( curr_target, curr_tpg );
+    y2milestone( "initModify lun:%1", lun );
+    foreach( list l, IscsiLioData::GetLunList( curr_target, curr_tpg ),
+        {
+        inc_items = add( inc_items, `item(`id(size(inc_items)), l[0]:99, l[1]:"", l[2]:""));
+        });
+    UI::ChangeWidget(`id(`lun_table), `Items, inc_items);
+    }
 
-                break;
-   case("Lun")          :
-     inc_items = add(inc_items, `item(`id(size(inc_items)), row["KEY"]:"", row["VALUE"]:""));
-     // put it into table
-     UI::ChangeWidget(`id(`lun_table), `Items, inc_items);
-
-                break;
-  }
- });
-}
-
-symbol handleModify(string key, map event){
- if ( event["EventReason"]:"" == "Activated" ){
-  switch((symbol)event["WidgetID"]:nil){
-   case `delete:
+symbol handleModify(string key, map event)
+    {
+    if( event["EventReason"]:"" == "Activated" )
+        {
+        switch((symbol)event["WidgetID"]:nil)
+            {
+            case `delete:
                 any del = UI::QueryWidget(`id (`lun_table),`CurrentItem);
-                if (del != nil){
-                 if (Popup::ContinueCancel(_("Really delete the selected item?")))
-                  {
-                   y2milestone("Delete LUN %1 from table", del);
-		   list items=[];
-		   integer count=0;
-		   foreach(term row, (list<term>)UI::QueryWidget(`lun_table, `Items), {
-		    if (count!=del){
-			items=add(items, `item(`id(size(items)),row[1]:"", row[2]:""));
-		    }
-		    count = count + 1;
-		   });
-                  UI::ChangeWidget(`id(`lun_table), `Items, items);
-                  } else y2milestone("Delete canceled");
+                if (del != nil)
+                    {
+                    if(Popup::ContinueCancel(_("Really delete the selected item?")))
+                        {
+                        y2milestone("Delete LUN %1 from table", del);
+                        list items=[];
+                        integer count=0;
+                        foreach(term row, (list<term>)UI::QueryWidget(`lun_table, `Items), 
+                            {
+                            if (count!=del)
+                                {
+                                items=add(items, `item(`id(size(items)),row[1]:"", row[2]:""));
+                                }
+                            count = count + 1;
+                            });
+                        UI::ChangeWidget(`id(`lun_table), `Items, items);
+                        } 
+                    else 
+                        y2milestone("Delete canceled");
+                    }
+                break;
+            case `edit:
+                list<term> items = (list<term>)UI::QueryWidget(`lun_table, `Items);
+                integer edit_pos=tointeger(UI::QueryWidget(`lun_table, `CurrentItem));
+                y2milestone( "handleModify pos:%1 items:%2", edit_pos, items );
+                term ret = LUNDetailDialog( edit_pos, items );
+                y2milestone( "handleModify ret:%1 em:%2 eq:%3", ret, `Empty(), ret!=`Empty() );
+                if( ret!=`Empty() )
+                    {
+                    items[edit_pos]=ret;
+                    UI::ChangeWidget(`lun_table, `Items, items);
+                    UI::ChangeWidget(`lun_table, `CurrentItem, edit_pos);
+                    }
+                break;
+            case `add:
+                items = (list<term>)UI::QueryWidget(`lun_table, `Items);
+                ret = LUNDetailDialog( -1, items );
+                if( ret!=`Empty() )
+                    {
+                    items = (list<term>)add( items, ret ); 
+                    UI::ChangeWidget(`lun_table, `Items, items);
+                    UI::ChangeWidget(`lun_table, `CurrentItem, size(items)-1);
+                    }
+                break;
+            }
+        }
+    boolean enab = size((list)UI::QueryWidget(`lun_table, `Items))>0;
+    UI::ChangeWidget(`edit, `Enabled, enab);
+    UI::ChangeWidget(`delete, `Enabled, enab);
+    }
+
+void storeModify(string option_id, map option_map)
+    {
+    boolean chg = false;
+    foreach(term row, (list<term>)UI::QueryWidget(`lun_table, `Items),
+        {
+        map lun = $[ "lun" : tointeger(row[1]:"-1"),
+                     "nm" : row[2]:"",
+                     "path" : row[3]:"" ];
+        if(IscsiLioData::NeedUpdateLun( curr_target, curr_tpg, lun ))
+            {
+            y2milestone( "storeModify lun:%1", lun );
+            chg = true;
+            if( !IscsiLioData::DoUpdateLun( curr_target, curr_tpg, lun ))
+                {
+                string txt = sformat( _("Problem seting lun %1 (name:%2) to path %3"),
+                                      lun["lun"]:-1, lun["nm"]:"", lun["path"]:"" );
+                Popup::Error( txt );
                 }
-	break;
-   case `edit:
-	    list<term> items = (list<term>)UI::QueryWidget(`lun_table, `Items);
-	    integer edit_pos=tointeger(UI::QueryWidget(`lun_table, `CurrentItem));
-	    map<string, any> ret_map = LUNDetailDialog($["KEY":"Lun", "VALUE":items[edit_pos, 2]:""]);
-	    if (ret_map!=$[]){
-		items[edit_pos]=`item(`id(edit_pos), ret_map["KEY"]:"", ret_map["VALUE"]:"");
-		UI::ChangeWidget(`lun_table, `Items, items);
-	       }
-	break;
-   case `add:
-	    map<string, any> add_map = LUNDetailDialog($["KEY":"Lun", "VALUE":tostring(size((list<term>)UI::QueryWidget(`lun_table, `Items)))]);
-	    if (add_map!=$[]){
-		list items = (list)UI::QueryWidget(`lun_table, `Items);
-		items=add(items, `item(`id(size(items)), add_map["KEY"]:"", add_map["VALUE"]:""));
-		UI::ChangeWidget(`lun_table, `Items, items);
-	       }
-	break;
-  }
- }
- if (size((list)UI::QueryWidget(`lun_table, `Items))==0){
-  UI::ChangeWidget(`edit, `Enabled, false);
-  UI::ChangeWidget(`delete,  `Enabled, false);
- } else {
-	  UI::ChangeWidget(`edit, `Enabled, true);
-	  UI::ChangeWidget(`delete,  `Enabled, true);
-	}
-}
-
-void storeModify(string option_id, map option_map){
- list<map<string, any> > items = [];
- foreach(term row, (list<term>)UI::QueryWidget(`lun_table, `Items), {
-  items = add(items, $["KEY":row[1]:"", "VALUE":row[2]:""]);
- });
- IscsiServerFunctions::setLUN(curr_target, items);
-}
-
-//	************** LUN Detail Dialog ****************************
-symbol handleLUN(string key, map event){
- boolean enable=false;
- if ((boolean)UI::QueryWidget(`fileio, `Value)==true) enable=true;
-
-  UI::ChangeWidget(`file_path, `Enabled, enable);
-  UI::ChangeWidget(`browse, `Enabled, enable);
-  UI::ChangeWidget(`scsi_id, `Enabled, enable);
-  UI::ChangeWidget(`sectors, `Enabled, !enable);
-
- if (event["EventReason"]:"" == "Activated" && event["WidgetID"]:nil == `browse){
-  string file = UI::AskForExistingFile("/", "", _("Select file or device"));
-  if (file!=nil) UI::ChangeWidget(`file_path, `Value, file);
- }
-}
-
-void storeLUN(string option_id, map option_map){
- string lun=(string)UI::QueryWidget(`lun, `Value);
-}
+            }
+        });
+    if( chg )
+        {
+        IscsiLioData::UpdateConfig();
+        initModify("");
+        }
+    }
 
 }

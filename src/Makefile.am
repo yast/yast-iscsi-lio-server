@@ -1,11 +1,11 @@
 # Makefile.am for iscsi-server/src
 
-yncludedir = @yncludedir@/iscsi-server
+yncludedir = @yncludedir@/iscsi-lio-server
 
 client_DATA =			\
-	iscsi-server.ycp		\
-	iscsi-server_auto.ycp	\
-	iscsi-server_proposal.ycp
+	iscsi-lio-server.ycp		\
+	iscsi-lio-server_auto.ycp	\
+	iscsi-lio-server_proposal.ycp
 
 ynclude_DATA =			\
 	helps.ycp		\
@@ -15,10 +15,11 @@ ynclude_DATA =			\
 	widgets.ycp
 
 desktop_DATA =			\
-	iscsi-server.desktop
+	iscsi-lio-server.desktop
 
 module_DATA =			\
-	IscsiServer.ycp		\
+	IscsiLioServer.ycp	\
+	IscsiLioData.ycp	\
 	IscsiServerFunctions.pm
 
 EXTRA_DIST = $(client_DATA) $(ynclude_DATA) $(module_DATA) $(desktop_DATA)
