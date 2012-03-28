@@ -78,7 +78,7 @@ global string CreateLunName( list<string> used, string p )
     while( size(filter( string s, used, ``(s==ret)))>0 )
         {
         count = count+1;
-        ret = base + "_" + tostring(count);
+        ret = base + "_" + count;
         }
     y2milestone( "CreateLunName p:%1 ret:%2", p, ret );
     return( ret );
@@ -92,7 +92,7 @@ string CreateTcmKey( map<string,map> tcm, string base, string p )
     while( haskey( tcm, ret ))
         {
         count = count+1;
-        ret = base + "_" + tostring(count);
+        ret = base + "_" + count;
         }
     y2milestone( "CreateTcmKey base:%1 p:%2 ret:%3", base, p, ret );
     return( ret );
@@ -233,6 +233,12 @@ global void SetAuth( string tgt, integer tpg, list<string> incom, string outgo )
     SetTgt(data,tgt,tpg,m);
     }
 
+global boolean HasTarget( string tgt, integer tpg )
+    {
+    return( haskey( data["tgt"]:$[], tgt ) && 
+            haskey( data["tgt",tgt]:$[], tpg ));
+    }
+
 global boolean HasIncomingAuth( string tgt, integer tpg )
     {
     map m = GetTgt(data,tgt,tpg);
@@ -273,6 +279,18 @@ global list<string> GetNetworkPortal( string tgt, integer tpg )
         {
         return( sformat( "%1:%2", n["ip"]:"", n["port"]:1 ));
         });
+    return( ret );
+    }
+
+global boolean SetNetworkPortal( string tgt, integer tpg, string np )
+    {
+    y2milestone( "SetNetworkPortal tgt:%1 tpg:%2 np:%3", tgt, tpg, np );
+    string kt = tgt + " " + tpg + " ";
+    if( size(data["tgt",tgt,tpg,"ep","np"]:[])>0 )
+        LogExecCmd( "lio_node --delnp " + kt + 
+                    sformat( "%1:%2", data["tgt",tgt,tpg,"ep","np",0,"ip"]:"",
+                                      data["tgt",tgt,tpg,"ep","np",0,"port"]:1 ));
+    boolean ret = LogExecCmd( "lio_node --addnp " + kt + np );
     return( ret );
     }
 
@@ -418,8 +436,7 @@ void ParseAuthData( string tgt, integer tpg, string clnt,
     y2milestone( "ParseAuthData tgt:%1 tpg:%2 clnt:%3", tgt, tpg, clnt );
     string cmd = "";
     if( size(tgt)>0 )
-        cmd = "lio_node --showchapauth " + tgt + " " + tostring(tpg) + 
-              " " + clnt;
+        cmd = "lio_node --showchapauth " + tgt + " " + tpg + " " + clnt;
     else
         cmd = "lio_node --showchapdiscauth";
     map out = (map)SCR::Execute(.target.bash_output, cmd );
@@ -574,7 +591,7 @@ global map<string,any> ParseConfigLio()
             tgmap[tgt,tpg] = $[ "ep" : endp[tgt,tpg]:$[],
                                 "clnt" : $[] ];
             y2milestone( "ParseConfigLio tgt:%1 tpg:%2", tgt, tpg );
-            string cmd = "lio_node --listlunacls " + tgt + " " + tostring(tpg);
+            string cmd = "lio_node --listlunacls " + tgt + " " + tpg;
             out = (map)SCR::Execute(.target.bash_output, cmd );
             ls = SplitStringNE( out["stdout"]:"", "\n" );
             i=0;
@@ -648,7 +665,7 @@ string CreateTcmDev( string p )
         ret = CreateTcmKey( data["tcm"]:$[], ret, p );
         cmd = cmd + ret + " " + p;
         if( file )
-            cmd = cmd + " " + tostring(bl[2]:1);
+            cmd = cmd + " " + bl[2]:1;
         }
     if( size(ret)>0 && !LogExecCmd( cmd ) )
         ret = "";
@@ -660,17 +677,25 @@ string CreateTcmDev( string p )
     return( ret );
     }
 
+global boolean DoRemoveLun( string tgt, integer tpg, integer l )
+    {
+    string kt = tgt + " " + tpg + " " + l;
+    boolean ret = LogExecCmd( "lio_node --dellun " + kt );
+    y2milestone( "DoRemoveLun tgt:%1 tpg:%2 l:%3 ret:%4", tgt, tpg, l, ret );
+    return( ret );
+    }
+
 boolean ActivateLun( string tgt, integer tpg, integer lun, map lm )
     {
     y2milestone( "ActivateLun tgt:%1 tpg:%2 lun:%3", tgt, tpg, lun );
-    string kt = tgt + " " + tostring(tpg) + " " + tostring(lun);
+    string kt = tgt + " " + tpg + " " + lun;
     boolean ok = true;
     boolean done = false;
     if( haskey( data["tgt",tgt,tpg,"ep","lun"]:$[], lun ) )
         {
         if( data["tgt",tgt,tpg,"ep","lun",lun,"tcm_key"]:"" != lm["tcm_key"]:"" ||
             data["tgt",tgt,tpg,"ep","lun",lun,"nm"]:"" != lm["nm"]:"" )
-            ok = LogExecCmd( "lio_node --dellun " + kt );
+            ok = DoRemoveLun( tgt, tpg, lun );
         else 
             done = true;
         }
@@ -689,6 +714,12 @@ boolean ActivateLun( string tgt, integer tpg, integer lun, map lm )
     return( ok );
     }
 
+global boolean EnableTpg( string tgt, integer tpg )
+    {
+    boolean ret = LogExecCmd( "lio_node --enabletpg " + tgt + " " + tpg );
+    return( ret );
+    }
+
 global boolean ActivateConfigIetd( map dat )
     {
     string cmd = "";
@@ -698,13 +729,13 @@ global boolean ActivateConfigIetd( map dat )
         {
         foreach( integer tpg, map d, m,
             {
-            string kt = key + " " + tostring(tpg);
+            string kt = key + " " + tpg;
             foreach( integer l, map lun, d["ep","lun"]:$[],
                 {
                 ok = ActivateLun( key, tpg, l, lun ) && ok;
                 });
             if( !IsTpgActive( key, tpg ))
-                ok = LogExecCmd( "lio_node --enabletpg " + kt ) && ok;
+                ok = EnableTpg( key, tpg ) && ok;
             });
         });
     y2milestone( "ActivateConfigIetd ok:%1", ok );
@@ -734,6 +765,24 @@ global boolean DoUpdateLun( string tgt, integer tpg, map lm )
     integer lun = lm["lun"]:-1;
     boolean ret = ActivateLun( tgt, tpg, lun, lm );
     y2milestone( "DoUpdateLun ret:%1", ret );
+    return( ret );
+    }
+
+global boolean AddTarget( string tgt, integer tpg )
+    {
+    boolean ret = LogExecCmd( "lio_node --addtpg " + tgt + " " + tpg );
+    if( ret )
+        ret = EnableTpg( tgt, tpg );
+    y2milestone( "AddTarget tgt:%1 tpg:%2 ret:%3", tgt, tpg, ret );
+    return( ret );
+    }
+
+global boolean DelTarget( string tgt, integer tpg )
+    {
+    boolean ret = LogExecCmd( "lio_node --deltpg " + tgt + " " + tpg );
+    if( ret && size( data["tgt",tgt]:$[] )<=1 )
+        ret = LogExecCmd( "lio_node --deliqn " + tgt );
+    y2milestone( "DelTarget tgt:%1 tpg:%2 ret:%3", tgt, tpg, ret );
     return( ret );
     }
 

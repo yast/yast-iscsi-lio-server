@@ -243,14 +243,25 @@ symbol handleTable (string table, map event)
                 ret = `add;
                 break;
             case(`delete):
-                // add a new item
-                if (Popup::ContinueCancel(_("Really delete this item?")))
+                // remove a item
+                any del = UI::QueryWidget(`id(`server),`CurrentItem);
+                y2milestone("handleTable del:%1",del);
+                if (del != nil)
                     {
-                    integer del=tointeger( UI::QueryWidget(`id(`server), `CurrentItem) );
-                    string target = ((term)UI::QueryWidget(`id(`server), `Item(del)))[1]:"";
-                    IscsiServerFunctions::setDelChanges( target );
-                    IscsiServerFunctions::removeTarget( ((term)UI::QueryWidget(`id(`server), `Item(del)))[1]:"" );
-                    initTable("");
+                    if(Popup::ContinueCancel(_("Really delete the selected item?")))
+                        {
+                        list it=(list)UI::QueryWidget(`id(`server), `Items);
+                        term i = it[(integer)del]:`Empty();
+                        y2milestone("handleTable item:%1",i);
+                        if( IscsiLioData::DelTarget( i[1]:"", tointeger(i[2]:"-1") ))
+                            {
+                            it = remove( it, (integer)del );
+                            UI::ChangeWidget(`id(`server), `Items, it);
+                            IscsiLioData::UpdateConfig();
+                            }
+                        } 
+                    else 
+                        y2milestone("handleTable Delete canceled");
                     }
                 break;
             case(`edit):
@@ -372,87 +383,6 @@ boolean validateGlobal(string key, map event){
  if (!contains(getIncomingValues(), getOutgoingValues())) ret=true;
 	else Popup::Error(_("Cannot use the same secret for incoming and outgoing authentication."));
  return ret;
-}
-//	************** Add Target Dialog	******************
-// initialize function for create new target
-void initAddTarget(string key){
-// some proposed values
- string target = "iqn";
- string date = ((map<string, any>)SCR::Execute(.target.bash_output, "date +%Y-%m"))["stdout"]:"";
- string domain = ((map<string, any>)SCR::Execute(.target.bash_output, "dnsdomainname"))["stdout"]:"";
- string uuid = ((map<string, any>)SCR::Execute(.target.bash_output, "uuidgen"))["stdout"]:"";
- uuid = deletechars(uuid, "\n");
- if (size(domain)>0){
-  domain = (splitstring(domain, "\n"))[0]:"";
-  list<string> tmp_list=splitstring(domain, ".");
-  domain = sformat("%1.%2", tmp_list[1]:"", tmp_list[0]:"");
- } else domain="com.example";
- target = deletechars(sformat("%1.%2.%3", target, date, domain), "\n");
- y2milestone("init values for add_target %1", target);
- UI::ChangeWidget(`id(`target), `Value, target);
- UI::ChangeWidget(`id(`identifier), `Value, uuid);
- UI::ChangeWidget(`id(`tpg), `ValidChars, String::CDigit());
- UI::ChangeWidget(`id(`tpg), `Value, "1");
- list<term> ip = (list<term>)UI::QueryWidget(`id(`ipaddr), `Items);
- string s =ip[0,1]:"";
- y2milestone("initAddTarget ip:%1", s );
- UI::ChangeWidget(`id(`ipaddr), `Value, s);
- UI::ChangeWidget(`id(`port), `ValidChars, String::CDigit());
- UI::ChangeWidget(`id(`port), `Value, "3260");
-}
-
-/*
-symbol handleAddTarget (string table, map event){
- symbol ret = nil;
- if(event["EventReason"]:"" == "Activated"){
-  switch((symbol)event["ID"]:nil){
-   case(`add)        : y2internal("add");
-			return `lun_add;
-   case(`edit)        : y2internal("edit");
-			break;
-   case(`delete)        : y2internal("delete");
-			break;
-   case(`expert)        : y2internal("expert");
-			return `expert;
-
-  }
- }
-}
-*/
-
-// save values
-void storeAddTarget(string option_id, map option_map){
- list<map<string, any> > old = [];
- string target = tostring( sformat("%1:%2",UI::QueryWidget(`id(`target), `Value), UI::QueryWidget(`id(`identifier), `Value)) );
-// string lun = sformat("%1 Path=%2,Type=fileio",UI::QueryWidget(`id(`lun), `Value), UI::QueryWidget(`id(`path), `Value) );
-// add/modify that values
- list<map<string, any> > items = [];
- foreach(term row, (list<term>)UI::QueryWidget(`lun_table, `Items), {
-  items = add(items, $["KEY":row[1]:"", "VALUE":row[2]:""]);
- });
- y2milestone("Add target %1", target);
- IscsiServerFunctions::addNewTarget(target, items);
- curr_target = target;
-}
-
-// validate function checks if target/lun are unique and not empty
-boolean validateAddTarget(string key, map event){
- string target = tostring( UI::QueryWidget(`id(`target), `Value)    );
-// string lun = tostring(    UI::QueryWidget(`id(`lun), `Value)       );
- string type = "no";
- if (( size(target)==0 && (Popup::Error(_("The target cannot be empty."))==nil) ) ||
-        ( IscsiServerFunctions::ifExists("Target", target) && (Popup::Error(_("The target already exists."))==nil) )){
-  UI::SetFocus(`id(`target));
-  return false;
- }
-/*
- if ((size(lun)==0 && (Popup::Error(_("The logical unit definition cannot be empty."))==nil))||
-        ( IscsiServerFunctions::ifExists("Lun", lun) && (Popup::Error(_("The logical unit already exists."))==nil))){
-  UI::SetFocus(`id(`lun));
-  return false;
- }
-*/
- return true;
 }
 
 //	**************** Target Auth	*******************
@@ -587,17 +517,9 @@ symbol handleModify(string key, map event)
                     if(Popup::ContinueCancel(_("Really delete the selected item?")))
                         {
                         y2milestone("Delete LUN %1 from table", del);
-                        list items=[];
-                        integer count=0;
-                        foreach(term row, (list<term>)UI::QueryWidget(`lun_table, `Items), 
-                            {
-                            if (count!=del)
-                                {
-                                items=add(items, `item(`id(size(items)),row[1]:"", row[2]:""));
-                                }
-                            count = count + 1;
-                            });
-                        UI::ChangeWidget(`id(`lun_table), `Items, items);
+                        list it=(list)UI::QueryWidget(`lun_table, `Items);
+                        it = remove( it, (integer)del );
+                        UI::ChangeWidget(`id(`lun_table), `Items, it);
                         } 
                     else 
                         y2milestone("Delete canceled");
@@ -636,7 +558,50 @@ symbol handleModify(string key, map event)
 void storeModify(string option_id, map option_map)
     {
     boolean chg = false;
-    foreach(term row, (list<term>)UI::QueryWidget(`lun_table, `Items),
+    if( !IscsiLioData::HasTarget( curr_target, curr_tpg ) )
+        {
+        chg = true;
+        if( !IscsiLioData::AddTarget( curr_target, curr_tpg ))
+            {
+            string txt = sformat( _("Problem creating target %1 with tpg %2"), 
+                                  curr_target, curr_tpg  );
+            Popup::Error( txt );
+            }
+        }
+    string ipp = IscsiLioData::GetNetworkPortal( curr_target, curr_tpg )[0]:"";
+    string ip = (string)UI::QueryWidget(`ipaddr, `Value );
+    integer port = tointeger(UI::QueryWidget(`port, `Value ));
+    y2milestone( "storeModify ip:%1 port:%2 ipp:%3", ip, port, ipp );
+    string np = sformat( "%1:%2", ip, port );
+    if( size(ip)>0 && np != ipp )
+        {
+        chg = true;
+        if( !IscsiLioData::SetNetworkPortal( curr_target, curr_tpg, np ))
+            {
+            string txt = sformat( _("Problem setting network portal to %1"), np  );
+            Popup::Error( txt );
+            }
+        }
+    list<term> it = (list<term>)UI::QueryWidget(`lun_table, `Items);
+    list<integer> nll = maplist( term t, it, ``(tointeger(t[1]:"-1")));
+    list<integer> oll = maplist( list lli, 
+                                 IscsiLioData::GetLunList( curr_target, curr_tpg ),
+                                 ``(lli[0]:-1));
+    y2milestone( "storeModify oll:%1", oll );
+    y2milestone( "storeModify nll:%1", nll );
+    foreach( integer l, oll,
+        {
+        if( !contains( nll, l ))
+            {
+            chg = true;
+            if( !IscsiLioData::DoRemoveLun( curr_target, curr_tpg, l ))
+                {
+                string txt = sformat( _("Problem removing lun %1"), l );
+                Popup::Error( txt );
+                }
+            }
+        });
+    foreach(term row, it,
         {
         map lun = $[ "lun" : tointeger(row[1]:"-1"),
                      "nm" : row[2]:"",
@@ -647,7 +612,7 @@ void storeModify(string option_id, map option_map)
             chg = true;
             if( !IscsiLioData::DoUpdateLun( curr_target, curr_tpg, lun ))
                 {
-                string txt = sformat( _("Problem seting lun %1 (name:%2) to path %3"),
+                string txt = sformat( _("Problem setting lun %1 (name:%2) to path %3"),
                                       lun["lun"]:-1, lun["nm"]:"", lun["path"]:"" );
                 Popup::Error( txt );
                 }
@@ -658,6 +623,84 @@ void storeModify(string option_id, map option_map)
         IscsiLioData::UpdateConfig();
         initModify("");
         }
+    }
+
+//	************** Add Target Dialog	******************
+// initialize function for create new target
+void initAddTarget(string key)
+    {
+    // some proposed values
+    string target = "iqn";
+    string date = ((map<string, any>)SCR::Execute(.target.bash_output, "date +%Y-%m"))["stdout"]:"";
+    string domain = ((map<string, any>)SCR::Execute(.target.bash_output, "dnsdomainname"))["stdout"]:"";
+    string uuid = ((map<string, any>)SCR::Execute(.target.bash_output, "uuidgen"))["stdout"]:"";
+    uuid = deletechars(uuid, "\n");
+    if (size(domain)>0)
+        {
+        domain = (splitstring(domain, "\n"))[0]:"";
+        list<string> tmp_list=splitstring(domain, ".");
+        domain = sformat("%1.%2", tmp_list[1]:"", tmp_list[0]:"");
+        } 
+    else 
+        domain="com.example";
+    target = deletechars(sformat("%1.%2.%3", target, date, domain), "\n");
+    y2milestone("init values for add_target %1", target);
+    UI::ChangeWidget(`id(`target), `Value, target);
+    UI::ChangeWidget(`id(`identifier), `Value, uuid);
+    UI::ChangeWidget(`id(`tpg), `ValidChars, String::CDigit());
+    UI::ChangeWidget(`id(`tpg), `Value, "1");
+    list<term> ip = (list<term>)UI::QueryWidget(`id(`ipaddr), `Items);
+    string s =ip[0,1]:"";
+    y2milestone("initAddTarget ip:%1", s );
+    UI::ChangeWidget(`id(`ipaddr), `Value, s);
+    UI::ChangeWidget(`id(`port), `ValidChars, String::CDigit());
+    UI::ChangeWidget(`id(`port), `Value, "3260");
+    }
+
+list uiTarget()
+    {
+    integer tpg = nil;
+    tpg = tointeger(UI::QueryWidget(`id(`tpg),`Value));
+    return( [ (string)UI::QueryWidget(`id(`target), `Value), 
+              (string)UI::QueryWidget(`id(`identifier), `Value),
+              tpg ] );
+    }
+
+void storeAddTarget(string option_id, map option_map)
+    {
+    list target = uiTarget();
+    y2milestone( "storeAddTarget %1", target );
+    curr_target = sformat( "%1:%2", target[0]:"", target[1]:"" );
+    curr_tpg = target[2]:-1;
+    storeModify(option_id,option_map);
+    }
+
+
+// validate function checks if target/tpg are unique and not empty
+boolean validateAddTarget(string key, map event)
+    {
+    list target = uiTarget();
+    y2milestone( "validateAddTarget %1", target );
+    boolean ret = true;
+    if( size(target[0]:"")==0 )
+        {
+        Popup::Error(_("The target cannot be empty."));
+        UI::SetFocus(`id(`target));
+        ret = false;
+        }
+    else if( target[2]:nil==nil )
+        {
+        Popup::Error(_("The target portal group cannot be empty."));
+        UI::SetFocus(`id(`tpg));
+        ret = false;
+        }
+    else if( IscsiLioData::HasTarget(sformat( "%1:%2", target[0]:"", target[1]:"" ), target[2]:-1 ))
+        {
+        Popup::Error(_("The target already exists."));
+        UI::SetFocus(`id(`target));
+        ret = false;
+        }
+    return ret;
     }
 
 }
