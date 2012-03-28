@@ -1,0 +1,747 @@
+/**
+ * File:	modules/IscsiLioData.ycp
+ * Package:	Configuration Data of iscsi-lio-server
+ * Summary:	IscsiLioServer data manipulation functions
+ * Authors:	Thomas Fehr <fehr@suse.cz>
+ *
+ * $Id$
+ *
+ * Representation of the configuration of iscsi-lio-server.
+ */
+
+{
+
+module "IscsiLioData";
+
+textdomain "iscsi-lio-server";
+
+map<string,any> data = $[];
+
+list<string> SplitStringNE( string str, string delim )
+    {
+    return( filter( string s, splitstring(str,delim), ``(size(s)>0)));
+    }
+
+integer MyFind( string s, string pat )
+    {
+    integer ret = search( s, pat );
+    if(ret==nil)
+        ret=-1;
+    return( ret );
+    }
+
+map<string,any> GetTgt( map<string,any> data, string tgt, integer tpg )
+    {
+    map<string,any> m = data["tgt",tgt,tpg]:$[];
+    if( size(tgt)==0 )
+        m = data;
+    return( m );
+    }
+
+void SetTgt( map<string,any>& data, string tgt, integer tpg, map<string,any> m )
+    {
+    if( size(tgt)==0 )
+        data = m;
+    else
+        data["tgt",tgt] = $[ tpg : m ];
+    }
+
+string FindTcmKey( string p )
+    {
+    string ret = maplist( string key, map du,
+                          filter( string k, map m, data["tcm"]:$[],
+                                  ``(m["path"]:""==p)), 
+                          ``(key))[0]:"";
+    y2milestone( "FindTcmKey p:%1 ret:%2", p, ret );
+    return( ret );
+    }
+
+string ReplaceSlashUs( string i )
+    {
+    string ret = "";
+    integer count=0;
+    foreach( string s, SplitStringNE( i, "/" ),
+        {
+        if( count>0 )
+            ret = ret + "_";
+        ret = ret + s;
+        count = count+1;
+        });
+    return( ret );
+    }
+
+global string CreateLunName( list<string> used, string p )
+    {
+    string ret = ReplaceSlashUs( p );
+    string base = ret;
+    integer count = 0;
+    while( size(filter( string s, used, ``(s==ret)))>0 )
+        {
+        count = count+1;
+        ret = base + "_" + tostring(count);
+        }
+    y2milestone( "CreateLunName p:%1 ret:%2", p, ret );
+    return( ret );
+    }
+
+string CreateTcmKey( map<string,map> tcm, string base, string p )
+    {
+    string ret = base + ReplaceSlashUs( p );
+    string base = ret;
+    integer count = 0;
+    while( haskey( tcm, ret ))
+        {
+        count = count+1;
+        ret = base + "_" + tostring(count);
+        }
+    y2milestone( "CreateTcmKey base:%1 p:%2 ret:%3", base, p, ret );
+    return( ret );
+    }
+
+map<string,any> AddLun( map<string,any> tgt, string val )
+    {
+    if( !haskey( tgt, "ep" ))
+        tgt["ep"] = $[ "lun" : $[] ];
+    list<string> sl = SplitStringNE( val, " \t" );
+    y2milestone( "AddLun sl:%1", sl );
+    if( size(sl[0]:"")>0 && size(sl[1]:"")>0)
+        {
+        integer l = tointeger( sl[0]:"" );
+        if( l!=nil && !haskey( tgt["ep","lun"]:$[],l))
+            tgt["ep","lun",l] = $[];
+        if( haskey( tgt["ep","lun"]:$[],l ))
+            {
+            list<string> tmps = SplitStringNE( sl[1]:"", "," );
+            sl = [];
+            foreach( string s, tmps,
+                {
+                sl = (list<string>)merge( sl, splitstring( s, "=" ));
+                });
+            y2milestone( "AddLun sl:%1", sl );
+            while( size(sl)>0 )
+                {
+                if( sl[0]:""=="Path" && size(sl)>1 )
+                    {
+                    string tk = FindTcmKey( sl[1]:"" );
+                    if( size(tk)>0 )
+                        tgt["ep","lun",l,"tcm_key"] = tk;
+                    else
+                        tgt["ep","lun",l,"path"] = sl[1]:"";
+                    list<string> used = 
+                        maplist( integer i, map m, tgt["ep","lun"]:$[],
+                                 ``(m["nm"]:""));
+                    y2milestone( "AddLun used:%1", used );
+                    tgt["ep","lun",l,"nm"] = CreateLunName( used, sl[1]:"" );
+                    sl = remove( sl, 0 );
+                    }
+                sl = remove( sl, 0 );
+                }
+            }
+        if( size(tgt["ep","lun",l,"path"]:"")==0 && size(tgt["ep","lun",l,"tcm_key"]:"")==0)
+            tgt["ep","lun"] = remove( tgt["ep","lun"]:$[], l );
+        }
+    return( tgt );
+    }
+
+map<string,any> AddIncoming( map<string,any> tgt, string val )
+    {
+    list<string> sl = SplitStringNE( val, " \t" ); 
+    if( size(sl[0]:"")>0 && size(sl[1]:"")>0)
+        tgt["incoming"] = add( tgt["incoming"]:[], [ sl[0]:"", sl[1]:"" ] );
+    return( tgt );
+    }
+
+map<string,any> AddOutgoing( map<string,any> tgt, string val )
+    {
+    list<string> sl = SplitStringNE( val, " \t" ); 
+    if( size(sl[0]:"")>0 && size(sl[1]:"")>0)
+        tgt["outgoing"] = [ sl[0]:"", sl[1]:"" ];
+    return( tgt );
+    }
+
+global map<string,any> ParseConfigIetd( map<string, any> rv )
+    {
+    map<string,any> data = $[];
+    string target = "";
+    integer tpg = 1;
+    foreach( map v, (list<map>)rv["value"]:[],
+        {
+        string name = toupper( v["name"]:"" );
+        string val = v["value"]:"";
+        if( contains( ["ISNSSERVER", "ISNSACCESSCONTROL"], name ))
+            data[name] = val;
+        else if( name == "TARGET" )
+            {
+            if( !haskey( data, "tgt" ))
+                data["tgt"] = $[];
+            if( !haskey( data["tgt"]:$[], val ))
+                data["tgt",val] = $[ tpg : $[]];
+            target = val;
+            }
+        else if( name == "LUN" && size(target)>0 )
+            data["tgt",target,tpg] = AddLun( data["tgt",target,tpg]:$[], val );
+        else if( name == "INCOMINGUSER" )
+            {
+            map<string,any> m = GetTgt(data,target,tpg);
+            m = AddIncoming( m, val );
+            SetTgt(data,target,tpg,m);
+            }
+        else if( name == "OUTGOINGUSER" )
+            {
+            map<string,any> m = GetTgt(data,target,tpg);
+            m = AddOutgoing( m, val );
+            SetTgt(data,target,tpg,m);
+            }
+        });
+    return( data );
+    }
+
+boolean IsTpgActive( string tgt, integer tpg )
+    {
+    return( data["tgt",tgt,tpg,"ep","enabled"]:false );
+    }
+
+boolean LogExecCmd( string cmd )
+    {
+    y2milestone( "Executing cmd:%1", cmd );
+    map ret = (map<string,any>)SCR::Execute(.target.bash_output, cmd );
+    if( ret["exit"]:-1!=0 )
+        y2error( "Error ret:%1", ret );
+    else
+        y2milestone( "Ret:%1", ret );
+    return( ret["exit"]:-1==0 );
+    }
+
+global void AddNewTarget( string name, integer tpg, list<string> lun )
+    {
+    y2milestone( "AddNewTarget name:%1 tpg:%2", name, tpg );
+    if( !haskey( data, "tgt" ))
+        data["tgt"] = $[];
+    data["tgt",name] = $[ tpg : $[] ];
+    foreach( string s, lun,
+        {
+        data["tgt",name,tpg] = AddLun( data["tgt",name,tpg]:$[], s );
+        });
+    }
+
+global void SetAuth( string tgt, integer tpg, list<string> incom, string outgo )
+    {
+    map<string,any> m = GetTgt(data,tgt,tpg);
+    foreach( string s, incom, ``{m=AddIncoming( m, s );});
+    if( size(outgo)>0 )
+        m = AddOutgoing( m, outgo );
+    SetTgt(data,tgt,tpg,m);
+    }
+
+global boolean HasIncomingAuth( string tgt, integer tpg )
+    {
+    map m = GetTgt(data,tgt,tpg);
+    y2milestone( "HasIncomingAuth m:%1 ret:%2", m["incoming"]:[], size(m["incoming"]:[])>0 );
+    return( size(m["incoming"]:[])>0 );
+    }
+
+global boolean HasOutgoingAuth( string tgt, integer tpg )
+    {
+    map m = GetTgt(data,tgt,tpg);
+    y2milestone( "HasOutgoingAuth m:%1 ret:%2", m["outgoing"]:[], size(m["outgoing"]:[])>1 );
+    return( size(m["outgoing"]:[])>1 );
+    }
+
+global boolean HasAuth( string tgt, integer tpg )
+    {
+    return( HasIncomingAuth(tgt,tpg)||HasOutgoingAuth(tgt,tpg) );
+    }
+
+global map<integer,map> GetLun( string tgt, integer tpg )
+    {
+    map<integer,map> ret = data["tgt",tgt,tpg,"ep","lun"]:$[];
+    return( ret );
+    }
+
+global list<list> GetLunList( string tgt, integer tpg )
+    {
+    list<list> ret = maplist( integer l, map m, data["tgt",tgt,tpg,"ep","lun"]:$[],
+        {
+        return( [ l, m["nm"]:"", data["tcm",m["tcm_key"]:"","path"]:"" ] );
+        });
+    return( ret );
+    }
+
+global list<string> GetNetworkPortal( string tgt, integer tpg )
+    {
+    list<string> ret = maplist( map n, data["tgt",tgt,tpg,"ep","np"]:[],
+        {
+        return( sformat( "%1:%2", n["ip"]:"", n["port"]:1 ));
+        });
+    return( ret );
+    }
+
+global list<list> GetTargets()
+    {
+    list<list> ret = [];
+    foreach( string key, map<integer,map> m, data["tgt"]:$[], 
+        {
+        foreach( integer tpg, map dummy, m,
+            {
+            ret = add( ret, [ key, tpg ] );
+            y2milestone( "GetTargets key:%1 tpg:%2", key, tpg );
+            y2milestone( "GetTargets ret:%1", ret );
+            });
+        });
+    y2milestone( "GetTargets ret:%1", ret );
+    return( ret );
+    }
+
+global string GetExportLun( integer l, map m )
+    {
+    string p = m["path"]:"";
+    if( size(p)==0 )
+        p = data["tcm",m["tcm_key"]:"","path"]:"";
+    string ret = tostring(l) + " Path=" + p + ",Type=fileio";
+    return( ret );
+    }
+
+global list<map<string,any> > GetExportAuth( string tgt, integer tpg )
+    {
+    list<map<string,any> > ret = [];
+    map<string,any> m = GetTgt(data,tgt,tpg);
+    foreach( list s, (list<list>)m["incoming"]:[],
+        {
+        ret = add( ret, $[ "KEY" : "IncomingUser", 
+                           "VALUE" : s[0]:"" + " " + s[1]:"" ] );
+        });
+    if( size(m["outgoing"]:[])>1 )
+        ret = add( ret, $[ "KEY" : "OutgoingUser", 
+                           "VALUE" : m["outgoing",0]:"" + " " + m["outgoing",1]:"" ] );
+    return( ret );
+    }
+
+global map<string,any> GetExportTargets()
+    {
+    map<string,any> ret = $[];
+    foreach( list s, GetTargets(),
+        {
+        list tgt = [ $[ "KEY" : "Target", "VALUE" : s[0]:"" ],
+                     $[ "KEY" : "Tpg", "VALUE" : tostring(s[1]:1) ] ];
+        foreach( integer i, map m, data["tgt",s[0]:"",s[1]:1,"ep","lun"]:$[],
+            {
+            tgt = add( tgt, $[ "KEY" : "Lun", "VALUE" : GetExportLun(i,m) ] );
+            });
+        tgt = union( tgt, GetExportAuth(s[0]:"",s[1]:1) );
+        ret[s[0]:""] = tgt;
+        });
+    return( ret );
+    }
+
+global map<string,any> GetData()
+    {
+    return data;
+    }
+
+global void SetData(map<string,any> dat)
+    {
+    data = dat;
+    }
+
+global void ClearData()
+    {
+    data = $[];
+    }
+
+global map<string, any> GetChanges()
+    {
+    return( $[] );
+    }
+
+global map<string, any> GetConfig()
+    {
+    return( $[] );
+    }
+
+global list<string> GetIpAddr()
+    {
+    map out = (map) SCR::Execute (.target.bash_output, "ifconfig" );
+    list<string> ls = filter( string ln, splitstring( out["stdout"]:"", "\n" ),
+                              ``(search(ln,"inet addr:")!=nil));
+    ls = maplist( string s, ls, 
+        {
+        integer pos = search(s,"inet addr:");
+        s = substring( s, pos+10 );
+        pos = findfirstof(s,"\t ");
+        if( pos!=nil )
+            s = substring( s, 0, pos );
+        return(s);
+        });
+    ls = filter( string s, ls, ``(substring( s, 0, 4 )!="127."));
+    ls = add( ls, "" );
+    y2milestone( "GetIpAddr ls:%1", ls );
+    return( ls );
+    }
+
+global list<string> GetConnected()
+    {
+    string cmd = "find /sys/kernel/config/target/iscsi -name info";
+    map<string,any> ret = (map<string,any>)SCR::Execute(.target.bash_output, cmd );
+    list<string> ls = SplitStringNE( ret["stdout"]:"", "\n" ); 
+    y2milestone( "GetConnected ls:%1", ls );
+    map<string,boolean> state = $[];
+    string inact = "No active iSCSI Session ";
+    string act = "InitiatorName: ";
+    foreach( string f, ls,
+        {
+        cmd = "head -1 " + f;
+        ret = (map<string,any>)SCR::Execute(.target.bash_output, cmd );
+        if( ret["exit"]:-1==0 )
+            {
+            if( substring( ret["stdout"]:"", 0, size(inact) )==inact )
+                state[f] = false;
+            else if( substring( ret["stdout"]:"", 0, size(act) )==act )
+                state[f] = true;
+            }
+        });
+    y2milestone( "GetConnected state:%1", state );
+    state = mapmap( string s, boolean b, state,
+        {
+        ls = splitstring( s, "/" );
+        return( $[ ls[6]:"" + " " + ls[7]:"" + " " + ls[9]:"" : b ] );
+        });
+    y2milestone( "GetConnected state:%1", state );
+    ls = maplist( string s, boolean b, filter( string s, boolean b, state, ``(b)),
+                  ``(splitstring( s, " " )[2]:""));
+    y2milestone( "GetConnected ret:%1", ls );
+    return( ls );
+    }
+
+void ParseAuthData( string tgt, integer tpg, string clnt, 
+                    list& chap, list& mutual )
+    {
+    y2milestone( "ParseAuthData tgt:%1 tpg:%2 clnt:%3", tgt, tpg, clnt );
+    string cmd = "";
+    if( size(tgt)>0 )
+        cmd = "lio_node --showchapauth " + tgt + " " + tostring(tpg) + 
+              " " + clnt;
+    else
+        cmd = "lio_node --showchapdiscauth";
+    map out = (map)SCR::Execute(.target.bash_output, cmd );
+    list<string> ls = SplitStringNE( out["stdout"]:"", "\n" );
+    integer i=0;
+    while( i<size(ls) )
+        {
+        if( search(ls[i]:"", "password_mutual:" )!=nil )
+            mutual[1] = SplitStringNE( ls[i]:"", " " )[1]:"";
+        if( search(ls[i]:"", "userid_mutual:" )!=nil )
+            mutual[0] = SplitStringNE( ls[i]:"", " " )[1]:"";
+        if( search(ls[i]:"", "password:" )!=nil )
+            chap[1] = SplitStringNE( ls[i]:"", " " )[1]:"";
+        if( search(ls[i]:"", "userid:" )!=nil )
+            chap[0] = SplitStringNE( ls[i]:"", " " )[1]:"";
+        i=i+1;
+        }
+    }
+
+global map<string,any> ParseConfigLio()
+    {
+    map<string, any> tcm = $[];
+    map out = (map)SCR::Execute(.target.bash_output, "tcm_node --listhbas" );
+    list<string> ls = SplitStringNE( out["stdout"]:"", "\n" );
+    integer i=0;
+    while( i<size(ls) )
+        {
+        while( i<size(ls) && search(ls[i]:"", "\\---" )!=0 )
+            i=i+1;
+        string hba = splitstring( ls[i]:"", " " )[1]:"";
+        string nm = "";
+        i=i+1;
+        integer pos = MyFind( ls[i]:"", "\\---" );
+        while( i<size(ls) && pos!=0 )
+            {
+            if( pos>0 )
+                {
+                nm = SplitStringNE( ls[i]:"", " " )[1]:"";
+                y2milestone( "ParseConfigLio nm=%1", nm );
+                }
+            if( search(ls[i]:"", "TCM FILEIO")!=nil )
+                {
+                pos = search(ls[i]:"", "File:");
+                if( pos!=nil )
+                    {
+                    string p = SplitStringNE( substring(ls[i]:"",pos), " " )[1]:"";
+                    string key = hba + "/" + nm;
+                    if( size(p)>0 )
+                        tcm[key] = $[ "path" : p, "type" : `fileio ];
+                    y2milestone( "ParseConfigLio hba[%1]:%2", key, tcm[key]:$[] );
+                    }
+                }
+            if( search(ls[i]:"", "iBlock device:")!=nil )
+                {
+                pos = search(ls[i]:"", "UDEV PATH:");
+                if( pos!=nil )
+                    {
+                    string p = SplitStringNE( substring(ls[i]:"",pos), " " )[2]:"";
+                    string key = hba + "/" + nm;
+                    if( size(p)>0 )
+                        tcm[key] = $[ "path" : p, "type" : `iblock ];
+                    y2milestone( "ParseConfigLio hba[%1]:%2", key, tcm[key]:$[] );
+                    }
+                }
+            i=i+1;
+            pos = MyFind( ls[i]:"", "\\---" );
+            }
+        }
+    map<string, map> endp = $[];
+    out = (map)SCR::Execute(.target.bash_output, "lio_node --listendpoints" );
+    ls = SplitStringNE( out["stdout"]:"", "\n" );
+    i=0;
+    while( i<size(ls) )
+        {
+        while( i<size(ls) && search(ls[i]:"", "\\---" )!=0 )
+            i=i+1;
+        string tgt = splitstring( ls[i]:"", " " )[1]:"";
+        string ts = "";
+        endp[tgt] = $[];
+        i=i+1;
+        integer pos = MyFind( ls[i]:"", "\\---" );
+        integer tpg = 0;
+        while( i<size(ls) && pos!=0 )
+            {
+            if( search(ls[i]:"", "-> tpgt")!=nil )
+                {
+                tpg = tointeger(substring( SplitStringNE( ls[i]:"", " " )[1]:"", 5 ));
+                if( tpg!=nil )
+                    {
+                    endp[tgt,tpg] = $[];
+                    }
+                else 
+                    tpg = 0;
+                y2milestone( "ParseConfigLio tpg:%1", tpg );
+                }
+            if( tpg>0 && search(ls[i]:"", "TPG Status:")!=nil )
+                {
+                ts = SplitStringNE( ls[i]:"", " " )[2]:"";
+                endp[tgt,tpg,"enabled"] = ts=="ENABLED";
+                y2milestone( "ParseConfigLio enabled:%1", endp[tgt,tpg,"enabled"]:false );
+                }
+            if( tpg>0 && search(ls[i]:"", "TPG Network Portals:")!=nil )
+                {
+                i=i+1;
+                while( MyFind(ls[i]:"", "-> ")>0 )
+                    {
+                    list<string> tls = SplitStringNE( SplitStringNE( ls[i]:"", " " )[1]:"", ":");
+                    integer port = tointeger( tls[1]:"" );
+                    if( port!=nil )
+                        endp[tgt,tpg,"np"] = add( endp[tgt,tpg,"np"]:[],
+                                                  $[ "ip" : tls[0]:"", "port" : port ] );
+                    i=i+1;
+                    }
+                i=i-1;
+                y2milestone( "ParseConfigLio np:%1", endp[tgt,tpg,"np"]:[] );
+                }
+            if( tpg>0 && search(ls[i]:"", "-> lun")!=nil )
+                {
+                list<string> tls = SplitStringNE( ls[i]:"", " " );
+                integer ti = tointeger(substring( SplitStringNE( tls[1]:"", "/" )[0]:"", 4 ));
+                if( ti!=nil )
+                    {
+                    if( !haskey( endp[tgt,tpg]:$[], "lun" ))
+                        endp[tgt,tpg,"lun"] = $[];
+                    map lun = $[];
+                    lun["nm"] = SplitStringNE( tls[1]:"", "/" )[1]:"";
+                    lun["tcm_key"] = substring( tls[3]:"", 12 );
+                    endp[tgt,tpg,"lun",ti] = lun;
+                    y2milestone( "ParseConfigLio lun[%1]:%2", ti, lun );
+                    if( !haskey( tcm, lun["tcm_key"]:"" ))
+                        y2warning( "tcm key %1 should exist", lun["tcm_key"]:"" );
+                    }
+                }
+            i=i+1;
+            pos = MyFind( ls[i]:"", "\\---" );
+            }
+        }
+    map<string,any> ret = $[ "tcm" : tcm ];
+    map tgmap = $[];
+    list<string> mutual = [ "", "" ];
+    list<string> chap = [ "", "" ];
+    ParseAuthData( "", 0, "", chap, mutual );
+    if( size(mutual[0]:"")>0 && size(mutual[1]:"")>0 )
+        tgmap["outgoing"] = mutual;
+    if( size(chap[0]:"")>0 && size(chap[1]:"")>0 )
+        tgmap["incoming"] = [ chap ];
+    foreach( string tgt, map m, endp,
+        {
+        tgmap[tgt] = $[];
+        foreach( integer tpg, map tp, (map<integer,map>)m,
+            {
+            tgmap[tgt,tpg] = $[ "ep" : endp[tgt,tpg]:$[],
+                                "clnt" : $[] ];
+            y2milestone( "ParseConfigLio tgt:%1 tpg:%2", tgt, tpg );
+            string cmd = "lio_node --listlunacls " + tgt + " " + tostring(tpg);
+            out = (map)SCR::Execute(.target.bash_output, cmd );
+            ls = SplitStringNE( out["stdout"]:"", "\n" );
+            i=0;
+            string nm = "";
+            while( i<size(ls) )
+                {
+                if( search(ls[i]:"", "InitiatorName ACL:" )!=nil )
+                    {
+                    nm = SplitStringNE( ls[i]:"", " " )[3]:"";
+                    if( size(nm)>0 )
+                        tgmap[tgt,tpg,"clnt",nm] = $[];
+                    y2milestone( "ParseConfigLio nm:%1", nm );
+                    }
+                if( size(nm)>0 && search(ls[i]:"", "-> lun")!=nil )
+                    {
+                    list<string> tls = SplitStringNE( ls[i]:"", " " );
+                    integer ti = tointeger(substring( SplitStringNE( tls[1]:"", "/" )[0]:"", 4 ));
+                    integer lun = tointeger( substring(SplitStringNE( tls[3]:"", "/" )[5]:"", 4));
+                    if( ti!=nil && lun!=nil )
+                        {
+                        if( !haskey( tgmap[tgt,tpg,"clnt",nm]:$[], "lun" ))
+                            tgmap[tgt,tpg,"clnt",nm,"lun"] = $[];
+                        tgmap[tgt,tpg,"clnt",nm,"lun",ti] = lun;
+                        y2milestone( "ParseConfigLio lun[%1]:%2", ti, lun );
+                        if( !haskey( tgmap[tgt,tpg,"ep","lun"]:$[], lun ))
+                            y2warning( "lun %1 should exist in endpoints", lun );
+                        }
+                    }
+                i=i+1;
+                }
+            foreach( string clnt, map m, tgmap[tgt,tpg,"clnt"]:$[],
+                {
+                mutual = [ "", "" ];
+                chap = [ "", "" ];
+                ParseAuthData( tgt, tpg, clnt, chap, mutual );
+                if( size(mutual[0]:"")>0 && size(mutual[1]:"")>0 )
+                    tgmap[tgt,tpg,"clnt",clnt,"outgoing"] = mutual;
+                if( size(chap[0]:"")>0 && size(chap[1]:"")>0 )
+                    tgmap[tgt,tpg,"clnt",clnt,"incoming"] = [ chap ];
+                });
+            });
+        });
+    ret["tgt"] = tgmap;
+    return( ret );
+    }
+
+global list CheckPath( string p )
+    {
+    list<boolean> ret = [ false, false ];
+    map stat = (map) SCR::Read(.target.stat, p );
+    ret[0] = stat["isblock"]:false || stat["isreg"]:false;
+    ret[1] = ret[0]:false && stat["isblock"]:false;
+    ret[2] = ret[0]:false && stat["size"]:false;
+    y2milestone( "CheckPath p:%1 ret:%2", p, ret );
+    return( ret );
+    }
+
+string CreateTcmDev( string p )
+    {
+    string ret = "";
+    string cmd = "tcm_node ";
+    list bl = CheckPath( p );
+    boolean file = !bl[1]:false;
+    if( bl[0]:false )
+        {
+        ret = bl[1]:false?"iblock_0/":"fileio_0/";
+        cmd = cmd + ((bl[1]:false)?"--block ":"--fileio ");
+        }
+    if( size(ret)>0 )
+        {
+        ret = CreateTcmKey( data["tcm"]:$[], ret, p );
+        cmd = cmd + ret + " " + p;
+        if( file )
+            cmd = cmd + " " + tostring(bl[2]:1);
+        }
+    if( size(ret)>0 && !LogExecCmd( cmd ) )
+        ret = "";
+    else
+        data["tcm",ret] = $[ "path" : p, "type" : file?`fileio:`iblock ];
+    y2milestone( "CreateTcmDev path:%1 ret:%2", p, ret );
+    if( size(ret)>0 )
+        y2milestone( "CreateTcmDev new tcm:%1", data["tcm",ret]:$[] );
+    return( ret );
+    }
+
+boolean ActivateLun( string tgt, integer tpg, integer lun, map lm )
+    {
+    y2milestone( "ActivateLun tgt:%1 tpg:%2 lun:%3", tgt, tpg, lun );
+    string kt = tgt + " " + tostring(tpg) + " " + tostring(lun);
+    boolean ok = true;
+    boolean done = false;
+    if( haskey( data["tgt",tgt,tpg,"ep","lun"]:$[], lun ) )
+        {
+        if( data["tgt",tgt,tpg,"ep","lun",lun,"tcm_key"]:"" != lm["tcm_key"]:"" ||
+            data["tgt",tgt,tpg,"ep","lun",lun,"nm"]:"" != lm["nm"]:"" )
+            ok = LogExecCmd( "lio_node --dellun " + kt );
+        else 
+            done = true;
+        }
+    if( !done && ok && size( lm["tcm_key"]:"" )==0 )
+        {
+        string key = CreateTcmDev( lm["path"]:"" );
+        if( size(key)==0 )
+            ok = false;
+        else
+            lm["tcm_key"] = key;
+        }
+    if( !done && ok )
+        ok = LogExecCmd( "lio_node --addlun " + kt + " " +
+                         lm["nm"]:"" + " " + lm["tcm_key"]:"" );
+    y2milestone( "ActivateLun ok:%1 done:%2 lm:%3", ok, done, lm );
+    return( ok );
+    }
+
+global boolean ActivateConfigIetd( map dat )
+    {
+    string cmd = "";
+    boolean ok = true;
+    y2milestone( "ActivateConfigIetd start" );
+    foreach( string key, map<integer,map> m, dat["tgt"]:$[], 
+        {
+        foreach( integer tpg, map d, m,
+            {
+            string kt = key + " " + tostring(tpg);
+            foreach( integer l, map lun, d["ep","lun"]:$[],
+                {
+                ok = ActivateLun( key, tpg, l, lun ) && ok;
+                });
+            if( !IsTpgActive( key, tpg ))
+                ok = LogExecCmd( "lio_node --enabletpg " + kt ) && ok;
+            });
+        });
+    y2milestone( "ActivateConfigIetd ok:%1", ok );
+    data = ParseConfigLio();
+    return( ok );
+    }
+
+global boolean NeedUpdateLun( string tgt, integer tpg, map& lm )
+    {
+    integer lun = lm["lun"]:-1;
+    boolean ret = !haskey( data["tgt",tgt,tpg,"ep","lun"]:$[], lun );
+    string tk = FindTcmKey( lm["path"]:"" );
+    if( size(tk)>0 )
+        lm["tcm_key"] = tk;
+    if( !ret )
+        {
+        ret = data["tgt",tgt,tpg,"ep","lun",lun,"tcm_key"]:"" != lm["tcm_key"]:"" ||
+              data["tgt",tgt,tpg,"ep","lun",lun,"nm"]:"" != lm["nm"]:"";
+        }
+    y2milestone( "NeedUpdateLun ret:%1 lm:%2", ret, lm );
+    return( ret );
+    }
+
+global boolean DoUpdateLun( string tgt, integer tpg, map lm )
+    {
+    y2milestone( "DoUpdateLun tgt:%1 tpg:%2 lm:%3", tgt, tpg, lm );
+    integer lun = lm["lun"]:-1;
+    boolean ret = ActivateLun( tgt, tpg, lun, lm );
+    y2milestone( "DoUpdateLun ret:%1", ret );
+    return( ret );
+    }
+
+global void UpdateConfig()
+    {
+    data = ParseConfigLio();
+    y2milestone( "UpdateConfig done" );
+    }
+
+/* EOF */
+}
