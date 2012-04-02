@@ -224,7 +224,7 @@ global void AddNewTarget( string name, integer tpg, list<string> lun )
         });
     }
 
-global void SetAuth( string tgt, integer tpg, list<string> incom, string outgo )
+global void SetIetdAuth( string tgt, integer tpg, list<string> incom, string outgo )
     {
     map<string,any> m = GetTgt(data,tgt,tpg);
     foreach( string s, incom, ``{m=AddIncoming( m, s );});
@@ -256,6 +256,13 @@ global boolean HasOutgoingAuth( string tgt, integer tpg )
 global boolean HasAuth( string tgt, integer tpg )
     {
     return( HasIncomingAuth(tgt,tpg)||HasOutgoingAuth(tgt,tpg) );
+    }
+
+global map GetAuth( string tgt, integer tpg, string clnt )
+    {
+    map m = GetTgt(data,tgt,tpg);
+    return( $[ "incoming" : m["incoming",0]:[], 
+               "outgoing" : m["outgoing"]:[] ] );
     }
 
 global map<integer,map> GetLun( string tgt, integer tpg )
@@ -580,9 +587,9 @@ global map<string,any> ParseConfigLio()
     list<string> chap = [ "", "" ];
     ParseAuthData( "", 0, "", chap, mutual );
     if( size(mutual[0]:"")>0 && size(mutual[1]:"")>0 )
-        tgmap["outgoing"] = mutual;
+        ret["outgoing"] = mutual;
     if( size(chap[0]:"")>0 && size(chap[1]:"")>0 )
-        tgmap["incoming"] = [ chap ];
+        ret["incoming"] = [ chap ];
     foreach( string tgt, map m, endp,
         {
         tgmap[tgt] = $[];
@@ -783,6 +790,63 @@ global boolean DelTarget( string tgt, integer tpg )
     if( ret && size( data["tgt",tgt]:$[] )<=1 )
         ret = LogExecCmd( "lio_node --deliqn " + tgt );
     y2milestone( "DelTarget tgt:%1 tpg:%2 ret:%3", tgt, tpg, ret );
+    return( ret );
+    }
+
+global boolean SetAuth( string tgt, integer tpg, string clnt, list inc, list out  )
+    {
+    y2milestone( "SetAuth tgt:%1 tpg:%2 clnt:%3 in:%4 out:%5", 
+                 tgt, tpg, clnt, inc, out );
+    string cmd = "";
+    boolean ret = true;
+    if( size(tgt)==0 )
+        {
+        if( size(inc)>0 )
+            {
+            cmd = "lio_node --setchapdiscauth ";
+            ret = LogExecCmd( cmd + inc[0]:"" + " " + inc[1]:"" ) && ret;
+            }
+        else if(HasIncomingAuth("",0))
+            {
+            ret = false;
+            y2error( "SetAuth: impossible to disable discovery auth" );
+            }
+        if( size(out)>0 )
+            {
+            cmd = "lio_node --setchapdiscmutualauth ";
+            ret = LogExecCmd( cmd + out[0]:"" + " " + out[1]:"" ) && ret;
+            }
+        else if(HasOutgoingAuth("",0))
+            {
+            ret = false;
+            y2error( "SetAuth: impossible to disable discovery mutual auth" );
+            }
+        }
+    else
+        {
+        string param = tgt + " " + tpg + " " + clnt;
+        if( size(inc)>0 )
+            {
+            cmd = "lio_node --setchapauth " + param;
+            ret = LogExecCmd( cmd + inc[0]:"" + " " + inc[1]:"" ) && ret;
+            }
+        else if(HasIncomingAuth(tgt,tpg))
+            {
+            ret = false;
+            y2error( "SetAuth: impossible to disable auth" );
+            }
+        if( size(out)>0 )
+            {
+            cmd = "lio_node --setchapmutualauth " + param;
+            ret = LogExecCmd( cmd + out[0]:"" + " " + out[1]:"" ) && ret;
+            }
+        else if(HasOutgoingAuth(tgt,tpg))
+            {
+            ret = false;
+            y2error( "SetAuth: impossible to disable mutual auth" );
+            }
+        }
+    y2milestone( "SetAuth ret:%1", ret );
     return( ret );
     }
 

@@ -42,8 +42,6 @@ map tabs_descr = $[
                                 "auto_start_up",
                                 `VSpacing (2),
                                 "firewall",
-                                `VSpacing (2),
-				"save",
                                 `VSpacing (2)
                                 ),
                            `HSpacing (1),
@@ -51,7 +49,7 @@ map tabs_descr = $[
                               ),
                           `VStretch()
                         ),
-         "widget_names" : [ "auto_start_up", "firewall", "save" ]
+         "widget_names" : [ "auto_start_up", "firewall" ]
          ],
 // second tab - global authentication
         "global":$[
@@ -153,53 +151,66 @@ map tabs_descr = $[
 
 
 
-map<string, map <string, any> > widgets = $[
-            "auto_start_up" : CWMServiceStart::CreateAutoStartWidget ($[
-                "get_service_auto_start" : IscsiLioServer::GetStartService,
-                "set_service_auto_start" : IscsiLioServer::SetStartService,
-                // radio button (starting iscsitarget service - option 1)
-                "start_auto_button" : _("When &Booting"),
-                // radio button (starting LIO target service - option 2)
-                "start_manual_button" : _("&Manually"),
-                "help" : sformat (CWMServiceStart::AutoStartHelpTemplate (),
-                    // part of help text, used to describe radiobuttons (matching starting LIO target service but without "&")
-                    _("When Booting"),
-                    // part of help text, used to describe radiobuttons (matching starting LIO target service but without "&")
-                    _("Manually")
+map<string, map <string, any> > widgets = 
+    $[
+    "auto_start_up" : 
+        CWMServiceStart::CreateAutoStartWidget ($[
+            "get_service_auto_start" : IscsiLioServer::GetStartService,
+            "set_service_auto_start" : IscsiLioServer::SetStartService,
+            // radio button (starting iscsitarget service - option 1)
+            "start_auto_button" : _("When &Booting"),
+            // radio button (starting LIO target service - option 2)
+            "start_manual_button" : _("&Manually"),
+            "help" : sformat (CWMServiceStart::AutoStartHelpTemplate (),
+                // part of help text, used to describe radiobuttons (matching starting LIO target service but without "&")
+                _("When Booting"),
+                // part of help text, used to describe radiobuttons (matching starting LIO target service but without "&")
+                _("Manually")
                 ),
             ]),
 
-	// firewall
-	"firewall" : CWMFirewallInterfaces::CreateOpenFirewallWidget ($[
-	        "services" : [ "service:iscsitarget" ],
-	        "display_details" : true,
+    // firewall
+    "firewall" : CWMFirewallInterfaces::CreateOpenFirewallWidget ($[
+            "services" : [ "service:iscsitarget" ],
+            "display_details" : true,
 	      ]),
-      "save" : $[
+    "save" : $[
 	"widget" : `push_button,
 	"label" : Label::SaveButton(),
 	"handle" : saveConfiguration,
 	"opt": [],
 	"help": HELPS["save_configuration"]:""
-      ],
-      "isns" : $[
+        ],
+    "isns" : $[
 	"widget" : `custom,
 	"custom_widget" :
 	`HBox(
-		`CheckBoxFrame(`id(`isns_ac), _("iSNS Access Control"), true,
-		 `VBox(
-			`InputField(`id(`isns_ip), `opt(`hstretch), _("iSNS Server"))
-		))
-	),
+            `CheckBoxFrame(`id(`isns_ac), _("iSNS Access Control"), true,
+            `VBox(`InputField(`id(`isns_ip), `opt(`hstretch), _("iSNS Server"))))
+            ),
 	"init" : initiSNS,
         "validate_type" : `function,
         "validate_function" : validateiSNS,
 	"store" : storeiSNS
 	],
 
-	// discovery authentication dialog
-     "global_config" : $[
+    // discovery authentication dialog
+    "global_config" : $[
         "widget" : `custom,
-        "custom_widget" : tabs_descr["auth", "contents"]:nil,
+        "custom_widget" : 
+            `VBox(
+                `Left( `CheckBox(`id(`auth_none),`opt(`notify), _("No Authentication"), true) ),
+                `VSpacing(2),
+                `Left( `CheckBox(`id(`auth_in),`opt(`notify), _("Incoming Authentication"), false) ),
+                `HBox(
+                    `InputField(`id(`user_in), `opt(`hstretch), _("Username")), 
+                    `Password(`id(`pass_in), _("Password"))),
+                `VSpacing(2),
+                `Left( `CheckBox(`id(`auth_out),`opt(`notify), _("Outgoing Authentication"), false) ),
+                `HBox(
+                    `InputField(`id(`user_out), `opt(`hstretch), _("Username")), 
+                    `Password(`id(`pass_out), _("Password")))
+                 ),
         "init"   : initGlobal,
         "handle" : handleAuth,
         "store"  : storeGlobal,

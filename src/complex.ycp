@@ -51,6 +51,7 @@ symbol ReadDialog() {
  * @return `abort if aborted and `next otherwise
  */
 symbol WriteDialog() {
+    y2milestone( "WriteDialog" );
     Wizard::RestoreHelp(HELPS["write"]:"");
     // IscsiLioServer::AbortFunction = PollAbort;
     boolean ret = IscsiLioServer::Write();
