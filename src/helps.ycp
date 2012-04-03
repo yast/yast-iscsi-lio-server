@@ -104,20 +104,32 @@ It is not possible. You must code it first. :-)
 
 	// target dialog
 	"server_table" :_(
-"List of offered targets. Create a new target by clicking <b>Add</b>. \n"
+"List of offered targets and target portal groups. Create a new target by clicking <b>Add</b>. \n"
 "To delete or modify an item, select it and press <b>Modify</b> or <b>Delete</b>."
 ),
 
 	// edit target
-	"target-modify":	_("<h1>iSCSI Target</h1>") + _("It is possible to change the <b>Path</b> to block devices, regular files, LVM, or RAID.
-"),
+	"target-modify":	_("<h1>iSCSI Target IP/Port and LUN setup</h1>") + "<p>" +
+_("It is possible to make arbitary block devices or files available under a lun.
+You have to provide <b>path</b> to either block devices or file. 
+The <b>LUN name</b> is an arbitrary name to uniquely identify the <b>LUN</b>. 
+The name needs to be unique within the target portal group. If the user
+does not provide a name for LUN, it is generated automatically.") + "</p>" +"<p>" +
+_("<p>Under <b>Ip Address</b> and <b>Port Number</b> you specify under which address
+and port the service will be available. Default for port number is 3260.
+Only ip addresses assigned to one of the network cards are possible.") + "</p>",
 
 	// add target
-	"target-add":	_("<h1>iSCSI Target</h1>") + _(
-"Create a new target. Replace template values with the correct values.\n"
-"For <b>Target</b>, use the format iqn.yyyy-mm.<reversed domain name>.\n"
-"For <b>Path</b>, use block devices, regular files, LVM, or RAID.\n")
-+_("<b>Add</b> one or more LUNs.\nIf you need any extra options, push <b>Expert Settings</b>."),
+	"target-add":	_("<h1>iSCSI Target IP/Port and LUN setup</h1>") + "<p>" +
+_("Create a new target. Replace template values with the correct values.") + "</p>" +
+_("It is possible to make arbitary block devices or files available under a lun.
+You have to provide <b>path</b> to either block devices or file. 
+The <b>LUN name</b> is an arbitrary name to uniquely identify the <b>LUN</b>. 
+The name needs to be unique within the target portal group. If the user
+does not provide a name for LUN, it is generated automatically.") + "</p>" +"<p>" +
+_("<p>Under <b>Ip Address</b> and <b>Port Number</b> you specify under which address
+and port the service will be available. Default for port number is 3260.
+Only ip addresses assigned to one of the network cards are possible.") + "</p>",
 
 
 	// expert dialog

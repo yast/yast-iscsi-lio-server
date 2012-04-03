@@ -107,6 +107,9 @@ map tabs_descr = $[
                                          IscsiLioData::GetIpAddr())),
 		    `HWeight(1,`InputField(`id(`port), _("Port number"), "3260"))
 		       ),
+                  `VSpacing(0.5),
+		  `Left( `HBox( `CheckBox(`id(`auth), _("Use Authentication"), true) )),
+                  `VSpacing(0.5),
                   `Table(`id(`lun_table),
                          `header(_("LUN"), _("Name"), _("Path")), []),
                   `Left(
@@ -120,6 +123,30 @@ map tabs_descr = $[
               `HWeight( 2, `Empty() ))
 
 	],
+	"clnt": $[
+	 "contents" :
+            `HBox( 
+              `HWeight( 2, `Empty() ),
+              `HWeight( 4,
+                `VBox(
+		  `HBox(
+                    `HWeight(3,`InputField(`id(`target), `opt(`hstretch), _("Target"), "iqn.2001-04.com.example")),
+		    `HWeight(3,`InputField(`id(`identifier), `opt(`hstretch), _("Identifier"), "test")),
+		    `HWeight(1,`InputField(`id(`tpg), _("Portal group"), "1"))
+		       ),
+                  `Table(`id(`clnt_table),
+                         `header(_("Client"), _("Lun Mapping"), _("Auth")), []),
+                  `Left(
+                    `HBox(
+                      `PushButton(`id(`add), _("Add")),
+                      `PushButton(`id(`edit_lun), _("Edit LUN")),
+                      `PushButton(`id(`edit_auth), _("Edit Auth")),
+                      `PushButton(`id(`delete), _("Delete")),
+                      `PushButton(`id(`copy), _("Copy"))
+                         ))
+                  )),
+              `HWeight( 2, `Empty() ))
+        ],
 	"auth": $[
 	 "contents" :
                  `VBox(
@@ -278,14 +305,14 @@ map<string, map <string, any> > widgets =
         ],
 
 	// dialog for add/edit authentication for target
-     "target-auth" : $[
+     "target-clnt" : $[
         "widget" : `custom,
-        "custom_widget" : tabs_descr["auth", "contents"]:nil,
-        "init"   : initGlobal,
-        "handle" : handleAuth,
-        "store"  : storeGlobal,
+        "custom_widget" : tabs_descr["clnt", "contents"]:nil,
+        "init"   : initClient,
+        "handle" : handleClient,
+        "store"  : storeClient,
         "validate_type" : `function,
-        "validate_function" : validateGlobal,
+        "validate_function" : validateClient,
         "help" : HELPS["global_config"]:""
         ],
 
@@ -365,8 +392,8 @@ any AddDialog(){
 // discovery authentication dialog
 any AuthDialog(){
      current_tab = "targets";
-    string caption = _("Modify iSCSI Target");
-    list<map <string, any> > w = CWM::CreateWidgets (["target-auth"], (map <string, map <string, any> >)widgets);
+    string caption = _("Modify iSCSI Target Client Setup");
+    list<map <string, any> > w = CWM::CreateWidgets (["target-clnt"], (map <string, map <string, any> >)widgets);
         term contents =
                           `VBox(
                           `VStretch(),
@@ -395,7 +422,7 @@ any AuthDialog(){
 // edit target dialog
 any EditDialog(){
      current_tab = "targets";
-    string caption = _("Modify iSCSI Target");
+    string caption = _("Modify iSCSI Target Lun Setup");
     list<map <string, any> > w = CWM::CreateWidgets (["target-modify"], (map <string, map <string, any> >)widgets);
         term contents =
                           `VBox(

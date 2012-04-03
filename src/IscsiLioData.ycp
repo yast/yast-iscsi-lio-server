@@ -19,7 +19,7 @@ map<string,any> data = $[];
 
 list<string> SplitStringNE( string str, string delim )
     {
-    return( filter( string s, splitstring(str,delim), ``(size(s)>0)));
+    return( filter( string s, splitstring(str,delim), ``(!isempty(s))));
     }
 
 integer MyFind( string s, string pat )
@@ -33,14 +33,14 @@ integer MyFind( string s, string pat )
 map<string,any> GetTgt( map<string,any> data, string tgt, integer tpg )
     {
     map<string,any> m = data["tgt",tgt,tpg]:$[];
-    if( size(tgt)==0 )
+    if( isempty(tgt) )
         m = data;
     return( m );
     }
 
 void SetTgt( map<string,any>& data, string tgt, integer tpg, map<string,any> m )
     {
-    if( size(tgt)==0 )
+    if( isempty(tgt) )
         data = m;
     else
         data["tgt",tgt] = $[ tpg : m ];
@@ -75,7 +75,7 @@ global string CreateLunName( list<string> used, string p )
     string ret = ReplaceSlashUs( p );
     string base = ret;
     integer count = 0;
-    while( size(filter( string s, used, ``(s==ret)))>0 )
+    while( !isempty(filter( string s, used, ``(s==ret))) )
         {
         count = count+1;
         ret = base + "_" + count;
@@ -104,7 +104,7 @@ map<string,any> AddLun( map<string,any> tgt, string val )
         tgt["ep"] = $[ "lun" : $[] ];
     list<string> sl = SplitStringNE( val, " \t" );
     y2milestone( "AddLun sl:%1", sl );
-    if( size(sl[0]:"")>0 && size(sl[1]:"")>0)
+    if( !isempty(sl[0]:"") && !isempty(sl[1]:""))
         {
         integer l = tointeger( sl[0]:"" );
         if( l!=nil && !haskey( tgt["ep","lun"]:$[],l))
@@ -118,12 +118,12 @@ map<string,any> AddLun( map<string,any> tgt, string val )
                 sl = (list<string>)merge( sl, splitstring( s, "=" ));
                 });
             y2milestone( "AddLun sl:%1", sl );
-            while( size(sl)>0 )
+            while( !isempty(sl) )
                 {
                 if( sl[0]:""=="Path" && size(sl)>1 )
                     {
                     string tk = FindTcmKey( sl[1]:"" );
-                    if( size(tk)>0 )
+                    if( !isempty(tk) )
                         tgt["ep","lun",l,"tcm_key"] = tk;
                     else
                         tgt["ep","lun",l,"path"] = sl[1]:"";
@@ -137,7 +137,7 @@ map<string,any> AddLun( map<string,any> tgt, string val )
                 sl = remove( sl, 0 );
                 }
             }
-        if( size(tgt["ep","lun",l,"path"]:"")==0 && size(tgt["ep","lun",l,"tcm_key"]:"")==0)
+        if( isempty(tgt["ep","lun",l,"path"]:"") && isempty(tgt["ep","lun",l,"tcm_key"]:""))
             tgt["ep","lun"] = remove( tgt["ep","lun"]:$[], l );
         }
     return( tgt );
@@ -146,7 +146,7 @@ map<string,any> AddLun( map<string,any> tgt, string val )
 map<string,any> AddIncoming( map<string,any> tgt, string val )
     {
     list<string> sl = SplitStringNE( val, " \t" ); 
-    if( size(sl[0]:"")>0 && size(sl[1]:"")>0)
+    if( !isempty(sl[0]:"") && !isempty(sl[1]:""))
         tgt["incoming"] = add( tgt["incoming"]:[], [ sl[0]:"", sl[1]:"" ] );
     return( tgt );
     }
@@ -154,7 +154,7 @@ map<string,any> AddIncoming( map<string,any> tgt, string val )
 map<string,any> AddOutgoing( map<string,any> tgt, string val )
     {
     list<string> sl = SplitStringNE( val, " \t" ); 
-    if( size(sl[0]:"")>0 && size(sl[1]:"")>0)
+    if( !isempty(sl[0]:"") && !isempty(sl[1]:""))
         tgt["outgoing"] = [ sl[0]:"", sl[1]:"" ];
     return( tgt );
     }
@@ -178,7 +178,7 @@ global map<string,any> ParseConfigIetd( map<string, any> rv )
                 data["tgt",val] = $[ tpg : $[]];
             target = val;
             }
-        else if( name == "LUN" && size(target)>0 )
+        else if( name == "LUN" && !isempty(target) )
             data["tgt",target,tpg] = AddLun( data["tgt",target,tpg]:$[], val );
         else if( name == "INCOMINGUSER" )
             {
@@ -228,7 +228,7 @@ global void SetIetdAuth( string tgt, integer tpg, list<string> incom, string out
     {
     map<string,any> m = GetTgt(data,tgt,tpg);
     foreach( string s, incom, ``{m=AddIncoming( m, s );});
-    if( size(outgo)>0 )
+    if( !isempty(outgo) )
         m = AddOutgoing( m, outgo );
     SetTgt(data,tgt,tpg,m);
     }
@@ -242,15 +242,17 @@ global boolean HasTarget( string tgt, integer tpg )
 global boolean HasIncomingAuth( string tgt, integer tpg )
     {
     map m = GetTgt(data,tgt,tpg);
-    y2milestone( "HasIncomingAuth m:%1 ret:%2", m["incoming"]:[], size(m["incoming"]:[])>0 );
-    return( size(m["incoming"]:[])>0 );
+    boolean ret = !isempty(m["incoming"]:[]);
+    y2milestone( "HasIncomingAuth m:%1 ret:%2", m["incoming"]:[], ret );
+    return( ret );
     }
 
 global boolean HasOutgoingAuth( string tgt, integer tpg )
     {
     map m = GetTgt(data,tgt,tpg);
-    y2milestone( "HasOutgoingAuth m:%1 ret:%2", m["outgoing"]:[], size(m["outgoing"]:[])>1 );
-    return( size(m["outgoing"]:[])>1 );
+    boolean ret = size(m["outgoing"]:[])>1;
+    y2milestone( "HasOutgoingAuth m:%1 ret:%2", m["outgoing"]:[], ret );
+    return( ret );
     }
 
 global boolean HasAuth( string tgt, integer tpg )
@@ -289,11 +291,30 @@ global list<string> GetNetworkPortal( string tgt, integer tpg )
     return( ret );
     }
 
+global boolean GetTpgAuth( string tgt, integer tpg )
+    {
+    boolean ret = data["tgt",tgt,tpg,"auth"]:true;
+    return( ret );
+    }
+
+global list<string> GetClntList( string tgt, integer tpg )
+    {
+    list<string> ret = 
+        maplist( string s, map m, data["tgt",tgt,tpg,"clnt"]:$[], ``(s));
+    return( ret );
+    }
+
+global map<integer,integer> GetClntLun( string tgt, integer tpg, string clnt )
+    {
+    map<integer,integer> ret = data["tgt",tgt,tpg,"clnt",clnt,"lun"]:$[];
+    return( ret );
+    }
+
 global boolean SetNetworkPortal( string tgt, integer tpg, string np )
     {
     y2milestone( "SetNetworkPortal tgt:%1 tpg:%2 np:%3", tgt, tpg, np );
     string kt = tgt + " " + tpg + " ";
-    if( size(data["tgt",tgt,tpg,"ep","np"]:[])>0 )
+    if( !isempty(data["tgt",tgt,tpg,"ep","np"]:[]) )
         LogExecCmd( "lio_node --delnp " + kt + 
                     sformat( "%1:%2", data["tgt",tgt,tpg,"ep","np",0,"ip"]:"",
                                       data["tgt",tgt,tpg,"ep","np",0,"port"]:1 ));
@@ -320,7 +341,7 @@ global list<list> GetTargets()
 global string GetExportLun( integer l, map m )
     {
     string p = m["path"]:"";
-    if( size(p)==0 )
+    if( isempty(p) )
         p = data["tcm",m["tcm_key"]:"","path"]:"";
     string ret = tostring(l) + " Path=" + p + ",Type=fileio";
     return( ret );
@@ -442,7 +463,7 @@ void ParseAuthData( string tgt, integer tpg, string clnt,
     {
     y2milestone( "ParseAuthData tgt:%1 tpg:%2 clnt:%3", tgt, tpg, clnt );
     string cmd = "";
-    if( size(tgt)>0 )
+    if( !isempty(tgt) )
         cmd = "lio_node --showchapauth " + tgt + " " + tpg + " " + clnt;
     else
         cmd = "lio_node --showchapdiscauth";
@@ -491,7 +512,7 @@ global map<string,any> ParseConfigLio()
                     {
                     string p = SplitStringNE( substring(ls[i]:"",pos), " " )[1]:"";
                     string key = hba + "/" + nm;
-                    if( size(p)>0 )
+                    if( !isempty(p) )
                         tcm[key] = $[ "path" : p, "type" : `fileio ];
                     y2milestone( "ParseConfigLio hba[%1]:%2", key, tcm[key]:$[] );
                     }
@@ -503,7 +524,7 @@ global map<string,any> ParseConfigLio()
                     {
                     string p = SplitStringNE( substring(ls[i]:"",pos), " " )[2]:"";
                     string key = hba + "/" + nm;
-                    if( size(p)>0 )
+                    if( !isempty(p) )
                         tcm[key] = $[ "path" : p, "type" : `iblock ];
                     y2milestone( "ParseConfigLio hba[%1]:%2", key, tcm[key]:$[] );
                     }
@@ -586,9 +607,9 @@ global map<string,any> ParseConfigLio()
     list<string> mutual = [ "", "" ];
     list<string> chap = [ "", "" ];
     ParseAuthData( "", 0, "", chap, mutual );
-    if( size(mutual[0]:"")>0 && size(mutual[1]:"")>0 )
+    if( !isempty(mutual[0]:"") && !isempty(mutual[1]:"") )
         ret["outgoing"] = mutual;
-    if( size(chap[0]:"")>0 && size(chap[1]:"")>0 )
+    if( !isempty(chap[0]:"") && !isempty(chap[1]:"") )
         ret["incoming"] = [ chap ];
     foreach( string tgt, map m, endp,
         {
@@ -608,11 +629,11 @@ global map<string,any> ParseConfigLio()
                 if( search(ls[i]:"", "InitiatorName ACL:" )!=nil )
                     {
                     nm = SplitStringNE( ls[i]:"", " " )[3]:"";
-                    if( size(nm)>0 )
+                    if( !isempty(nm) )
                         tgmap[tgt,tpg,"clnt",nm] = $[];
                     y2milestone( "ParseConfigLio nm:%1", nm );
                     }
-                if( size(nm)>0 && search(ls[i]:"", "-> lun")!=nil )
+                if( !isempty(nm) && search(ls[i]:"", "-> lun")!=nil )
                     {
                     list<string> tls = SplitStringNE( ls[i]:"", " " );
                     integer ti = tointeger(substring( SplitStringNE( tls[1]:"", "/" )[0]:"", 4 ));
@@ -634,11 +655,24 @@ global map<string,any> ParseConfigLio()
                 mutual = [ "", "" ];
                 chap = [ "", "" ];
                 ParseAuthData( tgt, tpg, clnt, chap, mutual );
-                if( size(mutual[0]:"")>0 && size(mutual[1]:"")>0 )
+                if( !isempty(mutual[0]:"") && !isempty(mutual[1]:"") )
                     tgmap[tgt,tpg,"clnt",clnt,"outgoing"] = mutual;
-                if( size(chap[0]:"")>0 && size(chap[1]:"")>0 )
+                if( !isempty(chap[0]:"") && !isempty(chap[1]:"") )
                     tgmap[tgt,tpg,"clnt",clnt,"incoming"] = [ chap ];
                 });
+            cmd = "lio_node --listtpgattr " + tgt + " " + tpg;
+            out = (map)SCR::Execute(.target.bash_output, cmd );
+            ls = SplitStringNE( out["stdout"]:"", "\n" );
+            i=0;
+            while( i<size(ls) )
+                {
+                if( search(ls[i]:"", "authentication=" )!=nil )
+                    {
+                    string val = SplitStringNE( ls[i]:"", "=" )[1]:"";
+                    tgmap[tgt,tpg,"auth"] = (val=="1");
+                    }
+                i=i+1;
+                }
             });
         });
     ret["tgt"] = tgmap;
@@ -667,19 +701,19 @@ string CreateTcmDev( string p )
         ret = bl[1]:false?"iblock_0/":"fileio_0/";
         cmd = cmd + ((bl[1]:false)?"--block ":"--fileio ");
         }
-    if( size(ret)>0 )
+    if( !isempty(ret) )
         {
         ret = CreateTcmKey( data["tcm"]:$[], ret, p );
         cmd = cmd + ret + " " + p;
         if( file )
             cmd = cmd + " " + bl[2]:1;
         }
-    if( size(ret)>0 && !LogExecCmd( cmd ) )
+    if( !isempty(ret) && !LogExecCmd( cmd ) )
         ret = "";
     else
         data["tcm",ret] = $[ "path" : p, "type" : file?`fileio:`iblock ];
     y2milestone( "CreateTcmDev path:%1 ret:%2", p, ret );
-    if( size(ret)>0 )
+    if( !isempty(ret) )
         y2milestone( "CreateTcmDev new tcm:%1", data["tcm",ret]:$[] );
     return( ret );
     }
@@ -706,10 +740,10 @@ boolean ActivateLun( string tgt, integer tpg, integer lun, map lm )
         else 
             done = true;
         }
-    if( !done && ok && size( lm["tcm_key"]:"" )==0 )
+    if( !done && ok && isempty( lm["tcm_key"]:"" ) )
         {
         string key = CreateTcmDev( lm["path"]:"" );
-        if( size(key)==0 )
+        if( isempty(key) )
             ok = false;
         else
             lm["tcm_key"] = key;
@@ -755,7 +789,7 @@ global boolean NeedUpdateLun( string tgt, integer tpg, map& lm )
     integer lun = lm["lun"]:-1;
     boolean ret = !haskey( data["tgt",tgt,tpg,"ep","lun"]:$[], lun );
     string tk = FindTcmKey( lm["path"]:"" );
-    if( size(tk)>0 )
+    if( !isempty(tk) )
         lm["tcm_key"] = tk;
     if( !ret )
         {
@@ -799,9 +833,9 @@ global boolean SetAuth( string tgt, integer tpg, string clnt, list inc, list out
                  tgt, tpg, clnt, inc, out );
     string cmd = "";
     boolean ret = true;
-    if( size(tgt)==0 )
+    if( isempty(tgt) )
         {
-        if( size(inc)>0 )
+        if( !isempty(inc) )
             {
             cmd = "lio_node --setchapdiscauth ";
             ret = LogExecCmd( cmd + inc[0]:"" + " " + inc[1]:"" ) && ret;
@@ -811,7 +845,7 @@ global boolean SetAuth( string tgt, integer tpg, string clnt, list inc, list out
             ret = false;
             y2error( "SetAuth: impossible to disable discovery auth" );
             }
-        if( size(out)>0 )
+        if( !isempty(out) )
             {
             cmd = "lio_node --setchapdiscmutualauth ";
             ret = LogExecCmd( cmd + out[0]:"" + " " + out[1]:"" ) && ret;
@@ -825,7 +859,7 @@ global boolean SetAuth( string tgt, integer tpg, string clnt, list inc, list out
     else
         {
         string param = tgt + " " + tpg + " " + clnt;
-        if( size(inc)>0 )
+        if( !isempty(inc) )
             {
             cmd = "lio_node --setchapauth " + param;
             ret = LogExecCmd( cmd + inc[0]:"" + " " + inc[1]:"" ) && ret;
@@ -835,7 +869,7 @@ global boolean SetAuth( string tgt, integer tpg, string clnt, list inc, list out
             ret = false;
             y2error( "SetAuth: impossible to disable auth" );
             }
-        if( size(out)>0 )
+        if( !isempty(out) )
             {
             cmd = "lio_node --setchapmutualauth " + param;
             ret = LogExecCmd( cmd + out[0]:"" + " " + out[1]:"" ) && ret;
@@ -847,6 +881,19 @@ global boolean SetAuth( string tgt, integer tpg, string clnt, list inc, list out
             }
         }
     y2milestone( "SetAuth ret:%1", ret );
+    return( ret );
+    }
+
+global boolean SetTpgAuth( string tgt, integer tpg, boolean value )
+    {
+    y2milestone( "SetTpgAuth tgt:%1 tpg:%2 auth:%3", tgt, tpg, value );
+    boolean ret = true;
+    if( value!=GetTgt(data,tgt,tpg)["auth"]:false )
+        {
+        string cmd = "lio_node " + (value?"--enableauth":"--disableauth") + " " + tgt + " " + tpg;
+        ret = LogExecCmd( cmd );
+        }
+    y2milestone( "SetTpgAuth ret:%1", ret );
     return( ret );
     }
 

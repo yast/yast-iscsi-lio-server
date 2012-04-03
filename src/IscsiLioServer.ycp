@@ -525,15 +525,6 @@ global list Summary()
             {
             summary = Summary::AddListItem(summary, keys[0]:"");
             summary = Summary::AddLine(summary, getLunDesc(IscsiLioData::GetLun(keys[0]:"",keys[1]:1)));
-            if (!IscsiLioData::HasAuth(keys[0]:"",keys[1]:1)) 
-                summary = Summary::AddLine(summary, _("No Authentication"));
-            else 
-                {
-                if(IscsiLioData::HasIncomingAuth(keys[0]:"",keys[1]:1)) 
-                    summary = Summary::AddLine(summary, _("Incoming Authentication"));
-                if(IscsiLioData::HasOutgoingAuth(keys[0]:"",keys[1]:1)) 
-                    summary = Summary::AddLine(summary, _("Outgoing Authentication"));
-                }
             });
 	summary = Summary::CloseList(summary);
         } 

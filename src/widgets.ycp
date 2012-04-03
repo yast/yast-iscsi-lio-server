@@ -14,7 +14,7 @@ map inc_auth = $[];
 boolean CheckLun( integer l, list<term> other, boolean silent )
     {
     string s = tostring(l);
-    boolean ret = size(filter( term i, other, ``(i[1]:""==s)))==0;
+    boolean ret = isempty(filter( term i, other, ``(i[1]:""==s)));
     y2milestone( "CheckLun other:%1", other );
     y2milestone( "CheckLun l:%1 ret:%2", l, ret );
     if( !ret && !silent )
@@ -24,7 +24,7 @@ boolean CheckLun( integer l, list<term> other, boolean silent )
 
 boolean CheckName( string n, list<term> other )
     {
-    boolean ret = size(filter( term i, other, ``(i[2]:""==n)))==0;
+    boolean ret = isempty(filter( term i, other, ``(i[2]:""==n)));
     if( !ret )
         Popup::Error( _("Selected Name is already in use!") );
     return( ret );
@@ -35,7 +35,7 @@ boolean CheckPath( string p, list<term> other )
     boolean ret = IscsiLioData::CheckPath( p )[0]:false;
     if( !ret )
         Popup::Error( _("Selected Path must be either block device or normal file!") );
-    if( ret && size(filter( term i, other, ``(i[3]:""==p)))>0 )
+    if( ret && !isempty(filter( term i, other, ``(i[3]:""==p))) )
         {
         Popup::Error( _("Selected Path is already in use!") );
         ret = false;
@@ -100,7 +100,7 @@ term LUNDetailDialog( integer pos, list<term> items )
                 sym = `again;
             if( sym==`ok )
                 {
-                if( size(name)==0 )
+                if( isempty(name) )
                     {
                     list<string> used = maplist( term i, other, ``(i[2]:""));
                     y2milestone( "LUNDetailDialog used:%1", used );
@@ -179,7 +179,7 @@ list <string> getDialogValues(string user, string pass){
 		break;
 	 }
 	}
- if (size(user)>0 && size(pass)>0) return [user, pass];
+ if (!isempty(user) && !isempty(pass)) return [user, pass];
 	else return [];
 }
 
@@ -276,7 +276,7 @@ symbol handleTable (string table, map event)
                 break;
             }
         }
-    boolean empt = size((list)UI::QueryWidget(`server, `Items))==0;
+    boolean empt = isempty((list)UI::QueryWidget(`server, `Items));
     UI::ChangeWidget(`edit, `Enabled, !empt);
     UI::ChangeWidget(`delete,  `Enabled, !empt);
     return ret;
@@ -307,7 +307,7 @@ UI::ChangeWidget(`isns_ip, `Value, ip);
 boolean validateiSNS(string key, map event){
  string ip = (string)UI::QueryWidget(`isns_ip, `Value);
  boolean valid=true;
- if (size(ip)>0) valid = IP::Check(ip);
+ if (!isempty(ip)) valid = IP::Check(ip);
 	else valid= true;
  if (!valid)Popup::Error (_("Invalid IP address."));
  return valid;
@@ -331,31 +331,31 @@ void initGlobalValues(map auth)
     string user = "";
     string pass = "";
     // incoming authentication
-    if( size(auth["incoming"]:[])>0 );
+    if( !isempty(auth["incoming"]:[]) );
         {
         user = auth["incoming",0]:"";
         pass = auth["incoming",1]:"";
         }
     UI::ChangeWidget(`id(`user_in), `Value, user );
     UI::ChangeWidget(`id(`pass_in), `Value, pass );
-    setAuthIn(size(auth["incoming"]:[])>0);
+    setAuthIn(!isempty(auth["incoming"]:[]));
     // outgoing authentication
     user = "";
     pass = "";
-    if( size(auth["outgoing"]:[])>0 );
+    if( !isempty(auth["outgoing"]:[]) );
         {
         user = auth["outgoing",0]:"";
         pass = auth["outgoing",1]:"";
         }
     UI::ChangeWidget(`id(`user_out), `Value, user );
     UI::ChangeWidget(`id(`pass_out), `Value, pass );
-    setAuthOut(size(auth["outgoing"]:[])>0);
+    setAuthOut(!isempty(auth["outgoing"]:[]));
     }
 
 // initialize discovery authentication or authentication for given target
 void initGlobal (string key)
     {
-    if (size(curr_target)>0) 
+    if (!isempty(curr_target)) 
         initGlobalValues(IscsiLioData::GetAuth(curr_target,curr_tpg,""));
     else 
         initGlobalValues(IscsiLioData::GetAuth("",0,""));
@@ -366,7 +366,7 @@ void storeGlobal(string option_id, map option_map)
     {
     y2milestone( "storeGlobal id:%1 map:%2", option_id, option_map );
     boolean ret = false;
-    if(size(curr_target)>0)
+    if(!isempty(curr_target))
         {
         ret = IscsiLioData::SetAuth( curr_target, curr_tpg, "", getIncomingValues(), getOutgoingValues() );
         } 
@@ -435,9 +435,10 @@ void initModify (string key)
     UI::ChangeWidget( `id(`ipaddr), `Enabled, true);
     UI::ChangeWidget( `id(`port), `Value, (splitstring(ipp, ":"))[1]:"3260");
     UI::ChangeWidget( `id(`port), `Enabled, true);
-    list lun = IscsiLioData::GetLunList( curr_target, curr_tpg );
+    UI::ChangeWidget( `id(`auth), `Value, IscsiLioData::GetTpgAuth(curr_target,curr_tpg));
+    list<list> lun = IscsiLioData::GetLunList( curr_target, curr_tpg );
     y2milestone( "initModify lun:%1", lun );
-    foreach( list l, IscsiLioData::GetLunList( curr_target, curr_tpg ),
+    foreach( list l, lun,
         {
         inc_items = add( inc_items, `item(`id(size(inc_items)), l[0]:99, l[1]:"", l[2]:""));
         });
@@ -490,7 +491,7 @@ symbol handleModify(string key, map event)
                 break;
             }
         }
-    boolean enab = size((list)UI::QueryWidget(`lun_table, `Items))>0;
+    boolean enab = !isempty((list)UI::QueryWidget(`lun_table, `Items));
     UI::ChangeWidget(`edit, `Enabled, enab);
     UI::ChangeWidget(`delete, `Enabled, enab);
     }
@@ -513,7 +514,7 @@ void storeModify(string option_id, map option_map)
     integer port = tointeger(UI::QueryWidget(`port, `Value ));
     y2milestone( "storeModify ip:%1 port:%2 ipp:%3", ip, port, ipp );
     string np = sformat( "%1:%2", ip, port );
-    if( size(ip)>0 && np != ipp )
+    if( !isempty(ip) && np != ipp )
         {
         chg = true;
         if( !IscsiLioData::SetNetworkPortal( curr_target, curr_tpg, np ))
@@ -558,6 +559,17 @@ void storeModify(string option_id, map option_map)
                 }
             }
         });
+    boolean val = (boolean)UI::QueryWidget(`auth, `Value);
+    if( val!=IscsiLioData::GetTpgAuth(curr_target,curr_tpg))
+        {
+        chg = true;
+        if(!IscsiLioData::SetTpgAuth(curr_target,curr_tpg,val))
+            {
+            string txt = sformat( _("Problem setting auth on %1:%2 to %3"),
+                                  curr_target, curr_tpg, val );
+            Popup::Error( txt );
+            }
+        }
     if( chg )
         {
         IscsiLioData::UpdateConfig();
@@ -575,7 +587,7 @@ void initAddTarget(string key)
     string domain = ((map<string, any>)SCR::Execute(.target.bash_output, "dnsdomainname"))["stdout"]:"";
     string uuid = ((map<string, any>)SCR::Execute(.target.bash_output, "uuidgen"))["stdout"]:"";
     uuid = deletechars(uuid, "\n");
-    if (size(domain)>0)
+    if (!isempty(domain))
         {
         domain = (splitstring(domain, "\n"))[0]:"";
         list<string> tmp_list=splitstring(domain, ".");
@@ -595,6 +607,7 @@ void initAddTarget(string key)
     UI::ChangeWidget(`id(`ipaddr), `Value, s);
     UI::ChangeWidget(`id(`port), `ValidChars, String::CDigit());
     UI::ChangeWidget(`id(`port), `Value, "3260");
+    UI::ChangeWidget(`id(`auth), `Value, true);
     }
 
 list uiTarget()
@@ -622,7 +635,7 @@ boolean validateAddTarget(string key, map event)
     list target = uiTarget();
     y2milestone( "validateAddTarget %1", target );
     boolean ret = true;
-    if( size(target[0]:"")==0 )
+    if( isempty(target[0]:"") )
         {
         Popup::Error(_("The target cannot be empty."));
         UI::SetFocus(`id(`target));
@@ -641,6 +654,117 @@ boolean validateAddTarget(string key, map event)
         ret = false;
         }
     return ret;
+    }
+
+void initClient(string key)
+    {
+    y2milestone( "initClient %1 %2", curr_target, curr_tpg );
+    UI::ChangeWidget( `id(`target), `Value, (splitstring(curr_target, ":"))[0]:"");
+    UI::ChangeWidget( `id(`target),`Enabled, false);
+    UI::ChangeWidget( `id(`identifier), `Value, (splitstring(curr_target, ":"))[1]:"");
+    UI::ChangeWidget( `id(`identifier), `Enabled, false);
+    UI::ChangeWidget( `id(`tpg), `Value, tostring(curr_tpg) );
+    UI::ChangeWidget( `id(`tpg), `Enabled, false);
+    list<string> clnt = IscsiLioData::GetClntList( curr_target, curr_tpg );
+    y2milestone( "initClient clnt:%1", clnt );
+    list <term> inc_items = [];
+    string auth = _("Disabled");
+    boolean tgt_auth = IscsiLioData::GetTpgAuth( curr_target, curr_tpg );
+    foreach( string s, clnt,
+        {
+        if( tgt_auth )
+            {
+            map m = IscsiLioData::GetAuth( curr_target, curr_tpg, s );
+            auth = "";
+            if( !isempty(m["incoming"]:[]) )
+                auth = _("Incoming");
+            if( !isempty(m["outgoing"]:[]) )
+                {
+                if(!isempty(auth))
+                    auth = auth + "/";
+                auth = auth +  _("Outgoing");
+                }
+            if( isempty(auth) )
+                auth = _("None");
+            }
+        string lun = "";
+        map<integer,integer> lmap = IscsiLioData::GetClntLun( curr_target, curr_tpg, s );
+        foreach( integer l1, integer l2, lmap,
+            {
+            if(!isempty(lun))
+                lun = lun + "-";
+            lun = lun + sformat("%1:%2",l1,l2);
+            });
+        inc_items = add( inc_items, `item(`id(size(inc_items)), s, lun, auth));
+        });
+    UI::ChangeWidget(`id(`clnt_table), `Items, inc_items);
+    }
+
+symbol handleClient(string key, map event)
+    {
+    if( event["EventReason"]:"" == "Activated" )
+        {
+        switch((symbol)event["WidgetID"]:nil)
+            {
+            case `delete:
+                any del = UI::QueryWidget(`id (`clnt_table),`CurrentItem);
+                if (del != nil)
+                    {
+                    if(Popup::ContinueCancel(_("Really delete the selected item?")))
+                        {
+                        y2milestone("handleClient Delete Client %1 from table", del);
+                        list it=(list)UI::QueryWidget(`clnt_table, `Items);
+                        it = remove( it, (integer)del );
+                        UI::ChangeWidget(`id(`clnt_table), `Items, it);
+                        } 
+                    else 
+                        y2milestone("handleClient: Delete canceled");
+                    }
+                break;
+            case `edit:
+                list<term> items = (list<term>)UI::QueryWidget(`clnt_table, `Items);
+                integer edit_pos=tointeger(UI::QueryWidget(`clnt_table, `CurrentItem));
+                y2milestone( "handleClient pos:%1 items:%2", edit_pos, items );
+                term ret = LUNDetailDialog( edit_pos, items );
+                y2milestone( "handleClient ret:%1 em:%2 eq:%3", ret, `Empty(), ret!=`Empty() );
+                if( ret!=`Empty() )
+                    {
+                    items[edit_pos]=ret;
+                    UI::ChangeWidget(`clnt_table, `Items, items);
+                    UI::ChangeWidget(`clnt_table, `CurrentItem, edit_pos);
+                    }
+                break;
+            case `add:
+                items = (list<term>)UI::QueryWidget(`clnt_table, `Items);
+                ret = LUNDetailDialog( -1, items );
+                if( ret!=`Empty() )
+                    {
+                    items = (list<term>)add( items, ret ); 
+                    UI::ChangeWidget(`clnt_table, `Items, items);
+                    UI::ChangeWidget(`clnt_table, `CurrentItem, size(items)-1);
+                    }
+                break;
+            }
+        }
+    boolean enab = !isempty((list)UI::QueryWidget(`clnt_table, `Items));
+    UI::ChangeWidget(`edit_lun, `Enabled, enab);
+    UI::ChangeWidget(`edit_auth, `Enabled, enab);
+    UI::ChangeWidget(`delete, `Enabled, enab);
+    UI::ChangeWidget(`copy, `Enabled, enab);
+    }
+
+boolean validateClient(string key, map event)
+    {
+    boolean ret = true;
+    return( ret );
+    }
+
+void storeClient(string option_id, map option_map)
+    {
+    list target = uiTarget();
+    y2milestone( "storeAddTarget %1", target );
+    curr_target = sformat( "%1:%2", target[0]:"", target[1]:"" );
+    curr_tpg = target[2]:-1;
     }
 
 }
