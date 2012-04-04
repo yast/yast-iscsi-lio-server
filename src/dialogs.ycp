@@ -117,8 +117,7 @@ map tabs_descr = $[
                       `PushButton(`id(`add), _("Add")),
                       `PushButton(`id(`edit), _("Edit")),
                       `PushButton(`id(`delete), _("Delete"))
-                         )),
-                  `Left( `PushButton(`id(`expert),`opt(`disabled),  _("Expert Settings")) )
+                         ))
                      )),
               `HWeight( 2, `Empty() ))
 
