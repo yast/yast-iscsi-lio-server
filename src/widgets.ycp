@@ -1,3 +1,26 @@
+/*
+|***************************************************************************
+|
+| Copyright (c) [2012] Novell, Inc.
+| All Rights Reserved.
+|
+| This program is free software; you can redistribute it and/or
+| modify it under the terms of version 2 of the GNU General Public License as
+| published by the Free Software Foundation.
+|
+| This program is distributed in the hope that it will be useful,
+| but WITHOUT ANY WARRANTY; without even the implied warranty of
+| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.   See the
+| GNU General Public License for more details.
+|
+| You should have received a copy of the GNU General Public License
+| along with this program; if not, contact Novell, Inc.
+|
+| To contact Novell about this file by physical or electronic mail,
+| you may find current contact information at www.novell.com
+|
+|***************************************************************************
+*/
 {
 
 textdomain "iscsi-lio-server";
@@ -10,8 +33,28 @@ import "IP";
 //	**************** global funcions and variables *****
 string curr_target = "";
 integer curr_tpg = 1;
-string modify_record = "";
-map inc_auth = $[];
+map<string, map<integer,integer> > changed_lun = $[];
+map<string, map > changed_auth = $[];
+list<string> del_clnt = [];
+
+term AuthTerm()
+    {
+    term t =
+        `VBox(
+            `Left( `CheckBox(`id(`auth_none),`opt(`notify), _("No Authentication"), true) ),
+            `VSpacing(1.5),
+            `Left( `CheckBox(`id(`auth_in),`opt(`notify), _("Incoming Authentication"), false) ),
+            `HBox(
+                `InputField(`id(`user_in), `opt(`hstretch), _("Username")), 
+                `Password(`id(`pass_in), _("Password"))),
+            `VSpacing(1.5),
+            `Left( `CheckBox(`id(`auth_out),`opt(`notify), _("Outgoing Authentication"), false) ),
+            `HBox(
+                `InputField(`id(`user_out), `opt(`hstretch), _("Username")), 
+                `Password(`id(`pass_out), _("Password")))
+            );
+    return( t );
+    }
 
 boolean CheckLun( integer l, list<term> other, boolean silent )
     {
@@ -120,7 +163,7 @@ term LUNDetailDialog( integer pos, list<term> items )
 
 integer TpgIdFromTpgItem( string s )
     {
-    integer val = tointeger(s);
+    integer val = (s!="-")?tointeger(s):-1;
     if( val==nil )
         val = -1;
     return( val );
@@ -134,23 +177,30 @@ string TpgItemFromTpgId( integer i )
 void ChangeTpgItems( integer id, integer value, list<term>& items )
     {
     y2milestone( "ChangeTpgItems id:%1 value:%2", id, value );
-    term it = items[id]:`Empty();
-    it[2] = TpgItemFromTpgId( value );
-    items[id] = it;
+    if( value!=nil )
+        {
+        term it = items[id]:`Empty();
+        it[2] = TpgItemFromTpgId( value );
+        items[id] = it;
+        UI::ChangeWidget(`id(`lun), `Items, items );
+        UI::ChangeWidget(`id(`lun), `CurrentItem, id );
+        }
     }
 
 map<integer,integer> LUNMapDialog( string clnt )
     {
     y2milestone( "LUNMapDialog clnt:%1", clnt );
-    map<integer,integer> lmap = IscsiLioData::GetClntLun( curr_target, curr_tpg, clnt );
+    map<integer,integer> lmap = $[];
+    if( haskey(changed_lun,clnt) )
+        lmap = changed_lun[clnt]:$[];
+    else
+        lmap = IscsiLioData::GetClntLun(curr_target,curr_tpg,clnt); 
     y2milestone( "LUNMapDialog map:%1", lmap );
     list<integer> ll = maplist( integer l, integer d, lmap, ``(l));
     list<term> lt = maplist( integer l, map d, IscsiLioData::GetLun(curr_target,curr_tpg), 
                              ``(`item(`id(l),tostring(l))));
     lt = add( lt, `item(`id(-1),"-"));
-    integer mx = 0;
-    if( ll[size(ll)-1]:0 > mx )
-        mx = ll[size(ll)-1]:0;
+    integer mx = ll[size(ll)-1]:-1;
     integer i = 0;
     list<term> items = [];
     while( i<=mx )
@@ -161,7 +211,7 @@ map<integer,integer> LUNMapDialog( string clnt )
     y2milestone( "LUNMapDialog items:%1", items );
     term lun_dialog =
         `VBox(
-            `MinHeight( 10, `Table(`id(`lun), `opt(`immediate,`notify,`notifyContextMenu),
+            `MinHeight( 10, `Table(`id(`lun), `opt(`keepSorting,`immediate,`notify,`notifyContextMenu),
                                    `header(_("Client Lun"), _("Target LUN")),
                                    items )),
             `Left( `HBox( 
@@ -173,6 +223,11 @@ map<integer,integer> LUNMapDialog( string clnt )
                 `PushButton(`id(`cancel), Label::CancelButton() ))
             );
     UI::OpenDialog(lun_dialog);
+    if( size(items)==0 )
+        {
+        UI::ChangeWidget(`id(`change), `Enabled, false );
+        UI::ChangeWidget(`id(`delete), `Enabled, false );
+        }
     UI::ChangeWidget(`id(`change), `Value, TpgIdFromTpgItem(items[0,2]:"-") );
     symbol sym = `nil;
     while(sym != `ok && sym !=`cancel)
@@ -194,8 +249,6 @@ map<integer,integer> LUNMapDialog( string clnt )
                 UI::OpenContextMenu(`menu(lt));
                 integer value = (integer)UI::UserInput();
                 ChangeTpgItems( id, value, items );
-                UI::ChangeWidget(`id(`lun), `Items, items );
-                UI::ChangeWidget(`id(`lun), `CurrentItem, id );
                 UI::ChangeWidget(`id(`change), `Value, value );
                 }
             else
@@ -205,9 +258,24 @@ map<integer,integer> LUNMapDialog( string clnt )
             }
         else if( sym==`add )
             {
+            integer n = size(items);
+            items = add( items, `item( `id(n), tostring(n), "-" ));
+            UI::ChangeWidget(`id(`lun), `Items, items );
+            UI::ChangeWidget(`id(`lun), `CurrentItem, n );
+            UI::ChangeWidget(`id(`change), `Value, -1 );
+            if( size(items)==1 )
+                {
+                UI::ChangeWidget(`id(`change), `Enabled, true );
+                UI::ChangeWidget(`id(`delete), `Enabled, true );
+                }
             }
         else if( sym==`delete )
             {
+            integer id = (integer)UI::QueryWidget(`lun,`CurrentItem);
+            if( id!=nil && id<size(items) )
+                {
+                ChangeTpgItems( id, -1, items );
+                }
             }
         else if( sym==`change )
             {
@@ -216,21 +284,156 @@ map<integer,integer> LUNMapDialog( string clnt )
             if( id!=nil && id<size(items) )
                 {
                 ChangeTpgItems( id, value, items );
-                UI::ChangeWidget(`id(`lun), `Items, items );
-                UI::ChangeWidget(`id(`lun), `CurrentItem, id );
                 }
             }
         else if(sym == `ok) 
             {
-            if( sym==`ok )
+            lmap = $[];
+            foreach( term it, items,
                 {
-                }
+                string s = it[2]:"-";
+                i = nil;
+                if( s!="-" )
+                    i = tointeger(it[2]:"");
+                if( i!=nil )
+                    lmap[tointeger(it[1]:"0")] = i;
+                });
+            y2milestone( "LUNMapDialog ret:%1", lmap );
+            boolean ok = true;
+            list<integer> ll = maplist( integer l, integer d, lmap, ``(l));
+            list<integer> ld = maplist( integer l, integer d, lmap, ``(d));
+            i=0;
+            while( i<size(ll) && ok )
+                {
+                ok = size(filter( integer j, ld, ``(j==ld[i]:-1)))<=1;
+                if( !ok )
+                    {
+                    string txt = sformat(_("Target LUN %1 used more than once!"), ld[i]:-1 );
+                    integer j=i+1;
+                    while(ld[i]:-1!=ld[j]:-1 && j<size(ll))
+                        j=j+1;
+                    if( j<size(items) )
+                        UI::ChangeWidget(`id(`lun), `CurrentItem, ll[j]:0 );
+                    Popup::Error( txt );
+                    }
+                i=i+1;
+                };
+            if( !ok )
+                sym = `again;
             }
         else if(sym == `cancel) 
             lmap = nil;
         }
     UI::CloseDialog();
+    if( lmap!=nil )
+        changed_lun[clnt] = lmap;
     y2milestone( "LUNMapDialog ret:%1", lmap );
+    return lmap;
+    }
+
+map ClntAuthDialog( string clnt )
+    {
+    y2milestone( "ClntAuthDialog clnt:%1", clnt );
+    map lmap = $[];
+    if( haskey(changed_auth,clnt) )
+        lmap = changed_auth[clnt]:$[];
+    else
+        lmap = IscsiLioData::GetAuth(curr_target,curr_tpg,clnt); 
+    y2milestone( "ClntAuthDialog map:%1", lmap );
+    term auth_dialog = `VBox( `MarginBox( 6, 2, AuthTerm() ),
+                              `ButtonBox(
+                                  `PushButton(`id(`ok), `opt(`default), Label::OKButton() ),
+                                  `PushButton(`id(`cancel), Label::CancelButton() ))
+                            );
+    UI::OpenDialog(auth_dialog);
+    list<term> items = [];
+    if( size(items)==0 )
+        {
+        UI::ChangeWidget(`id(`change), `Enabled, false );
+        UI::ChangeWidget(`id(`delete), `Enabled, false );
+        }
+    UI::ChangeWidget(`id(`change), `Value, TpgIdFromTpgItem(items[0,2]:"-") );
+    integer i=0;
+    symbol sym = `nil;
+    while(sym != `ok && sym !=`cancel)
+        {
+        map ev = UI::WaitForEvent();
+        sym = Event::IsWidgetActivatedOrSelectionChanged(ev);
+        if( sym==nil )
+            sym = Event::IsWidgetValueChanged(ev);
+        if( sym==nil )
+            sym = Event::IsWidgetContextMenuActivated(ev);
+        y2milestone( "ClntAuthDialog event:%1", ev );
+        y2milestone( "ClntAuthDialog isCtxt:%1 sym:%2", Event::IsWidgetContextMenuActivated(ev), sym );
+        if(sym==`lun)
+            {
+            integer id = (integer)UI::QueryWidget(`lun,`CurrentItem);
+            y2milestone( "ClntAuthDialog id:%1 item:%2", id, items[id]:nil );
+            if( Event::IsWidgetContextMenuActivated(ev)!=nil )
+                {
+                integer value = (integer)UI::UserInput();
+                ChangeTpgItems( id, value, items );
+                UI::ChangeWidget(`id(`change), `Value, value );
+                }
+            else
+                {
+                UI::ChangeWidget(`id(`change), `Value, TpgIdFromTpgItem(items[id,2]:"-") );
+                }
+            }
+        else if( sym==`add )
+            {
+            integer n = size(items);
+            items = add( items, `item( `id(n), tostring(n), "-" ));
+            UI::ChangeWidget(`id(`lun), `Items, items );
+            UI::ChangeWidget(`id(`lun), `CurrentItem, n );
+            UI::ChangeWidget(`id(`change), `Value, -1 );
+            if( size(items)==1 )
+                {
+                UI::ChangeWidget(`id(`change), `Enabled, true );
+                UI::ChangeWidget(`id(`delete), `Enabled, true );
+                }
+            }
+        else if( sym==`delete )
+            {
+            integer id = (integer)UI::QueryWidget(`lun,`CurrentItem);
+            if( id!=nil && id<size(items) )
+                {
+                ChangeTpgItems( id, -1, items );
+                }
+            }
+        else if( sym==`change )
+            {
+            integer id = (integer)UI::QueryWidget(`lun,`CurrentItem);
+            integer value = (integer)UI::QueryWidget(`change,`Value);
+            if( id!=nil && id<size(items) )
+                {
+                ChangeTpgItems( id, value, items );
+                }
+            }
+        else if(sym == `ok) 
+            {
+            lmap = $[];
+            foreach( term it, items,
+                {
+                string s = it[2]:"-";
+                i = nil;
+                if( s!="-" )
+                    i = tointeger(it[2]:"");
+                if( i!=nil )
+                    lmap[tointeger(it[1]:"0")] = i;
+                });
+            y2milestone( "ClntAuthDialog ret:%1", lmap );
+            boolean ok = true;
+            if( !ok )
+                sym = `again;
+            }
+        else if(sym == `cancel) 
+            lmap = nil;
+        }
+    UI::CloseDialog();
+    if( lmap!=nil )
+        changed_auth[clnt] = lmap;
+    y2milestone( "ClntAuthDialog ret:%1", lmap );
     return lmap;
     }
 
@@ -326,6 +529,19 @@ symbol saveConfiguration(string key, map event)
     return nil;
     }
 
+list<term> RemoveById( list<term> it, any id )
+    {
+    y2milestone( "RemoveById id:%1 item:%2", id, filter( term i, it, ``(i[0,0]:(any)99==id)) );
+    return( filter( term i, it, ``(i[0,0]:(any)99!=id)) );
+    }
+
+term GetById( list<term> it, any id )
+    {
+    y2milestone( "GetById id:%1", id );
+    term t = filter( term i, it, ``(i[0,0]:(any)99==id))[0]:`Empty();
+    return( t );
+    }
+
 //	**************** Server Dialog	*********************
 // dialog with targets
 
@@ -363,12 +579,12 @@ symbol handleTable (string table, map event)
                     {
                     if(Popup::ContinueCancel(_("Really delete the selected item?")))
                         {
-                        list it=(list)UI::QueryWidget(`id(`server), `Items);
-                        term i = it[(integer)del]:`Empty();
+                        list<term> it=(list<term>)UI::QueryWidget(`id(`server), `Items);
+                        term i = GetById( it, del );
                         y2milestone("handleTable item:%1",i);
                         if( IscsiLioData::DelTarget( i[1]:"", tointeger(i[2]:"-1") ))
                             {
-                            it = remove( it, (integer)del );
+                            it = RemoveById( it, del );
                             UI::ChangeWidget(`id(`server), `Items, it);
                             IscsiLioData::UpdateConfig();
                             }
@@ -399,17 +615,6 @@ symbol handleTable (string table, map event)
     UI::ChangeWidget(`delete,  `Enabled, !empt);
     return ret;
     }
-
-// create items for incoming table
-list <term> getAuthItems(){
- list <term> inc_items = [];
- integer count = -1;
- while (count<size(inc_auth)-1){
-  count = count+1;
-  inc_items = add(inc_items, `item(`id(count),inc_auth[count, "USER"]:"", "*****"));
- }
- return inc_items;
-}
 
 void initiSNS (string key) ``{
 boolean ac=false;
@@ -449,7 +654,7 @@ void initGlobalValues(map auth)
     string user = "";
     string pass = "";
     // incoming authentication
-    if( !isempty(auth["incoming"]:[]) );
+    if( !isempty(auth["incoming"]:[]) )
         {
         user = auth["incoming",0]:"";
         pass = auth["incoming",1]:"";
@@ -460,7 +665,7 @@ void initGlobalValues(map auth)
     // outgoing authentication
     user = "";
     pass = "";
-    if( !isempty(auth["outgoing"]:[]) );
+    if( !isempty(auth["outgoing"]:[]) )
         {
         user = auth["outgoing",0]:"";
         pass = auth["outgoing",1]:"";
@@ -576,8 +781,8 @@ symbol handleModify(string key, map event)
                     if(Popup::ContinueCancel(_("Really delete the selected item?")))
                         {
                         y2milestone("Delete LUN %1 from table", del);
-                        list it=(list)UI::QueryWidget(`lun_table, `Items);
-                        it = remove( it, (integer)del );
+                        list<term> it=(list<term>)UI::QueryWidget(`lun_table, `Items);
+                        it = RemoveById( it, del );
                         UI::ChangeWidget(`id(`lun_table), `Items, it);
                         } 
                     else 
@@ -786,6 +991,22 @@ string GetLunList( map<integer,integer> lmap )
     return( s );
     }
 
+string GetAuthString( map am )
+    {
+    string ret = "";
+    if( !isempty(am["incoming"]:[]) )
+        ret = _("Incoming");
+    if( !isempty(am["outgoing"]:[]) )
+        {
+        if(!isempty(ret))
+            ret = ret + "/";
+        ret = ret +  _("Outgoing");
+        }
+    if( isempty(ret) )
+        ret = _("None");
+    return( ret );
+    }
+
 void initClient(string key)
     {
     y2milestone( "initClient %1 %2", curr_target, curr_tpg );
@@ -805,17 +1026,7 @@ void initClient(string key)
         if( tgt_auth )
             {
             map m = IscsiLioData::GetAuth( curr_target, curr_tpg, s );
-            auth = "";
-            if( !isempty(m["incoming"]:[]) )
-                auth = _("Incoming");
-            if( !isempty(m["outgoing"]:[]) )
-                {
-                if(!isempty(auth))
-                    auth = auth + "/";
-                auth = auth +  _("Outgoing");
-                }
-            if( isempty(auth) )
-                auth = _("None");
+            auth = GetAuthString(m);
             }
         string lun = "";
         map<integer,integer> lmap = IscsiLioData::GetClntLun( curr_target, curr_tpg, s );
@@ -832,14 +1043,19 @@ symbol handleClient(string key, map event)
         switch((symbol)event["WidgetID"]:nil)
             {
             case `delete:
-                any del = UI::QueryWidget(`id (`clnt_table),`CurrentItem);
+                any del = (integer)UI::QueryWidget(`id (`clnt_table),`CurrentItem);
                 if (del != nil)
                     {
                     if(Popup::ContinueCancel(_("Really delete the selected item?")))
                         {
                         y2milestone("handleClient Delete Client %1 from table", del);
-                        list it=(list)UI::QueryWidget(`clnt_table, `Items);
-                        it = remove( it, (integer)del );
+                        list<term> it=(list<term>)UI::QueryWidget(`clnt_table, `Items);
+                        string clnt = GetById(it,del)[1]:"";
+                        del_clnt = add( del_clnt, clnt );
+                        if( haskey(changed_lun,clnt))
+                            changed_lun = remove(changed_lun,clnt);
+                        y2milestone( "handleClient del_clnt:%1", del_clnt );
+                        it = RemoveById( it, del );
                         UI::ChangeWidget(`id(`clnt_table), `Items, it);
                         } 
                     else 
@@ -847,6 +1063,7 @@ symbol handleClient(string key, map event)
                     }
                 break;
             case `edit_lun:
+                {
                 integer edit_pos=tointeger(UI::QueryWidget(`clnt_table, `CurrentItem));
                 list<term> items = (list<term>)UI::QueryWidget(`clnt_table, `Items);
                 term it = items[edit_pos]:`Empty();
@@ -861,6 +1078,25 @@ symbol handleClient(string key, map event)
                     UI::ChangeWidget(`clnt_table, `Items, items);
                     UI::ChangeWidget(`clnt_table, `CurrentItem, edit_pos);
                     }
+                }
+                break;
+            case `edit_auth:
+                {
+                integer edit_pos=tointeger(UI::QueryWidget(`clnt_table, `CurrentItem));
+                list<term> items = (list<term>)UI::QueryWidget(`clnt_table, `Items);
+                term it = items[edit_pos]:`Empty();
+                string s  = it[1]:"";
+                y2milestone( "handleClient pos:%1 clnt:%2", edit_pos, s );
+                map auth = ClntAuthDialog( s );
+                y2milestone( "handleClient auth:%1", auth );
+                if( auth!=nil )
+                    {
+                    it[3] = GetAuthString(auth);
+                    items[edit_pos] = it;
+                    UI::ChangeWidget(`clnt_table, `Items, items);
+                    UI::ChangeWidget(`clnt_table, `CurrentItem, edit_pos);
+                    }
+                }
                 break;
             case `add:
                 /*
