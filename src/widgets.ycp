@@ -37,6 +37,146 @@ map<string, map<integer,integer> > changed_lun = $[];
 map<string, map > changed_auth = $[];
 list<string> del_clnt = [];
 
+// set incoming authentication enabled/disabled status
+void SetAuthIn(boolean status)
+    {
+    y2milestone("Status of AuthIncoming %1", status);
+    UI::ChangeWidget(`id(`user_in),`Enabled, status );
+    UI::ChangeWidget(`id(`pass_in),`Enabled, status );
+    UI::ChangeWidget(`id(`auth_in),`Value, status );
+    if(status) UI::ChangeWidget(`id(`auth_none),`Value, !status );
+    }
+
+// set outgoing authentication enabled/disabled status
+void SetAuthOut(boolean status)
+    {
+    y2milestone("Status of AuthOutgoing %1", status);
+    UI::ChangeWidget(`id(`user_out),`Enabled, status );
+    UI::ChangeWidget(`id(`pass_out),`Enabled, status );
+    UI::ChangeWidget(`id(`auth_out),`Value, status );
+    if(status) UI::ChangeWidget(`id(`auth_none),`Value, !status );
+    }
+
+// get values for incoming authentication
+list<string> GetIncomingValues()
+    {
+    list<string> values = [];
+    if ((boolean)UI::QueryWidget(`id(`auth_in), `Value) == true)
+        values = [ (string)UI::QueryWidget(`id(`user_in), `Value), 
+                   (string)UI::QueryWidget(`id(`pass_in), `Value) ];
+    return values;
+    }
+
+// get values for outgoing authentication
+list<string> GetOutgoingValues()
+    {
+    list<string> values = [];
+    if ((boolean)UI::QueryWidget(`id(`auth_out), `Value) == true)
+        values = [ (string)UI::QueryWidget(`id(`user_out), `Value), 
+                   (string)UI::QueryWidget(`id(`pass_out), `Value) ];
+    return values;
+    }
+
+//	**************** Global Dialog	*********************
+void initGlobalValues(map auth)
+    {
+    string user = "";
+    string pass = "";
+    // incoming authentication
+    if( !isempty(auth["incoming"]:[]) )
+        {
+        user = auth["incoming",0]:"";
+        pass = auth["incoming",1]:"";
+        }
+    UI::ChangeWidget(`id(`user_in), `Value, user );
+    UI::ChangeWidget(`id(`pass_in), `Value, pass );
+    SetAuthIn(!isempty(auth["incoming"]:[]));
+    // outgoing authentication
+    user = "";
+    pass = "";
+    if( !isempty(auth["outgoing"]:[]) )
+        {
+        user = auth["outgoing",0]:"";
+        pass = auth["outgoing",1]:"";
+        }
+    UI::ChangeWidget(`id(`user_out), `Value, user );
+    UI::ChangeWidget(`id(`pass_out), `Value, pass );
+    SetAuthOut(!isempty(auth["outgoing"]:[]));
+    }
+
+// initialize discovery authentication or authentication for given target
+void initGlobal (string key)
+    {
+    initGlobalValues(IscsiLioData::GetAuth("",0,""));
+    }
+
+// save discovery authentication or authentication for given target
+void storeGlobal(string option_id, map option_map)
+    {
+    y2milestone( "storeGlobal id:%1 map:%2", option_id, option_map );
+    boolean ret = false;
+    ret = IscsiLioData::SetAuth( "", 0, "", GetIncomingValues(), GetOutgoingValues() );
+    if( !ret )
+        {
+        Popup::Error( _("Problem changing authentication"));
+        }
+    IscsiLioData::UpdateConfig();
+    }
+
+// validate functions checks the secret for incoming and outgoing cannot be same
+boolean validateGlobal(string key, map event)
+    {
+    y2milestone( "validateGlobal key:%1 ev:%2", key, event );
+    boolean ret=true;
+    list<string> in = GetIncomingValues();
+    if( size(in)>0 && (size(in[0]:"")==0 || size(in[1]:"")==0) )
+        {
+        boolean user_fail = size(in[0]:"")==0;
+        string txt = user_fail ? _("Invalid Username") : _("Invalid Password.");
+        UI::SetFocus(`id(user_fail?`user_in:`pass_in));
+        Popup::Error( txt );
+        ret = false;
+        }
+    list<string> out = GetOutgoingValues();
+    if( size(out)>0 && (size(out[0]:"")==0 || size(out[1]:"")==0) )
+        {
+        boolean user_fail = size(out[0]:"")==0;
+        string txt = user_fail ? _("Invalid Username") : _("Invalid Password.");
+        UI::SetFocus(`id(user_fail?`user_out:`pass_out));
+        Popup::Error( txt );
+        ret = false;
+        }
+    return ret;
+    }
+
+//	**************** Target Auth	*******************
+// handle authentication dialog
+symbol handleAuth(string key, map event)
+    {
+    if (event["EventReason"]:"" == "ValueChanged")
+        {
+        boolean status = false;
+        // enable/disable none/incoming/outgoing authentication
+        switch((symbol)event["ID"]:nil)
+            {
+            case(`auth_none):
+                status = (boolean)UI::QueryWidget(`id(`auth_none), `Value);
+                SetAuthIn(!status);
+                SetAuthOut(!status);
+                break;
+            case(`auth_in):
+                status = (boolean)UI::QueryWidget(`id(`auth_in), `Value);
+                SetAuthIn(status);
+                break;
+            case(`auth_out):
+                status = (boolean)UI::QueryWidget(`id(`auth_out), `Value);
+                SetAuthOut(status);
+                break;
+            }
+        }
+    return nil;
+    }
+
 term AuthTerm()
     {
     term t =
@@ -238,8 +378,7 @@ map<integer,integer> LUNMapDialog( string clnt )
             sym = Event::IsWidgetValueChanged(ev);
         if( sym==nil )
             sym = Event::IsWidgetContextMenuActivated(ev);
-        y2milestone( "LUNMapDialog event:%1", ev );
-        y2milestone( "LUNMapDialog isCtxt:%1 sym:%2", Event::IsWidgetContextMenuActivated(ev), sym );
+        y2milestone( "LUNMapDialog event:%1 sym:%2", ev, sym );
         if(sym==`lun)
             {
             integer id = (integer)UI::QueryWidget(`lun,`CurrentItem);
@@ -346,14 +485,7 @@ map ClntAuthDialog( string clnt )
                                   `PushButton(`id(`cancel), Label::CancelButton() ))
                             );
     UI::OpenDialog(auth_dialog);
-    list<term> items = [];
-    if( size(items)==0 )
-        {
-        UI::ChangeWidget(`id(`change), `Enabled, false );
-        UI::ChangeWidget(`id(`delete), `Enabled, false );
-        }
-    UI::ChangeWidget(`id(`change), `Value, TpgIdFromTpgItem(items[0,2]:"-") );
-    integer i=0;
+    initGlobalValues( lmap );
     symbol sym = `nil;
     while(sym != `ok && sym !=`cancel)
         {
@@ -361,71 +493,23 @@ map ClntAuthDialog( string clnt )
         sym = Event::IsWidgetActivatedOrSelectionChanged(ev);
         if( sym==nil )
             sym = Event::IsWidgetValueChanged(ev);
-        if( sym==nil )
-            sym = Event::IsWidgetContextMenuActivated(ev);
-        y2milestone( "ClntAuthDialog event:%1", ev );
-        y2milestone( "ClntAuthDialog isCtxt:%1 sym:%2", Event::IsWidgetContextMenuActivated(ev), sym );
-        if(sym==`lun)
-            {
-            integer id = (integer)UI::QueryWidget(`lun,`CurrentItem);
-            y2milestone( "ClntAuthDialog id:%1 item:%2", id, items[id]:nil );
-            if( Event::IsWidgetContextMenuActivated(ev)!=nil )
-                {
-                integer value = (integer)UI::UserInput();
-                ChangeTpgItems( id, value, items );
-                UI::ChangeWidget(`id(`change), `Value, value );
-                }
-            else
-                {
-                UI::ChangeWidget(`id(`change), `Value, TpgIdFromTpgItem(items[id,2]:"-") );
-                }
-            }
-        else if( sym==`add )
-            {
-            integer n = size(items);
-            items = add( items, `item( `id(n), tostring(n), "-" ));
-            UI::ChangeWidget(`id(`lun), `Items, items );
-            UI::ChangeWidget(`id(`lun), `CurrentItem, n );
-            UI::ChangeWidget(`id(`change), `Value, -1 );
-            if( size(items)==1 )
-                {
-                UI::ChangeWidget(`id(`change), `Enabled, true );
-                UI::ChangeWidget(`id(`delete), `Enabled, true );
-                }
-            }
-        else if( sym==`delete )
-            {
-            integer id = (integer)UI::QueryWidget(`lun,`CurrentItem);
-            if( id!=nil && id<size(items) )
-                {
-                ChangeTpgItems( id, -1, items );
-                }
-            }
-        else if( sym==`change )
-            {
-            integer id = (integer)UI::QueryWidget(`lun,`CurrentItem);
-            integer value = (integer)UI::QueryWidget(`change,`Value);
-            if( id!=nil && id<size(items) )
-                {
-                ChangeTpgItems( id, value, items );
-                }
-            }
-        else if(sym == `ok) 
+        y2milestone( "ClntAuthDialog event:%1 sym:%2", ev, sym );
+        if( sym!=nil )
+            handleAuth( "", ev );
+        if(sym == `ok) 
             {
             lmap = $[];
-            foreach( term it, items,
-                {
-                string s = it[2]:"-";
-                i = nil;
-                if( s!="-" )
-                    i = tointeger(it[2]:"");
-                if( i!=nil )
-                    lmap[tointeger(it[1]:"0")] = i;
-                });
-            y2milestone( "ClntAuthDialog ret:%1", lmap );
-            boolean ok = true;
-            if( !ok )
+            if( !validateGlobal( "", $[] ))
                 sym = `again;
+            else
+                {
+                list in = GetIncomingValues();
+                list out = GetOutgoingValues();
+                if( size(in)>0 )
+                    lmap["incoming"] = in;
+                if( size(out)>0 )
+                    lmap["outgoing"] = out;
+                }
             }
         else if(sym == `cancel) 
             lmap = nil;
@@ -435,44 +519,6 @@ map ClntAuthDialog( string clnt )
         changed_auth[clnt] = lmap;
     y2milestone( "ClntAuthDialog ret:%1", lmap );
     return lmap;
-    }
-
-// set incoming authentication enabled/disabled status
-void setAuthIn(boolean status){
- y2milestone("Status of AuthIncoming %1", status);
- UI::ChangeWidget(`id(`user_in),`Enabled, status );
- UI::ChangeWidget(`id(`pass_in),`Enabled, status );
- UI::ChangeWidget(`id(`auth_in),`Value, status );
- if(status) UI::ChangeWidget(`id(`auth_none),`Value, !status );
-}
-
-// set outgoing authentication enabled/disabled status
-void setAuthOut(boolean status){
- y2milestone("Status of AuthOutgoing %1", status);
- UI::ChangeWidget(`id(`user_out),`Enabled, status );
- UI::ChangeWidget(`id(`pass_out),`Enabled, status );
- UI::ChangeWidget(`id(`auth_out),`Value, status );
- if(status) UI::ChangeWidget(`id(`auth_none),`Value, !status );
-}
-
-// get values for incoming authentication
-list<string> getIncomingValues()
-    {
-    list<string> values = [];
-    if ((boolean)UI::QueryWidget(`id(`auth_in), `Value) == true)
-        values = [ (string)UI::QueryWidget(`id(`user_in), `Value), 
-                   (string)UI::QueryWidget(`id(`pass_in), `Value) ];
-    return values;
-    }
-
-// get values for outgoing authentication
-list<string> getOutgoingValues()
-    {
-    list<string> values = [];
-    if ((boolean)UI::QueryWidget(`id(`auth_out), `Value) == true)
-        values = [ (string)UI::QueryWidget(`id(`user_out), `Value), 
-                   (string)UI::QueryWidget(`id(`pass_out), `Value) ];
-    return values;
     }
 
 // dialog to add/modify user and password
@@ -646,98 +692,6 @@ void storeiSNS(string option_id, map option_map){
    if (ip=="") ac="";
    IscsiServerFunctions::setiSNS(ip, ac);
 }
-
-
-//	**************** Global Dialog	*********************
-void initGlobalValues(map auth)
-    {
-    string user = "";
-    string pass = "";
-    // incoming authentication
-    if( !isempty(auth["incoming"]:[]) )
-        {
-        user = auth["incoming",0]:"";
-        pass = auth["incoming",1]:"";
-        }
-    UI::ChangeWidget(`id(`user_in), `Value, user );
-    UI::ChangeWidget(`id(`pass_in), `Value, pass );
-    setAuthIn(!isempty(auth["incoming"]:[]));
-    // outgoing authentication
-    user = "";
-    pass = "";
-    if( !isempty(auth["outgoing"]:[]) )
-        {
-        user = auth["outgoing",0]:"";
-        pass = auth["outgoing",1]:"";
-        }
-    UI::ChangeWidget(`id(`user_out), `Value, user );
-    UI::ChangeWidget(`id(`pass_out), `Value, pass );
-    setAuthOut(!isempty(auth["outgoing"]:[]));
-    }
-
-// initialize discovery authentication or authentication for given target
-void initGlobal (string key)
-    {
-    if (!isempty(curr_target)) 
-        initGlobalValues(IscsiLioData::GetAuth(curr_target,curr_tpg,""));
-    else 
-        initGlobalValues(IscsiLioData::GetAuth("",0,""));
-    }
-
-// save discovery authentication or authentication for given target
-void storeGlobal(string option_id, map option_map)
-    {
-    y2milestone( "storeGlobal id:%1 map:%2", option_id, option_map );
-    boolean ret = false;
-    if(!isempty(curr_target))
-        {
-        ret = IscsiLioData::SetAuth( curr_target, curr_tpg, "", getIncomingValues(), getOutgoingValues() );
-        } 
-    else
-        {
-	ret = IscsiLioData::SetAuth( "", 0, "", getIncomingValues(), getOutgoingValues() );
-        }
-    if( !ret )
-        {
-        Popup::Error( _("Problem changing authentication"));
-        }
-    IscsiLioData::UpdateConfig();
-    }
-
-// validate functions checks the secret for incoming and outgoing cannot be same
-boolean validateGlobal(string key, map event)
-    {
-    boolean ret=true;
-    return ret;
-    }
-
-//	**************** Target Auth	*******************
-// handle authentication dialog
-symbol handleAuth(string key, map event)
-    {
-    if (event["EventReason"]:"" == "ValueChanged")
-        {
-        boolean status = false;
-        // enable/disable none/incoming/outgoing authentication
-        switch((symbol)event["ID"]:nil)
-            {
-            case(`auth_none):
-                status = (boolean)UI::QueryWidget(`id(`auth_none), `Value);
-                setAuthIn(!status);
-                setAuthOut(!status);
-                break;
-            case(`auth_in):
-                status = (boolean)UI::QueryWidget(`id(`auth_in), `Value);
-                setAuthIn(status);
-                break;
-            case(`auth_out):
-                status = (boolean)UI::QueryWidget(`id(`auth_out), `Value);
-                setAuthOut(status);
-                break;
-            }
-        }
-    return nil;
-    }
 
 //	**************** Edit Dialog	*****************************
 
