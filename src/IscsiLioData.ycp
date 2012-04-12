@@ -920,6 +920,22 @@ global boolean SetTpgAuth( string tgt, integer tpg, boolean value )
     return( ret );
     }
 
+global boolean DoRemoveClnt( string tgt, integer tpg, string clnt )
+    {
+    string kt = tgt + " " + tpg + " " + clnt;
+    boolean ret = LogExecCmd( "lio_node --delnodeacl " + kt );
+    y2milestone( "DoRemoveClnt tgt:%1 tpg:%2 clnt:%3 ret:%4", tgt, tpg, clnt, ret );
+    return( ret );
+    }
+
+global boolean DoCreateClnt( string tgt, integer tpg, string clnt )
+    {
+    string kt = tgt + " " + tpg + " " + clnt;
+    boolean ret = LogExecCmd( "lio_node --addnodeacl " + kt );
+    y2milestone( "DoCreateClnt tgt:%1 tpg:%2 clnt:%3 ret:%4", tgt, tpg, clnt, ret );
+    return( ret );
+    }
+
 global void UpdateConfig()
     {
     data = ParseConfigLio();

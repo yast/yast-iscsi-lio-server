@@ -521,6 +521,93 @@ map ClntAuthDialog( string clnt )
     return lmap;
     }
 
+map AddClntDialog()
+    {
+    y2milestone( "AddClntDialog" );
+    map ret = $[];
+    term dlg = `VBox( `MarginBox( 4, 1, 
+                          `VBox(
+                              `Left(`Label(_("New client name:"))),
+                              `MinWidth( 50, `InputField(`id(`clnt), `opt(`hstretch), "", "")),
+                              `VSpacing(0.5),
+                              `Left(`CheckBox( `id(`import), _("Import LUNs from TPG"), true )))),
+                      `ButtonBox(
+                          `PushButton(`id(`ok), `opt(`default), Label::OKButton() ),
+                          `PushButton(`id(`cancel), Label::CancelButton() )));
+    UI::OpenDialog(dlg);
+    symbol sym = `nil;
+    while(sym != `ok && sym !=`cancel)
+        {
+        sym = (symbol)UI::UserInput();
+        y2milestone( "AddClntDialog sym:%1", sym );
+        if(sym == `ok) 
+            {
+            string txt = "";
+            string s = (string)UI::QueryWidget(`id(`clnt), `Value);
+            if( isempty(s) )
+                txt = _("Client name must not be empty!");
+            if( haskey( changed_lun, s ) || 
+                contains( IscsiLioData::GetClntList(curr_target, curr_tpg), s ))
+                txt = _("Client name already exists!");
+            if( !isempty(txt))
+                {
+                sym = `again;
+                UI::SetFocus(`id(`clnt));
+                Popup::Error( txt );
+                }
+            else
+                {
+                ret["clnt"] = s;
+                ret["import"] = (boolean)UI::QueryWidget(`id(`import), `Value);
+                }
+            }
+        }
+    UI::CloseDialog();
+    y2milestone( "AddClntDialog ret:%1", ret );
+    return ret;
+    }
+
+string CopyClntDialog()
+    {
+    y2milestone( "CopylntDialog" );
+    string ret = "";
+    term dlg = `VBox( `MarginBox( 4, 1, 
+                          `VBox(
+                              `Left(`Label(_("New client name:"))),
+                              `MinWidth( 50, `InputField(`id(`clnt), `opt(`hstretch), "", "")))),
+                      `ButtonBox(
+                          `PushButton(`id(`ok), `opt(`default), Label::OKButton() ),
+                          `PushButton(`id(`cancel), Label::CancelButton() )));
+    UI::OpenDialog(dlg);
+    symbol sym = `nil;
+    while(sym != `ok && sym !=`cancel)
+        {
+        sym = (symbol)UI::UserInput();
+        y2milestone( "CopyClntDialog sym:%1", sym );
+        if(sym == `ok) 
+            {
+            string txt = "";
+            string s = (string)UI::QueryWidget(`id(`clnt), `Value);
+            if( isempty(s) )
+                txt = _("Client name must not be empty!");
+            if( haskey( changed_lun, s ) || 
+                contains( IscsiLioData::GetClntList(curr_target, curr_tpg), s ))
+                txt = _("Client name already exists!");
+            if( !isempty(txt))
+                {
+                sym = `again;
+                UI::SetFocus(`id(`clnt));
+                Popup::Error( txt );
+                }
+            else
+                ret = s;
+            }
+        }
+    UI::CloseDialog();
+    y2milestone( "CopyClntDialog ret:%1", ret );
+    return ret;
+    }
+
 // dialog to add/modify user and password
 list <string> getDialogValues(string user, string pass){
  UI::OpenDialog( `VBox(
@@ -982,8 +1069,6 @@ void initClient(string key)
             map m = IscsiLioData::GetAuth( curr_target, curr_tpg, s );
             auth = GetAuthString(m);
             }
-        string lun = "";
-        map<integer,integer> lmap = IscsiLioData::GetClntLun( curr_target, curr_tpg, s );
         string luns = GetLunList( IscsiLioData::GetClntLun( curr_target, curr_tpg, s ) );
         inc_items = add( inc_items, `item(`id(size(inc_items)), s, luns, auth));
         });
@@ -997,6 +1082,7 @@ symbol handleClient(string key, map event)
         switch((symbol)event["WidgetID"]:nil)
             {
             case `delete:
+                {
                 any del = (integer)UI::QueryWidget(`id (`clnt_table),`CurrentItem);
                 if (del != nil)
                     {
@@ -1005,16 +1091,20 @@ symbol handleClient(string key, map event)
                         y2milestone("handleClient Delete Client %1 from table", del);
                         list<term> it=(list<term>)UI::QueryWidget(`clnt_table, `Items);
                         string clnt = GetById(it,del)[1]:"";
-                        del_clnt = add( del_clnt, clnt );
+                        if( !contains( del_clnt, clnt ))
+                            del_clnt = add( del_clnt, clnt );
+                        y2milestone( "handleClient del_clnt:%1", del_clnt );
                         if( haskey(changed_lun,clnt))
                             changed_lun = remove(changed_lun,clnt);
-                        y2milestone( "handleClient del_clnt:%1", del_clnt );
+                        if( haskey(changed_auth,clnt))
+                            changed_auth = remove(changed_auth,clnt);
                         it = RemoveById( it, del );
                         UI::ChangeWidget(`id(`clnt_table), `Items, it);
                         } 
                     else 
                         y2milestone("handleClient: Delete canceled");
                     }
+                }
                 break;
             case `edit_lun:
                 {
@@ -1053,16 +1143,58 @@ symbol handleClient(string key, map event)
                 }
                 break;
             case `add:
-                /*
-                items = (list<term>)UI::QueryWidget(`clnt_table, `Items);
-                ret = LUNDetailDialog( -1, items );
-                if( ret!=`Empty() )
+                {
+                map ret = AddClntDialog();
+                if( !isempty(ret) && !isempty(ret["clnt"]:"") )
                     {
-                    items = (list<term>)add( items, ret ); 
+                    list<term> items = (list<term>)UI::QueryWidget(`clnt_table, `Items);
+                    string auth = _("Disabled");
+                    string c = ret["clnt"]:"";
+                    if( IscsiLioData::GetTpgAuth( curr_target, curr_tpg ) )
+                        {
+                        auth = GetAuthString( $[] );
+                        changed_auth[c] = $[];
+                        }
+                    map<integer,integer> lmap = $[];
+                    if( ret["import"]:false )
+                        lmap = mapmap( integer l, map m, 
+                                       IscsiLioData::GetLun( curr_target, curr_tpg ),
+                                       ``($[l:l]));
+                    y2milestone( "handleClient clnt:%1 lmap:%2", c, lmap );
+                    changed_lun[c] = lmap;
+                    term it = `item(`id(size(items)), c, GetLunList( lmap ), auth); 
+                    items = (list<term>)add( items, it );
                     UI::ChangeWidget(`clnt_table, `Items, items);
                     UI::ChangeWidget(`clnt_table, `CurrentItem, size(items)-1);
                     }
-                */
+                }
+                break;
+            case `copy:
+                {
+                integer edit_pos=tointeger(UI::QueryWidget(`clnt_table, `CurrentItem));
+                list<term> items = (list<term>)UI::QueryWidget(`clnt_table, `Items);
+                term it = items[edit_pos]:`Empty();
+                string s  = it[1]:"";
+                y2milestone( "handleClient pos:%1 clnt:%2", edit_pos, s );
+                string c = CopyClntDialog();
+                if( !isempty(c) )
+                    {
+                    string auth = _("Disabled");
+                    if( IscsiLioData::GetTpgAuth( curr_target, curr_tpg ) )
+                        {
+                        map m = IscsiLioData::GetAuth( curr_target, curr_tpg, s );
+                        auth = GetAuthString(m);
+                        changed_auth[c] = m;
+                        }
+                    map<integer,integer> lmap = IscsiLioData::GetClntLun( curr_target, curr_tpg, s );
+                    changed_lun[c] = lmap;
+                    y2milestone( "handleClient clnt:%1", c );
+                    term it = `item(`id(size(items)), c, GetLunList( lmap ), auth); 
+                    items = (list<term>)add( items, it );
+                    UI::ChangeWidget(`clnt_table, `Items, items);
+                    UI::ChangeWidget(`clnt_table, `CurrentItem, size(items)-1);
+                    }
+                }
                 break;
             }
         }
@@ -1082,10 +1214,67 @@ boolean validateClient(string key, map event)
 
 void storeClient(string option_id, map option_map)
     {
-    list target = uiTarget();
-    y2milestone( "storeAddTarget %1", target );
-    curr_target = sformat( "%1:%2", target[0]:"", target[1]:"" );
-    curr_tpg = target[2]:-1;
+    boolean chg = false; 
+    //map<string, map<integer,integer> > changed_lun = $[];
+    list<string> cl = IscsiLioData::GetClntList( curr_target, curr_tpg );
+    foreach( string c, del_clnt,
+        ``{
+        if( contains( cl, c  ))
+            {
+            chg = true;
+            if( !IscsiLioData::DoRemoveClnt( curr_target, curr_tpg, c ))
+                {
+                string txt = sformat( _("Problem removing client %3 from %1:%2"),
+                                      curr_target, curr_tpg, c );
+                Popup::Error( txt );
+                }
+            }
+        });
+    del_clnt = [];
+    foreach( string c, map m, changed_auth,
+        {
+        boolean ok = true;
+        if( !contains( cl, c  ))
+            {
+            chg = true;
+            if( !IscsiLioData::DoCreateClnt( curr_target, curr_tpg, c ))
+                {
+                string txt = sformat( _("Problem creating client %3 for %1:%2"),
+                                      curr_target, curr_tpg, c );
+                Popup::Error( txt );
+                ok = false;
+                }
+            }
+        if( ok )
+            {
+            map ca = IscsiLioData::GetAuth( curr_target, curr_tpg, c );
+            if( isempty(m["incoming"]:[])!=isempty(ca["incoming"]:[]) ||
+                isempty(m["outgoing"]:[])!=isempty(ca["outgoing"]:[]) ||
+                m["incoming",0]:""!=ca["incoming",0]:"" ||
+                m["incoming",1]:""!=ca["incoming",1]:"" ||
+                m["outgoing",0]:""!=ca["outgoing",0]:"" ||
+                m["outgoing",1]:""!=ca["outgoing",1]:"" )
+                {
+                y2milestone( "storeClient auth c:%1", c );
+                y2milestone( "storeClient cur:%1 new:%2", ca, m );
+                chg = true;
+                if( !IscsiLioData::SetAuth( curr_target, curr_tpg, c,
+                                            m["incoming"]:[], m["outgoing"]:[] ))
+                    {
+                    string txt = sformat( _("Problem changing auth for client %3 in %1:%2"),
+                                          curr_target, curr_tpg, c );
+                    Popup::Error( txt );
+                    }
+                }
+            }
+
+        });
+    changed_auth = $[];
+    y2milestone( "storeClient chg:%1", chg );
+    if( chg )
+        {
+        IscsiLioData::UpdateConfig();
+        }
     }
 
 }
