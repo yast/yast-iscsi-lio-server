@@ -684,13 +684,19 @@ void initTable (string key) ``{
     list <term> inc_items = [];
     // create items from targets
     list<list> tgt = IscsiLioData::GetTargets();
+    integer cur = 0;
     foreach(list l, tgt, 
         {
         inc_items = add(inc_items, `item(`id(count), l[0]:"", tostring(l[1]:0)));
+        y2milestone( "tgt:%1 tpg:%2 ctgt:%3 ctpg:%4", l[0]:"", l[1]:0, curr_target, curr_tpg );
+        if( curr_target==l[0]:"" && curr_tpg==l[1]:1 )
+            cur = count;
         count = count + 1;
         });
     // put it into table
     UI::ChangeWidget(`id(`server), `Items, inc_items);
+    if( cur!=0 )
+        UI::ChangeWidget(`id(`server), `CurrentItem, cur);
     }
 
 symbol handleTable (string table, map event)
@@ -734,11 +740,6 @@ symbol handleTable (string table, map event)
                 curr_target = t[1]:"";
                 curr_tpg = tointeger(t[2]:"");
                 y2milestone("handleTable tgt:%1 tpg:%2", curr_target, curr_tpg );
-                if (IscsiServerFunctions::setModifChanges( curr_target ) == 0) 
-                    y2milestone("modified %1", curr_target);
-                else 
-                    y2error("%1 already modified", curr_target);
-                // goto EditDialog() (initModify)
                 ret = `edit;
                 break;
             }
@@ -1212,10 +1213,33 @@ boolean validateClient(string key, map event)
     return( ret );
     }
 
+boolean removeClntLun( string tgt, integer tpg, string clnt, integer lun )
+    {
+    boolean ret = IscsiLioData::DoRemoveClntLun( tgt, tpg, clnt, lun );
+    if( !ret )
+        {
+        string txt = sformat( _("Problem removing lun %4 for client %3 in %1:%2"),
+                              tgt, tpg, clnt, lun );
+        Popup::Error( txt );
+        }
+    return( ret );
+    }
+
+boolean createClntLun( string tgt, integer tpg, string clnt, integer lun, integer tlun )
+    {
+    boolean ret = IscsiLioData::DoCreateClntLun( tgt, tpg, clnt, lun, tlun );
+    if( !ret )
+        {
+        string txt = sformat( _("Problem adding lun %4:%5 for client %3 in %1:%2"),
+                              tgt, tpg, clnt, lun, tlun );
+        Popup::Error( txt );
+        }
+    return( ret );
+    }
+
 void storeClient(string option_id, map option_map)
     {
     boolean chg = false; 
-    //map<string, map<integer,integer> > changed_lun = $[];
     list<string> cl = IscsiLioData::GetClntList( curr_target, curr_tpg );
     foreach( string c, del_clnt,
         ``{
@@ -1231,21 +1255,27 @@ void storeClient(string option_id, map option_map)
             }
         });
     del_clnt = [];
+    list<string> new_clnt = maplist( string c, map m, changed_auth, ``(c));
+    new_clnt = (list<string>)union( new_clnt,
+                                    maplist( string c, map m, changed_lun, ``(c)));
+    new_clnt = filter( string c, new_clnt, ``(!contains( cl, c  )));
+    if( !isempty(new_clnt) )
+        y2milestone( "storeClient new clnt:%1", new_clnt );
+    foreach( string c, new_clnt,
+        {
+        chg = true;
+        if( !IscsiLioData::DoCreateClnt( curr_target, curr_tpg, c ))
+            {
+            string txt = sformat( _("Problem creating client %3 for %1:%2"),
+                                  curr_target, curr_tpg, c );
+            Popup::Error( txt );
+            }
+        else
+            cl = add( cl, c );
+        });
     foreach( string c, map m, changed_auth,
         {
-        boolean ok = true;
-        if( !contains( cl, c  ))
-            {
-            chg = true;
-            if( !IscsiLioData::DoCreateClnt( curr_target, curr_tpg, c ))
-                {
-                string txt = sformat( _("Problem creating client %3 for %1:%2"),
-                                      curr_target, curr_tpg, c );
-                Popup::Error( txt );
-                ok = false;
-                }
-            }
-        if( ok )
+        if( contains( cl, c  ))
             {
             map ca = IscsiLioData::GetAuth( curr_target, curr_tpg, c );
             if( isempty(m["incoming"]:[])!=isempty(ca["incoming"]:[]) ||
@@ -1267,9 +1297,36 @@ void storeClient(string option_id, map option_map)
                     }
                 }
             }
-
         });
     changed_auth = $[];
+    foreach( string c, map<integer,integer> m, changed_lun,
+        {
+        if( contains( cl, c  ))
+            {
+            map<integer,integer> cl = IscsiLioData::GetClntLun( curr_target, curr_tpg, c );
+            foreach( integer l, integer ol, cl,
+                {
+                if( !haskey( m, l ) && removeClntLun( curr_target, curr_tpg, c, l ))
+                    chg = true;
+                });
+            foreach( integer l, integer ol, m,
+                {
+                if( !haskey( cl, l ) )
+                    {
+                    if( createClntLun( curr_target, curr_tpg, c, l, ol ))
+                        chg = true;
+                    }
+                else if( cl[l]:-1!=ol )
+                    {
+                    if( removeClntLun( curr_target, curr_tpg, c, l ))
+                        chg = true;
+                    if( createClntLun( curr_target, curr_tpg, c, l, ol ))
+                        chg = true;
+                    }
+                });
+            }
+        });
+    changed_lun = $[];
     y2milestone( "storeClient chg:%1", chg );
     if( chg )
         {

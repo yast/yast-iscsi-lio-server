@@ -286,6 +286,8 @@ global boolean HasAuth( string tgt, integer tpg )
 global map GetAuth( string tgt, integer tpg, string clnt )
     {
     map m = GetTgt(data,tgt,tpg);
+    if( !isempty(tgt) )
+        m = m["clnt",clnt]:$[];
     return( $[ "incoming" : m["incoming",0]:[], 
                "outgoing" : m["outgoing"]:[] ] );
     }
@@ -881,7 +883,7 @@ global boolean SetAuth( string tgt, integer tpg, string clnt, list inc, list out
         }
     else
         {
-        string param = tgt + " " + tpg + " " + clnt;
+        string param = tgt + " " + tpg + " " + clnt + " ";
         if( !isempty(inc) )
             {
             cmd = "lio_node --setchapauth " + param;
@@ -933,6 +935,26 @@ global boolean DoCreateClnt( string tgt, integer tpg, string clnt )
     string kt = tgt + " " + tpg + " " + clnt;
     boolean ret = LogExecCmd( "lio_node --addnodeacl " + kt );
     y2milestone( "DoCreateClnt tgt:%1 tpg:%2 clnt:%3 ret:%4", tgt, tpg, clnt, ret );
+    return( ret );
+    }
+
+global boolean DoRemoveClntLun( string tgt, integer tpg, string clnt, 
+                                integer lun )
+    {
+    string kt = tgt + " " + tpg + " " + clnt + " " + lun;
+    boolean ret = LogExecCmd( "lio_node --dellunacl " + kt );
+    y2milestone( "DoRemoveClntLun tgt:%1 tpg:%2 clnt:%3 lun:%4 ret:%5", 
+                 tgt, tpg, clnt, lun, ret );
+    return( ret );
+    }
+
+global boolean DoCreateClntLun( string tgt, integer tpg, string clnt, 
+                                integer lun, integer tlun )
+    {
+    string kt = tgt + " " + tpg + " " + clnt + " " + tlun + " " + lun;
+    boolean ret = LogExecCmd( "lio_node --addlunacl " + kt );
+    y2milestone( "DoCreateClntLun tgt:%1 tpg:%2 clnt:%3 lun:%4:%5 ret:%6", 
+                 tgt, tpg, clnt, lun, tlun, ret );
     return( ret );
     }
 
