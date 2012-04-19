@@ -474,11 +474,11 @@ global list<string> GetConnected()
     state = mapmap( string s, boolean b, state,
         {
         ls = splitstring( s, "/" );
-        return( $[ ls[6]:"" + " " + ls[7]:"" + " " + ls[9]:"" : b ] );
+        return( $[ ls[6]:"" + " " + substring(ls[7]:"",5) + " " + ls[9]:"" : b ] );
         });
     y2milestone( "GetConnected state:%1", state );
     ls = maplist( string s, boolean b, filter( string s, boolean b, state, ``(b)),
-                  ``(splitstring( s, " " )[2]:""));
+                  ``(s));
     y2milestone( "GetConnected ret:%1", ls );
     return( ls );
     }
@@ -699,6 +699,18 @@ global map<string,any> ParseConfigLio()
                 i=i+1;
                 }
             });
+        });
+    list<string> cl = GetConnected();
+    foreach( string s, cl,
+        {
+        list ls = SplitStringNE( s, " "  );
+        ls[1] = tointeger( ls[1]:"-1" );
+        y2milestone( "ParseConfigLio conn:%1", ls );
+        if( haskey( tgmap[ls[0]:""]:$[], ls[1]:-1 ))
+             tgmap[ls[0]:"",ls[1]:-1,"conn"] = 
+                 tgmap[ls[0]:"",ls[1]:"","conn"]:0 + 1;
+        if( haskey(tgmap[ls[0]:"",ls[1]:-1,"clnt"]:$[], ls[2]:"" ))
+             tgmap[ls[0]:"",ls[1]:-1,"clnt",ls[2]:"","connected"] = true;
         });
     ret["tgt"] = tgmap;
     return( ret );

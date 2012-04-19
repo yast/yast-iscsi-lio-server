@@ -194,83 +194,6 @@ boolean setServiceStatus(){
  return true;
 }
 
-// #157643 - reload server
-boolean reloadServer()
-    {
-    return true;
-    // ask user whether reload or restart server
-    // #180205 - gettext problem - string wasn't marked to translate
-    if (Popup::YesNo(_( "If changes have been made, the iSCSI target is not able
-to reload current configuration. It can only restart.
-When restarting, all sessions are aborted.
-Restart the target service?
-"))) 
-        Service::Restart("target");
-    else 
-        {
-	// get changes from perl module
-	map<string, any> changes = IscsiLioData::GetChanges();
-	list<string> connected = IscsiLioData::GetConnected();
-	// delete targets
-	foreach(string row, changes["del"]:[], 
-          {
-	  if (!contains(connected, row)){
-	    y2milestone("row to delete %1", row);
-	    string  target=((map<string, any>)SCR::Execute(.target.bash_output,
-		// get TID number for target
-		"cat /proc/net/iet/volume|grep $TARGET", $["TARGET":row]))["stdout"]:"" ;
-	    string to_delete = splitstring( splitstring(target, " ")[0]:"", ":")[1]:"";
-	    y2milestone("to delete %1", to_delete);
-	    // delete record with that TID
-	    SCR::Execute(.target.bash_output, "ietadm --op delete --tid=$TID", $["TID":to_delete]);
-	    }  
-          else 
-            y2error("Cannot remove target %1 - already connected", row);
-	  });
-
-	// add a new target
-	foreach(string row, changes["add"]:[], 
-          {
-          y2milestone("row to add %1", row);
-	  // create new target
-	  SCR::Execute(.target.bash_output, "ietadm --op new --tid=0 --params Name=$NAME", $["NAME":row]);
-          string target=((map<string, any>)SCR::Execute(.target.bash_output,
-                 "cat /proc/net/iet/volume|grep $TARGET", $["TARGET":row]))["stdout"]:"" ;
-	  // get TID of that target
-          string to_add = splitstring( splitstring(target, " ")[0]:"", ":")[1]:"";
-	  y2milestone("to add %1", to_add);
-	  list<string> lun = [];
-	  list <string> secret = [];
-	  // add authentication to target
-	  foreach( map<string, any> conf_row, (list<map<string, any> >) IscsiLioData::GetConfig()[row]:[], 
-            {
-	    switch (conf_row["KEY"]:"")
-              {
-              case("Lun") : lun = splitstring(conf_row["VALUE"]:"", " ");
-                  break;
-              case("IncomingUser") :  
-                  secret = splitstring(conf_row["VALUE"]:"", " ");
-                  y2milestone("params %1 %2 %3", to_add, secret[0]:"", secret[1]:"");
-                  SCR::Execute(.target.bash_output, "ietadm --op new --tid=$TID --user --params=IncomingUser=$US,Password=$PASS", $["TID":to_add, "US":secret[0]:"", "PASS":secret[1]:""]);
-                  break;
-              case("OutgoingUser") :  
-                  secret = splitstring(conf_row["VALUE"]:"", " ");
-		  SCR::Execute(.target.bash_output, "ietadm --op new --tid=$TID --user --params=OutgoingUser=$US,Password=$PASS", $["TID":to_add, "US":secret[0]:"", "PASS":secret[1]:""]);
-		  break;
-	      }
-	    });
-	  string lun_num = lun[0]:"";
-	  string lun_path = splitstring(lun[1]:"", ",")[0]:"";
-	  // add LUN for target
-	  string command = sformat("ietadm --op new --tid=%1 --lun=%2 --params %3", to_add, lun_num, lun_path);
-	  SCR::Execute(.target.bash_output, command, $[]);
-	  y2milestone("lun %1,%2", lun_num, lun_path);
-	  });
-        }
-    return true;
-    }
-
-
 /**
  * Read all iscsi-lio-server settings
  * @return true on success
@@ -356,11 +279,6 @@ try to import setting from /etc/ietd.conf into LIO?" );
     sleep(sl);
 
     if(Abort()) return false;
-    /* Progress finished */
-    Progress::NextStage();
-    sleep(sl);
-
-    if(Abort()) return false;
     modified = false;
     configured = true;
     return true;
@@ -404,18 +322,6 @@ global boolean Write() {
         SuSEFirewall::Write();
         Progress::set(true);
 
-    Progress::NextStage();
-    sleep(sl);
-
-
-    if(Abort()) return false;
-    Progress::NextStage ();
-    //  ask user whether reload or restart server and do it
-    if ( (serviceStatus) || (statusOnStart) )
-	if (!reloadServer()) return false;
-    sleep(sl);
-
-    if(Abort()) return false;
     Progress::NextStage();
     sleep(sl);
 
