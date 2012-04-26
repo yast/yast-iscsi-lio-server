@@ -250,7 +250,7 @@ global void AddNewTarget( string name, integer tpg, list<string> lun )
 global void SetIetdAuth( string tgt, integer tpg, list<string> incom, string outgo )
     {
     map<string,any> m = GetTgt(data,tgt,tpg);
-    foreach( string s, incom, ``{m=AddIncoming( m, s );});
+    foreach( string s, incom, {m=AddIncoming( m, s );});
     if( !isempty(outgo) )
         m = AddOutgoing( m, outgo );
     SetTgt(data,tgt,tpg,m);

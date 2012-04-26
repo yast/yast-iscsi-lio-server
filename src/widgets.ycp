@@ -24,7 +24,6 @@
 {
 
 textdomain "iscsi-lio-server";
-import "IscsiServerFunctions";
 import "IscsiLioData";
 import "Label";
 import "Event";
@@ -638,30 +637,6 @@ list <string> getDialogValues(string user, string pass){
 }
 
 
-symbol saveConfiguration(string key, map event)
-    {
-    y2milestone( "saveConfiguration key:%1 event:%2", key, event );
-    if( is(event["ID"]:nil, string) && event["ID"]:"" == "save")
-        {
-        any filename = UI::AskForSaveFileName("/",  "*", _("Save as..."));
-        if ( filename != nil && (string)filename!="")
-            {
-            if( IscsiServerFunctions::SaveIntoFile( (string)filename ))
-                {
-                Popup::Message(sformat(_("File %1 was saved successfully."), filename));
-                list pathComponents = splitstring(  (string)filename, "/");
-                integer s = size(pathComponents) - 1;
-                string base = pathComponents[s]:"default";
-                }
-            else
-                {
-                Popup::Warning(_("An error occurred while saving the file."));
-                }
-            }
-        }
-    return nil;
-    }
-
 list<term> RemoveById( list<term> it, any id )
     {
     y2milestone( "RemoveById id:%1 item:%2", id, filter( term i, it, ``(i[0,0]:(any)99==id)) );
@@ -679,7 +654,7 @@ term GetById( list<term> it, any id )
 // dialog with targets
 
 // initialize target dialog
-void initTable (string key) ``{
+void initTable (string key) {
     integer count = 0;
     list <term> inc_items = [];
     // create items from targets
@@ -750,13 +725,9 @@ symbol handleTable (string table, map event)
     return ret;
     }
 
-void initiSNS (string key) ``{
+void initiSNS (string key) {
 boolean ac=false;
 string ip = "";
-foreach(map<string, any> row, IscsiServerFunctions::getConfig()["iSNS"]:[], {
- if(row["KEY"]:""=="iSNSAccessControl") ac=(row["VALUE"]:"No"=="Yes") ? true : false;
- if(row["KEY"]:""=="iSNSServer") ip=row["VALUE"]:"";
-});
 UI::ChangeWidget(`isns_ac, `Value, ac);
 UI::ChangeWidget(`isns_ip, `Value, ip);
 }
@@ -778,7 +749,6 @@ void storeiSNS(string option_id, map option_map){
   }
    string ac=((boolean)UI::QueryWidget(`isns_ac, `Value))?"Yes":"No";
    if (ip=="") ac="";
-   IscsiServerFunctions::setiSNS(ip, ac);
 }
 
 //	**************** Edit Dialog	*****************************
@@ -1242,7 +1212,7 @@ void storeClient(string option_id, map option_map)
     boolean chg = false; 
     list<string> cl = IscsiLioData::GetClntList( curr_target, curr_tpg );
     foreach( string c, del_clnt,
-        ``{
+        {
         if( contains( cl, c  ))
             {
             chg = true;

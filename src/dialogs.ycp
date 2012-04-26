@@ -223,13 +223,6 @@ map<string, map <string, any> > widgets =
             "services" : [ "service:iscsitarget" ],
             "display_details" : true,
 	      ]),
-    "save" : $[
-	"widget" : `push_button,
-	"label" : Label::SaveButton(),
-	"handle" : saveConfiguration,
-	"opt": [],
-	"help": HELPS["save_configuration"]:""
-        ],
     "isns" : $[
 	"widget" : `custom,
 	"custom_widget" :
