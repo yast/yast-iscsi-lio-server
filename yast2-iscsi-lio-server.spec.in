@@ -4,7 +4,7 @@
 @HEADER@
 Group:  System/YaST
 License: GPL-2.0
-BuildRequires: docbook-xsl-stylesheets doxygen libxslt perl-XML-Writer popt-devel sgml-skel update-desktop-files yast2 yast2-devtools yast2-packagemanager-devel yast2-perl-bindings yast2-testsuite
+BuildRequires: docbook-xsl-stylesheets doxygen libxslt popt-devel sgml-skel update-desktop-files yast2 yast2-devtools yast2-packagemanager-devel yast2-testsuite
 
 # network needs Wizard::OpenCancelOKDialog()
 #  function from yast2-2.18.2
@@ -16,7 +16,7 @@ BuildArchitectures:	noarch
 Summary:	Configuration of iSCSI LIO target
 
 %description
-Configuration of iSCSI LIO target
+This package contains configuration of iSCSI LIO target
 
 @PREP@
 
@@ -33,6 +33,7 @@ Configuration of iSCSI LIO target
 @clientdir@/iscsi-lio-server.ycp
 @clientdir@/iscsi-lio-server_*.ycp
 @moduledir@/IscsiLioServer*
+@moduledir@/IscsiLioData*
 @desktopdir@/iscsi-lio-server.desktop
 @scrconfdir@/ietd.scr
 %doc @docdir@
