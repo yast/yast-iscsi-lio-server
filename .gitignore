@@ -24,3 +24,5 @@ testsuite/tmp*
 testsuite/*.log
 testsuite/*.sum
 testsuite/*.test
+package/*.bz2
+package/*.spec
