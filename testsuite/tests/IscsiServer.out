@@ -1,2 +1,2 @@
-Dump	IscsiServer::Modified
+Dump	IscsiLioServer::Modified
 Return	false
