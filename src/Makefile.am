@@ -19,8 +19,7 @@ desktop_DATA =			\
 
 module_DATA =			\
 	IscsiLioServer.ycp	\
-	IscsiLioData.ycp	\
-	IscsiServerFunctions.pm
+	IscsiLioData.ycp	
 
 EXTRA_DIST = $(client_DATA) $(ynclude_DATA) $(module_DATA) $(desktop_DATA)
 
