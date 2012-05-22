@@ -14,6 +14,13 @@ Makefile.am.common
 missing
 *.pot
 *.ami
+*.ybc
 .dep
 doc/autodocs/*.html
-
+testsuite/site.exp
+testsuite/config
+testsuite/run
+testsuite/tmp*
+testsuite/*.log
+testsuite/*.sum
+testsuite/*.test
