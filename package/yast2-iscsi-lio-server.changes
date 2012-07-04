@@ -2,6 +2,6 @@
 Tue Mar 27 19:57:31 CEST 2012 - fehr@suse.de
 
 - 2.17.1
-- initial version of iscsi-lio-server
+- initial version of iscsi-lio-server (bnc#769196, FATE#312231)
 
 -------------------------------------------------------------------
