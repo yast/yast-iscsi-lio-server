@@ -6,7 +6,7 @@ X-KDE-ModuleType=Library
 X-KDE-RootOnly=true
 X-KDE-HasReadOnlyMode=true
 X-KDE-Library=yast2
-X-SuSE-YaST-Call=iscsi-server
+X-SuSE-YaST-Call=iscsi-lio-server
 
 X-SuSE-YaST-Group=Net_advanced
 X-SuSE-YaST-Argument=
@@ -14,12 +14,12 @@ X-SuSE-YaST-RootOnly=true
 X-SuSE-YaST-AutoInst=all
 X-SuSE-YaST-Geometry=
 X-SuSE-YaST-SortKey=
-X-SuSE-YaST-AutoInstResource=iscsi-server
+X-SuSE-YaST-AutoInstResource=iscsi-lio-server
 
 Icon=yast-iscsi-server
-Exec=/sbin/yast2 iscsi-server 
+Exec=/sbin/yast2 iscsi-lio-server 
 
-Name=iSCSI Target
-GenericName=Configure an iSCSI target
+Name=iSCSI LIO Target
+GenericName=Configure an iSCSI target via LIO
 X-KDE-SubstituteUID=true
 StartupNotify=true
