@@ -724,7 +724,7 @@ global list CheckPath( string p )
     map stat = (map) SCR::Read(.target.stat, p );
     ret[0] = stat["isblock"]:false || stat["isreg"]:false;
     ret[1] = ret[0]:false && stat["isblock"]:false;
-    ret[2] = ret[0]:false && stat["size"]:false;
+    ret[2] = ret[0]:false && stat["size"]:0>0;
     y2milestone( "CheckPath p:%1 ret:%2", p, ret );
     return( ret );
     }
