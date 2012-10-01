@@ -431,7 +431,7 @@ global map<string, any> GetConfig()
 
 global list<string> GetIpAddr()
     {
-    map out = (map) SCR::Execute (.target.bash_output, "ifconfig" );
+    map out = (map) SCR::Execute (.target.bash_output, "LC_ALL=POSIX /sbin/ifconfig" );
     list<string> ls = filter( string ln, splitstring( out["stdout"]:"", "\n" ),
                               ``(search(ln,"inet addr:")!=nil));
     ls = maplist( string s, ls, 
@@ -493,6 +493,7 @@ void ParseAuthData( string tgt, integer tpg, string clnt,
         cmd = "lio_node --showchapauth " + tgt + " " + tpg + " " + clnt;
     else
         cmd = "lio_node --showchapdiscauth";
+    cmd = "LC_ALL=POSIX "+cmd;
     map out = (map)SCR::Execute(.target.bash_output, cmd );
     list<string> ls = SplitStringNE( out["stdout"]:"", "\n" );
     integer i=0;
@@ -513,7 +514,7 @@ void ParseAuthData( string tgt, integer tpg, string clnt,
 global map<string,any> ParseConfigLio()
     {
     map<string, any> tcm = $[];
-    map out = (map)SCR::Execute(.target.bash_output, "tcm_node --listhbas" );
+    map out = (map)SCR::Execute(.target.bash_output, "LC_ALL=POSIX tcm_node --listhbas" );
     list<string> ls = SplitStringNE( out["stdout"]:"", "\n" );
     integer i=0;
     while( i<size(ls) )
@@ -560,7 +561,7 @@ global map<string,any> ParseConfigLio()
             }
         }
     map<string, map> endp = $[];
-    out = (map)SCR::Execute(.target.bash_output, "lio_node --listendpoints" );
+    out = (map)SCR::Execute(.target.bash_output, "LC_ALL=POSIX lio_node --listendpoints" );
     ls = SplitStringNE( out["stdout"]:"", "\n" );
     i=0;
     while( i<size(ls) )
@@ -645,7 +646,7 @@ global map<string,any> ParseConfigLio()
             tgmap[tgt,tpg] = $[ "ep" : endp[tgt,tpg]:$[],
                                 "clnt" : $[] ];
             y2milestone( "ParseConfigLio tgt:%1 tpg:%2", tgt, tpg );
-            string cmd = "lio_node --listlunacls " + tgt + " " + tpg;
+            string cmd = "LC_ALL=POSIX lio_node --listlunacls " + tgt + " " + tpg;
             out = (map)SCR::Execute(.target.bash_output, cmd );
             ls = SplitStringNE( out["stdout"]:"", "\n" );
             i=0;
@@ -686,7 +687,7 @@ global map<string,any> ParseConfigLio()
                 if( !isempty(chap[0]:"") && !isempty(chap[1]:"") )
                     tgmap[tgt,tpg,"clnt",clnt,"incoming"] = [ chap ];
                 });
-            cmd = "lio_node --listtpgattr " + tgt + " " + tpg;
+            cmd = "LC_ALL=POSIX lio_node --listtpgattr " + tgt + " " + tpg;
             out = (map)SCR::Execute(.target.bash_output, cmd );
             ls = SplitStringNE( out["stdout"]:"", "\n" );
             i=0;
