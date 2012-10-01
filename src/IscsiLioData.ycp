@@ -444,7 +444,8 @@ global list<string> GetIpAddr()
         return(s);
         });
     ls = filter( string s, ls, ``(substring( s, 0, 4 )!="127."));
-    ls = add( ls, "" );
+    if( size(ls)==0 )
+	ls = add( ls, "" );
     y2milestone( "GetIpAddr ls:%1", ls );
     return( ls );
     }
