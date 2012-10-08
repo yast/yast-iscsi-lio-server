@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Oct  8 11:22:01 CEST 2012 - fehr@suse.de
+
+- fix size detection when using files as data source (bnc#769196)
+
+-------------------------------------------------------------------
 Mon Oct  1 16:44:32 CEST 2012 - fehr@suse.de
 
 - explicitely use LC_ALL=POSIX when parsing output (bnc#769196)
