@@ -725,32 +725,6 @@ symbol handleTable (string table, map event)
     return ret;
     }
 
-void initiSNS (string key) {
-boolean ac=false;
-string ip = "";
-UI::ChangeWidget(`isns_ac, `Value, ac);
-UI::ChangeWidget(`isns_ip, `Value, ip);
-}
-
-boolean validateiSNS(string key, map event){
- string ip = (string)UI::QueryWidget(`isns_ip, `Value);
- boolean valid=true;
- if (!isempty(ip)) valid = IP::Check(ip);
-	else valid= true;
- if (!valid)Popup::Error (_("Invalid IP address."));
- return valid;
-}
-
-void storeiSNS(string option_id, map option_map){
- string ip="";
- if ((boolean)UI::QueryWidget(`isns_ac, `Value))
-  {
-   ip = (string)UI::QueryWidget(`isns_ip, `Value);
-  }
-   string ac=((boolean)UI::QueryWidget(`isns_ac, `Value))?"Yes":"No";
-   if (ip=="") ac="";
-}
-
 //	**************** Edit Dialog	*****************************
 
 // init values for modifying target (read it from stored map)
