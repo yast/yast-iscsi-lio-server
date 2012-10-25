@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Oct 25 18:38:46 CEST 2012 - fehr@suse.de
+
+- add lio-utils to Requires in spec.in 
+
+-------------------------------------------------------------------
 Mon Oct  8 11:22:01 CEST 2012 - fehr@suse.de
 
 - fix size detection when using files as data source (bnc#769196)
