@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Oct 30 15:49:29 CET 2012  - fehr@suse.de
+
+- do not stop service when yast modules exits and service is not
+  configured to be started at boot (bnc#787195)
+  
+-------------------------------------------------------------------
 Thu Oct 25 18:38:46 CEST 2012 - fehr@suse.de
 
 - add lio-utils to Requires in spec.in 
