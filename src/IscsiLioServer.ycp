@@ -178,22 +178,6 @@ y2milestone("Service status = %1", statusOnStart);
  return ret;
 }
 
-// set service status
-boolean setServiceStatus(){
- boolean start=true;
- if (!serviceStatus) start = statusOnStart;
-
- if (!start) {
-	 y2milestone("Stop target service");
-	 Service::Stop("target");
-	} else {
-		y2milestone("Start target service");
-		serviceStatus=true;
-		Service::Start("target");
-		}
- return true;
-}
-
 /**
  * Read all iscsi-lio-server settings
  * @return true on success
@@ -324,9 +308,6 @@ global boolean Write() {
 
     Progress::NextStage();
     sleep(sl);
-
-    // set target initscript status
-    if(!setServiceStatus()) return false;
     return true;
 }
 
