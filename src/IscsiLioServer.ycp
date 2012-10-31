@@ -185,7 +185,7 @@ y2milestone("Service status = %1", statusOnStart);
 global boolean Read() {
 
     /* IscsiLioServer read dialog caption */
-    string caption = _("Initializing LIO iSCSI Target Configuration");
+    string caption = _("Initializing iSCSI LIO Target Configuration");
 
     // TODO FIXME Set the right number of stages
     integer steps = 4;

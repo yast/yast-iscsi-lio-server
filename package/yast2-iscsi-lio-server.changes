@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Oct 31 11:12:10 CET 2012  - fehr@suse.de
+
+- consistently use "iSCSI LIO Target" everywhere
+
+-------------------------------------------------------------------
 Tue Oct 30 15:49:29 CET 2012  - fehr@suse.de
 
 - do not stop service when yast modules exits and service is not

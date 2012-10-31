@@ -326,7 +326,7 @@ map<string, map <string, any> > widgets =
  */
 // Main dialog - tabbed
 any SummaryDialog() {
-    string caption = _("LIO iSCSI Target Overview");
+    string caption = _("iSCSI LIO Target Overview");
     map widget_descr = $[
         "tab": CWMTab::CreateWidget($[
             "tab_order": [ "service", "global", "targets" ],
