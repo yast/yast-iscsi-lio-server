@@ -568,7 +568,7 @@ map AddClntDialog()
 
 string CopyClntDialog()
     {
-    y2milestone( "CopylntDialog" );
+    y2milestone( "CopyClntDialog" );
     string ret = "";
     term dlg = `VBox( `MarginBox( 4, 1, 
                           `VBox(
@@ -1127,11 +1127,19 @@ symbol handleClient(string key, map event)
                     string auth = _("Disabled");
                     if( IscsiLioData::GetTpgAuth( curr_target, curr_tpg ) )
                         {
-                        map m = IscsiLioData::GetAuth( curr_target, curr_tpg, s );
+                        map m = $[];
+			if( haskey( changed_auth, s ) )
+			    m = changed_auth[s]:$[];
+			else
+			    m = IscsiLioData::GetAuth( curr_target, curr_tpg, s );
                         auth = GetAuthString(m);
                         changed_auth[c] = m;
                         }
-                    map<integer,integer> lmap = IscsiLioData::GetClntLun( curr_target, curr_tpg, s );
+                    map<integer,integer> lmap = $[];
+		    if( haskey( changed_lun, s ) )
+			lmap = changed_lun[s]:$[];
+		    else
+			lmap = IscsiLioData::GetClntLun( curr_target, curr_tpg, s );
                     changed_lun[c] = lmap;
                     y2milestone( "handleClient clnt:%1", c );
                     term it = `item(`id(size(items)), c, GetLunList( lmap ), auth); 
