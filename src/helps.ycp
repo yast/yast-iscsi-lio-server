@@ -122,8 +122,13 @@ It is not possible. You must code it first. :-)
 
 	// discovery authentication
 	"global_config"	: _(
-"Select the type of authentication. Use <b>No Authentication</b> or one of <b>Incoming</b> and <b>Outgoing</b> (can be both together). Then insert <b>User</b> and <b>Password</b>.\n"
-"For incoming authentication, it is possible to <b>Add</b> more  pairs or <b>Edit</b> or <b>Delete</b> them."),
+"Select the type of authentication. Use <b>No Authentication</b> or one of <b>Incoming</b> and <b>Outgoing</b> (can be both together). Then insert <b>User</b> and <b>Password</b>."),
+
+	// Target Cline setup.
+	"target-clnt"	: _(
+"With <b>Edit LUN</b> on can modify which LUNs the client can access."
+"After pressing <b>Edit Auth</b>, select the type of authentication. Use <b>Incoming</b>, <b>Outgoing</b> or both together. Then insert <b>User</b> and <b>Password</b>."
+"If <b>Use Authentication</b> is disabled in previous dialog, <b>Edit Auth</b> is disabled here."),
 
 	// target dialog
 	"server_table" :_(
