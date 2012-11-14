@@ -227,7 +227,7 @@ map<string, map <string, any> > widgets =
     // discovery authentication dialog
     "global_config" : $[
         "widget" : `custom,
-        "custom_widget" : AuthTerm(),
+        "custom_widget" : AuthTerm(true),
         "init"   : initGlobal,
         "handle" : handleAuth,
         "store"  : storeGlobal,
@@ -303,7 +303,7 @@ map<string, map <string, any> > widgets =
         "store"  : storeClient,
         "validate_type" : `function,
         "validate_function" : validateClient,
-        "help" : HELPS["global_config"]:""
+        "help" : HELPS["target-clnt"]:""
         ],
 
 	// dialog for modifying target
@@ -401,7 +401,7 @@ any AuthDialog(){
 
     string help = CWM::MergeHelps(w);
     contents = CWM::PrepareDialog(contents, w);
-    Wizard::SetContentsButtons(caption, contents, HELPS["global_config"]:"",
+    Wizard::SetContentsButtons(caption, contents, HELPS["target-clnt"]:"",
             Label::BackButton(), Label::NextButton());
 
     any ret = CWM::Run(w, $[`abort:ReallyAbort ]);

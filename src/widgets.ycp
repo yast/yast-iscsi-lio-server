@@ -176,12 +176,15 @@ symbol handleAuth(string key, map event)
     return nil;
     }
 
-term AuthTerm()
+term AuthTerm( boolean discovery )
     {
+    term no_auth = `Empty();
+    if( discovery )
+	no_auth = `VBox(`Left( `CheckBox(`id(`auth_none),`opt(`notify), _("No Authentication"), true) ),
+			`VSpacing(1.5));
     term t =
         `VBox(
-            `Left( `CheckBox(`id(`auth_none),`opt(`notify), _("No Authentication"), true) ),
-            `VSpacing(1.5),
+	    no_auth,
             `Left( `CheckBox(`id(`auth_in),`opt(`notify), _("Incoming Authentication"), false) ),
             `HBox(
                 `InputField(`id(`user_in), `opt(`hstretch), _("Username")), 
@@ -478,7 +481,7 @@ map ClntAuthDialog( string clnt )
     else
         lmap = IscsiLioData::GetAuth(curr_target,curr_tpg,clnt); 
     y2milestone( "ClntAuthDialog map:%1", lmap );
-    term auth_dialog = `VBox( `MarginBox( 6, 2, AuthTerm() ),
+    term auth_dialog = `VBox( `MarginBox( 6, 2, AuthTerm(false) ),
                               `ButtonBox(
                                   `PushButton(`id(`ok), `opt(`default), Label::OKButton() ),
                                   `PushButton(`id(`cancel), Label::CancelButton() ))
@@ -508,6 +511,12 @@ map ClntAuthDialog( string clnt )
                     lmap["incoming"] = in;
                 if( size(out)>0 )
                     lmap["outgoing"] = out;
+		if( size(in)==0 && size(out)==0 )
+		    {
+		    sym = `again;
+		    Popup::Error(_("Need to enable at least one Authentification!" ));
+		    }
+
                 }
             }
         else if(sym == `cancel) 
