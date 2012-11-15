@@ -1,6 +1,7 @@
 -------------------------------------------------------------------
 Thu Nov 15 13:27:44 CET 2012 - fehr@suse.de
 
+- 2.23.1
 - make lio_node --setchapauth be called with empty password to
   reset passwords
 
