@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Nov 15 13:27:44 CET 2012 - fehr@suse.de
+
+- make lio_node --setchapauth be called with empty password to
+  reset passwords
+
+-------------------------------------------------------------------
 Wed Nov 14 15:41:32 CET 2012 - fehr@suse.de
 
 - remove option "No Auth" for client authentification (bnc#789261)

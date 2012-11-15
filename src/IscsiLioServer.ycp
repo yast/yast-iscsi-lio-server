@@ -422,12 +422,12 @@ global list Summary()
             summary = Summary::AddLine(summary, _("When Booting"));
         else 
             summary = Summary::AddLine(summary, _("Manually"));
-	if( !IscsiLioData::HasAuth( "",0 )) 
+	if( !IscsiLioData::HasAuth( "",0,"" )) 
             summary = Summary::AddLine(summary, _("No Authentication"));
 	else 
             {
-            if(IscsiLioData::HasIncomingAuth("",0)) summary = Summary::AddLine(summary, _("Incoming Authentication"));
-            if(IscsiLioData::HasOutgoingAuth("",0)) summary = Summary::AddLine(summary, _("Outgoing Authentication"));
+            if(IscsiLioData::HasIncomingAuth("",0,"")) summary = Summary::AddLine(summary, _("Incoming Authentication"));
+            if(IscsiLioData::HasOutgoingAuth("",0,"")) summary = Summary::AddLine(summary, _("Outgoing Authentication"));
             }
 	summary = Summary::AddHeader(summary, _("Targets"));
 	summary = Summary::OpenList(summary);

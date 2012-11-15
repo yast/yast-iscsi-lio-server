@@ -43,7 +43,8 @@ void SetAuthIn(boolean status)
     UI::ChangeWidget(`id(`user_in),`Enabled, status );
     UI::ChangeWidget(`id(`pass_in),`Enabled, status );
     UI::ChangeWidget(`id(`auth_in),`Value, status );
-    if(status) UI::ChangeWidget(`id(`auth_none),`Value, !status );
+    if( UI::WidgetExists(`id(`auth_none))  && status )
+	UI::ChangeWidget(`id(`auth_none),`Value, !status );
     }
 
 // set outgoing authentication enabled/disabled status
@@ -53,7 +54,8 @@ void SetAuthOut(boolean status)
     UI::ChangeWidget(`id(`user_out),`Enabled, status );
     UI::ChangeWidget(`id(`pass_out),`Enabled, status );
     UI::ChangeWidget(`id(`auth_out),`Value, status );
-    if(status) UI::ChangeWidget(`id(`auth_none),`Value, !status );
+    if( UI::WidgetExists(`id(`auth_none))  && status )
+	UI::ChangeWidget(`id(`auth_none),`Value, !status );
     }
 
 // get values for incoming authentication
@@ -507,16 +509,13 @@ map ClntAuthDialog( string clnt )
                 {
                 list in = GetIncomingValues();
                 list out = GetOutgoingValues();
-                if( size(in)>0 )
-                    lmap["incoming"] = in;
-                if( size(out)>0 )
-                    lmap["outgoing"] = out;
+		lmap["incoming"] = in;
+		lmap["outgoing"] = out;
 		if( size(in)==0 && size(out)==0 )
 		    {
 		    sym = `again;
 		    Popup::Error(_("Need to enable at least one Authentification!" ));
 		    }
-
                 }
             }
         else if(sym == `cancel) 
