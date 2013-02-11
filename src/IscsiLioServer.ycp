@@ -174,7 +174,11 @@ boolean getServiceStatus(){
 	 serviceStatus=true;
 	}
 y2milestone("Service status = %1", statusOnStart);
- if (!statusOnStart) Service::Start("target");
+ if (!statusOnStart) 
+    {
+    if( !Service::Start("target"))
+	Popup::Error( _("Could not start service \"/etc/init.d/target\"") );
+    }
  return ret;
 }
 
