@@ -177,7 +177,11 @@ y2milestone("Service status = %1", statusOnStart);
  if (!statusOnStart) 
     {
     if( !Service::Start("target"))
-	Popup::Error( _("Could not start service \"/etc/init.d/target\"") );
+	{
+	string txt = sformat( ("Could not start service \"%1\""), 
+	                      "/etc/init.d/target" );
+	Popup::Error( txt );
+	}
     }
  return ret;
 }
