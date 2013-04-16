@@ -178,7 +178,8 @@ y2milestone("Service status = %1", statusOnStart);
     {
     if( !Service::Start("target"))
 	{
-	string txt = sformat( ("Could not start service \"%1\""), 
+	// to translator: %1 is replaced by pathname e.g. /etc/init.d/target
+	string txt = sformat( _("Could not start service \"%1\""), 
 	                      "/etc/init.d/target" );
 	Popup::Error( txt );
 	}
