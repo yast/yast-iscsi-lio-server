@@ -37,7 +37,6 @@ textdomain "iscsi-lio-server";
 import "Label";
 import "Popup";
 import "Wizard";
-import "Wizard_hw";
 import "IscsiLioServer";
 
 include "iscsi-lio-server/helps.ycp";
