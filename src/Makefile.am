@@ -1,26 +1,28 @@
-# Makefile.am for iscsi-server/src
+# Sources for iscsi-lio-server
+
+module_DATA = \
+  modules/IscsiLioServer.rb \
+  modules/IscsiLioData.rb
+
+client_DATA = \
+  clients/iscsi-lio-server.rb \
+  clients/iscsi-lio-server_proposal.rb \
+  clients/iscsi-lio-server_auto.rb
 
 yncludedir = @yncludedir@/iscsi-lio-server
+ynclude_DATA = \
+  include/iscsi-lio-server/widgets.rb \
+  include/iscsi-lio-server/wizards.rb \
+  include/iscsi-lio-server/dialogs.rb \
+  include/iscsi-lio-server/complex.rb \
+  include/iscsi-lio-server/helps.rb
 
-client_DATA =			\
-	iscsi-lio-server.ycp		\
-	iscsi-lio-server_auto.ycp	\
-	iscsi-lio-server_proposal.ycp
+scrconf_DATA = \
+  scrconf/ietd.scr
 
-ynclude_DATA =			\
-	helps.ycp		\
-	wizards.ycp		\
-	dialogs.ycp		\
-	complex.ycp		\
-	widgets.ycp
+desktop_DATA = \
+  desktop/iscsi-lio-server.desktop
 
-desktop_DATA =			\
-	iscsi-lio-server.desktop
-
-module_DATA =			\
-	IscsiLioServer.ycp	\
-	IscsiLioData.ycp	
-
-EXTRA_DIST = $(client_DATA) $(ynclude_DATA) $(module_DATA) $(desktop_DATA)
+EXTRA_DIST = $(module_DATA) $(client_DATA) $(ynclude_DATA) $(scrconf_DATA) $(desktop_DATA)
 
 include $(top_srcdir)/Makefile.am.common
