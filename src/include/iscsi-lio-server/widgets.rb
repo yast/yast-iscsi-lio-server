@@ -886,13 +886,13 @@ module Yast
       UI.ChangeWidget(
         Id(:ipaddr),
         :Value,
-        Ops.get(Builtins.splitstring(ipp, ":"), 0, "")
+        Ops.get(IscsiLioData.GetIpAndPort(ipp), 0, "")
       )
       UI.ChangeWidget(Id(:ipaddr), :Enabled, true)
       UI.ChangeWidget(
         Id(:port),
         :Value,
-        Ops.get(Builtins.splitstring(ipp, ":"), 1, "3260")
+        Ops.get(IscsiLioData.GetIpAndPort(ipp), 1, "3260")
       )
       UI.ChangeWidget(Id(:port), :Enabled, true)
       UI.ChangeWidget(
@@ -1008,6 +1008,9 @@ module Yast
       ip = Convert.to_string(UI.QueryWidget(:ipaddr, :Value))
       port = Builtins.tointeger(UI.QueryWidget(:port, :Value))
       Builtins.y2milestone("storeModify ip:%1 port:%2 ipp:%3", ip, port, ipp)
+      if IP.Check6(ip)
+         ip = "[#{ip}]" # brackets needed around IPv6
+      end
       np = Builtins.sformat("%1:%2", ip, port)
       if !Builtins.isempty(ip) && np != ipp
         chg = true
@@ -1146,6 +1149,7 @@ module Yast
         :from => "any",
         :to   => "list <term>"
       )
+      Builtins.y2milestone("Items: %1", ip)
       s = Ops.get_string(ip, [0, 1], "")
       Builtins.y2milestone("initAddTarget ip:%1", s)
       UI.ChangeWidget(Id(:ipaddr), :Value, s)

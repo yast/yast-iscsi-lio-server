@@ -46,6 +46,16 @@ module Yast
       end
     end
 
+    def GetIpAndPort(np)
+      if !np.start_with?("[")
+        ret = Builtins.splitstring(np, ":")
+      else
+        match_data = np.match(/\[([:\w]+)\]:(\d+)/)
+        ret = [match_data[1] || "", match_data[2] || ""]
+      end
+      ret
+    end
+
     def MyFind(s, pat)
       ret = Builtins.search(s, pat)
       ret = -1 if ret == nil
@@ -357,14 +367,16 @@ module Yast
     end
 
     def GetNetworkPortal(tgt, tpg)
+      Builtins.y2milestone("Data: %1, tgt: %2, tpg: %3", @data, tgt, tpg)
       ret = Builtins.maplist(
         Ops.get_list(@data, ["tgt", tgt, tpg, "ep", "np"], [])
       ) do |n|
-        Builtins.sformat(
-          "%1:%2",
-          Ops.get_string(n, "ip", ""),
-          Ops.get_integer(n, "port", 1)
-        )
+        ip = n["ip"] || ""
+        if IP.Check6(ip)
+          ip = "[#{ip}]"
+        end
+        port = n["port"] || 1
+        ipp = Builtins.sformat("%1:%2", ip, port )
       end
       deep_copy(ret)
     end
@@ -537,17 +549,26 @@ module Yast
       out = Convert.to_map(
         SCR.Execute(path(".target.bash_output"), "LC_ALL=POSIX /sbin/ifconfig")
       )
-      ls = Builtins.filter(
-        Builtins.splitstring(Ops.get_string(out, "stdout", ""), "\n")
-      ) { |ln| Builtins.search(ln, "inet addr:") != nil }
+      ls = Builtins.splitstring(out["stdout"]|| "", "\n")
+      ls = ls.delete_if{ |line| !line.include?("inet") || line.include?("Scope:Link") }
+
       ls = Builtins.maplist(ls) do |s|
-        pos = Builtins.search(s, "inet addr:")
-        s = Builtins.substring(s, Ops.add(pos, 10))
-        pos = Builtins.findfirstof(s, "\t ")
-        s = Builtins.substring(s, 0, pos) if pos != nil
-        s
+        if ((pos = Builtins.search(s, "inet addr:")) != nil)
+          s = Builtins.substring(s, Ops.add(pos, 10)) # inet addr:
+          pos = Builtins.findfirstof(s, "\t ")
+          s = Builtins.substring(s, 0, pos) if pos != nil
+          s
+        elsif ((pos = Builtins.search(s, "inet6 addr:")) != nil)
+          s = Builtins.substring(s, Ops.add(pos, 12)) # inet6 addr:_
+          pos = Builtins.findfirstof(s, "/")
+          s = Builtins.substring(s, 0, pos) if pos != nil
+          s
+        else
+          s
+        end
       end
-      ls = Builtins.filter(ls) { |s| Builtins.substring(s, 0, 4) != "127." }
+      ls = Builtins.filter(ls) { |s| Builtins.substring(s, 0, 4) != "127." } # lo IPv4
+      ls = Builtins.filter(ls) { |s| Builtins.substring(s, 0, 3) != "::1" }  # lo IPv6
       ls = Builtins.add(ls, "") if Builtins.size(ls) == 0
       Builtins.y2milestone("GetIpAddr ls:%1", ls)
       deep_copy(ls)
@@ -783,10 +804,8 @@ module Yast
               Builtins.search(Ops.get(ls, i, ""), "TPG Network Portals:") != nil
             i = Ops.add(i, 1)
             while Ops.greater_than(MyFind(Ops.get(ls, i, ""), "-> "), 0)
-              tls = SplitStringNE(
-                Ops.get(SplitStringNE(Ops.get(ls, i, ""), " "), 1, ""),
-                ":"
-              )
+              np = Ops.get(SplitStringNE(Ops.get(ls, i, ""), " "), 1, "")
+              tls = GetIpAndPort(np)
               port = Builtins.tointeger(Ops.get(tls, 1, ""))
               if port != nil
                 Ops.set(
@@ -797,6 +816,7 @@ module Yast
                     { "ip" => Ops.get(tls, 0, ""), "port" => port }
                   )
                 )
+                Builtins.y2milestone("Set ip to: %1", Ops.get(tls, 0, ""))
               end
               i = Ops.add(i, 1)
             end
