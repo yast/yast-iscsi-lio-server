@@ -47,11 +47,14 @@ module Yast
     end
 
     def GetIpAndPort(np)
+      return [] if !np || np.empty?
+
       if !np.start_with?("[")
         ret = Builtins.splitstring(np, ":")
-      else
-        match_data = np.match(/\[([:\w]+)\]:(\d+)/)
+      elsif match_data = np.match(/\[([:\w]+)\]:(\d+)/)
         ret = [match_data[1] || "", match_data[2] || ""]
+      else
+        ret = []
       end
       ret
     end

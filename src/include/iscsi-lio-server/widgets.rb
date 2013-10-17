@@ -883,16 +883,17 @@ module Yast
         ""
       )
       Builtins.y2milestone("initModify ipp:%1", ipp)
+      ip, port = IscsiLioData.GetIpAndPort(ipp)
       UI.ChangeWidget(
         Id(:ipaddr),
         :Value,
-        Ops.get(IscsiLioData.GetIpAndPort(ipp), 0, "")
+        ip || ""
       )
       UI.ChangeWidget(Id(:ipaddr), :Enabled, true)
       UI.ChangeWidget(
         Id(:port),
         :Value,
-        Ops.get(IscsiLioData.GetIpAndPort(ipp), 1, "3260")
+        port || ""
       )
       UI.ChangeWidget(Id(:port), :Enabled, true)
       UI.ChangeWidget(
