@@ -281,7 +281,9 @@ module Yast
     def LUNDetailDialog(pos, items)
       items = deep_copy(items)
       Builtins.y2milestone("LUNDetailDialog pos:%1 items:%2", pos, items)
-      other = Ops.greater_or_equal(pos, 0) ? Builtins.remove(items, pos) : items
+      other = Ops.greater_or_equal(pos, 0) ?
+        Builtins.remove(items, pos) :
+        deep_copy(items)
       Builtins.y2milestone("LUNDetailDialog other:%1", other)
       previous = Ops.get(items, pos, Empty())
       ret = Empty()
