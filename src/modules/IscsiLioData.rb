@@ -375,9 +375,7 @@ module Yast
         Ops.get_list(@data, ["tgt", tgt, tpg, "ep", "np"], [])
       ) do |n|
         ip = n["ip"] || ""
-        if IP.Check6(ip)
-          ip = "[#{ip}]"
-        end
+        ip = "[#{ip}]" if IP.Check6(ip)
         port = n["port"] || 1
         ipp = Builtins.sformat("%1:%2", ip, port )
       end
@@ -548,30 +546,42 @@ module Yast
       {}
     end
 
+    # # LC_ALL=POSIX /sbin/ifconfig
+    # enp3s0f0  Link encap:Ethernet  HWaddr 00:21:5A:F6:69:80
+    #      inet addr:10.121.8.83  Bcast:10.121.63.255  Mask:255.255.192.0
+    #      inet6 addr: 2620:113:80c0:8000:19ca:2ad:d755:fd68/64 Scope:Global
+    #      inet6 addr: fe80::221:5aff:fef6:6980/64 Scope:Link
+    #      inet6 addr: 2620:113:80c0:8000:a845:8232:ab79:6a7c/64 Scope:Global
+    #      UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+    #      RX packets:807334589 errors:0 dropped:96 overruns:0 frame:0
+    #      TX packets:147793653 errors:0 dropped:0 overruns:0 carrier:0
+    #      collisions:0 txqueuelen:1000
+    #      RX bytes:1138190820596 (1085463.3 Mb)  TX bytes:121179938780 (115566.1 Mb)
+    #      Interrupt:16 Memory:fd000000-fd7fffff
     def GetIpAddr
       out = Convert.to_map(
         SCR.Execute(path(".target.bash_output"), "LC_ALL=POSIX /sbin/ifconfig")
       )
       ls = Builtins.splitstring(out["stdout"]|| "", "\n")
-      ls = ls.delete_if{ |line| !line.include?("inet") || line.include?("Scope:Link") }
+      ls = ls.select{ |line| line.include?("inet") && !line.include?("Scope:Link") }
 
       ls = Builtins.maplist(ls) do |s|
         if ((pos = Builtins.search(s, "inet addr:")) != nil)
-          s = Builtins.substring(s, Ops.add(pos, 10)) # inet addr:
+          s = Builtins.substring(s, Ops.add(pos, 10)) # 'inet addr:'
           pos = Builtins.findfirstof(s, "\t ")
           s = Builtins.substring(s, 0, pos) if pos != nil
-          s
         elsif ((pos = Builtins.search(s, "inet6 addr:")) != nil)
-          s = Builtins.substring(s, Ops.add(pos, 12)) # inet6 addr:_
+          s = Builtins.substring(s, Ops.add(pos, 12)) # 'inet6 addr: '
           pos = Builtins.findfirstof(s, "/")
           s = Builtins.substring(s, 0, pos) if pos != nil
-          s
         else
           s
         end
       end
-      ls = Builtins.filter(ls) { |s| Builtins.substring(s, 0, 4) != "127." } # lo IPv4
-      ls = Builtins.filter(ls) { |s| Builtins.substring(s, 0, 3) != "::1" }  # lo IPv6
+      ls.reject! do |address|
+        address.start_with?("127.") ||  # local IPv4
+          address.start_with?("::1") # local IPv6
+      end
       ls = Builtins.add(ls, "") if Builtins.size(ls) == 0
       Builtins.y2milestone("GetIpAddr ls:%1", ls)
       deep_copy(ls)
