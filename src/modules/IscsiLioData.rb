@@ -553,7 +553,8 @@ module Yast
       out = Convert.to_map(
         SCR.Execute(path(".target.bash_output"), "LC_ALL=POSIX /sbin/ifconfig")
       )
-      ret = Builtins.splitstring(out["stdout"]|| "", "\n")
+      ls = out.fetch("stdout", "").split("\n")
+      deep_copy(ls)
     end
 
     #
@@ -561,8 +562,9 @@ module Yast
     #
     def GetIpAddr
       ip_list = GetNetConfig()
-      ip_list.select!{ |line|
-        line.include?("inet") && !line.include?("Scope:Link") }
+      ip_list.select! do |line|
+        line.include?("inet") && !line.include?("Scope:Link")
+      end
 
       ip_list = ip_list.map do |ip|
         ip.lstrip!
@@ -581,7 +583,7 @@ module Yast
           address.start_with?("::1") # local IPv6
       end
 
-      ip_list = Builtins.add(ip_list, "") if Builtins.size(ip_list) == 0
+      ip_list = [""] if ip_list.empty?
       Builtins.y2milestone("GetIpAddr: %1", ip_list)
       deep_copy(ip_list)
     end
