@@ -27,6 +27,7 @@ Group:          System/YaST
 License:        GPL-2.0
 BuildRequires:  docbook-xsl-stylesheets doxygen libxslt popt-devel sgml-skel update-desktop-files yast2 yast2-packagemanager-devel yast2-testsuite
 BuildRequires:  yast2-devtools >= 3.0.6
+BuildRequires:  rubygem-rspec
 Requires:       lio-utils
 
 # network needs Wizard::OpenCancelOKDialog()
