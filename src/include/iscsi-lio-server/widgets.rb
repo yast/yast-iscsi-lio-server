@@ -398,6 +398,7 @@ module Yast
     def LUNMapDialog(clnt)
       Builtins.y2milestone("LUNMapDialog clnt:%1", clnt)
       lmap = {}
+      Builtins.y2milestone("changed_lun: %1", @changed_lun)
       if Builtins.haskey(@changed_lun, clnt)
         lmap = Ops.get(@changed_lun, clnt, {})
       else
@@ -616,7 +617,7 @@ module Yast
           4,
           1,
           VBox(
-            Left(Label(_("New client name:"))),
+            Left(Label(_("Client name:"))),
             MinWidth(50, InputField(Id(:clnt), Opt(:hstretch), "", "")),
             VSpacing(0.5),
             Left(CheckBox(Id(:import), _("Import LUNs from TPG"), true))
@@ -636,11 +637,11 @@ module Yast
           txt = ""
           s = Convert.to_string(UI.QueryWidget(Id(:clnt), :Value))
           txt = _("Client name must not be empty!") if Builtins.isempty(s)
-          if Builtins.haskey(@changed_lun, s) ||
-              Builtins.contains(
-                IscsiLioData.GetClntList(@curr_target, @curr_tpg),
-                s
-              )
+          Builtins.y2milestone("Changed_lun: %1 new client name: %2", @changed_lun, s)
+          # Don't check IscsiLioData.GetClntList(@curr_target, @curr_tpg) for existing
+          # client name. It's allowed to have several LUNs accessable for same client.
+          # TODO: verify whether it's necessary to check @changed_lun here?
+          if @changed_lun.has_key?(s)
             txt = _("Client name already exists!")
           end
           if !Builtins.isempty(txt)
@@ -662,6 +663,10 @@ module Yast
       deep_copy(ret)
     end
 
+    #
+    # Copy exisiting LUN, i.e. give additional client access to the LUN
+    # (which is allowed, makes sense e.g. with multipath)
+    #
     def CopyClntDialog
       Builtins.y2milestone("CopyClntDialog")
       ret = ""
