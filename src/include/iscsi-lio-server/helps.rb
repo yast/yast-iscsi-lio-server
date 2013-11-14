@@ -40,7 +40,8 @@ module Yast
         ) +
           # Read dialog help 2/2
           _(
-            "<p><b><big>Aborting Initialization</big></b><br>\nSafely abort the configuration utility by pressing <b>Abort</b> now.</p>\n"
+            "<p><b><big>Aborting Initialization</big></b><br>\n" +
+            "Safely abort the configuration utility by pressing <b>Abort</b> now.</p>\n"
           ),
         # Write dialog help 1/2
         "write"              => _(
@@ -81,7 +82,8 @@ module Yast
         ) +
           # Ovreview dialog help 2/3
           _(
-            "<p><b><big>Adding an iSCSI Target</big></b><br>\nPress <b>Add</b> to configure an iSCSI target.</p>"
+            "<p><b><big>Adding an iSCSI Target</big></b><br>\n" +
+            "Press <b>Add</b> to configure an iSCSI target.</p>"
           ) +
           # Ovreview dialog help 3/3
           _(
@@ -115,22 +117,34 @@ module Yast
           ),
         # discovery authentication
         "global_config"      => _(
-          "Select the type of authentication. Use <b>No Authentication</b> or one of <b>Incoming</b> and <b>Outgoing</b> (can be both together). Then insert <b>User</b> and <b>Password</b>."
+          "Select the type of authentication. Use <b>No Authentication</b> or one of <b>Incoming</b>" +
+          " and <b>Outgoing</b> (can be both together). Then insert <b>User</b> and <b>Password</b>."
         ),
-        # Target Cline setup.
+        # target client setup.
         "target-clnt"        => _(
-          "With <b>Edit LUN</b> on can modify which LUNs the client can access.After pressing <b>Edit Auth</b>, select the type of authentication. Use <b>Incoming</b>, <b>Outgoing</b> or both together. Then insert <b>User</b> and <b>Password</b>.If <b>Use Authentication</b> is disabled in previous dialog, <b>Edit Auth</b> is disabled here."
-        ),
+           "<p>Use <b>Add</b> to give a client access for a LUN imported from target portal group." +
+           " Specify which client is allowed to access it (client name is <i>InitiatorName</i> in" +
+           " '/etc/iscsci/initiatorname.iscsi' on iscsi inititiator). <b>Delete</b> will remove the" +
+           " client access to the LUN.</p>"
+         ) +
+          _(
+            "<p>With <b>Edit LUN</b> one can modify the LUN mapping. Please note that LUN target number" +
+            " must be unique.<br>After pressing <b>Edit Auth</b>, select the type of authentication." +
+            " Use <b>Incoming</b>, <b>Outgoing</b> or both together. Then insert <b>User</b> and <b>Password</b>." +
+            " If <b>Use Authentication</b> is disabled in previous dialog, <b>Edit Auth</b> is disabled here.</p>"
+          ) +
+        _( "<p><b>Copy</b> offers the possibility to give an additional client access to the LUN.</p>"),
         # target dialog
         "server_table"       => _(
-          "List of offered targets and target portal groups. Create a new target by clicking <b>Add</b>. \nTo delete or modify an item, select it and press <b>Modify</b> or <b>Delete</b>."
+          "List of offered targets and target portal groups. Create a new target by clicking <b>Add</b>.\n" +
+          "To delete or modify an item, select it and press <b>Edit</b> or <b>Delete</b>."
         ),
         # edit target
         "target-modify"      => _(
           "<h1>iSCSI Target IP/Port and LUN setup</h1>"
         ) + "<p>" +
           _(
-            "It is possible to make arbitary block devices or files available under a lun.\n" +
+            "It is possible to make arbitary block devices or files available under a <b>LUN</b>.\n" +
               "You have to provide <b>path</b> to either block devices or file. \n" +
               "The <b>LUN name</b> is an arbitrary name to uniquely identify the <b>LUN</b>. \n" +
               "The name needs to be unique within the target portal group. If the user\n" +
@@ -168,7 +182,8 @@ module Yast
         # LUN details
         "lun-details"        => _("<h1>iSCSI Target</h1>") +
           _(
-            "Edit <b>LUN</b> number if needed, set <b>Type</b> (nullio is for testing purposes). \nIf Type=fileio set <b>Path</b> to disk device or file.<b>SCSI ID</b> and <b>Sectors</b> are optional."
+            "Edit <b>LUN</b> number if needed, set <b>Type</b> (nullio is for testing purposes).\n" +
+            "If Type=fileio set <b>Path</b> to disk device or file.<b>SCSI ID</b> and <b>Sectors</b> are optional."
           )
       } 
 

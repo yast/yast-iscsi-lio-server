@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Nov 12 14:04:05 CET 2013 - gs@suse.de
+
+- add IPv6 support (fate #316261)
+- allow a client to access several LUNs, improve help text
+- 3.1.1
+
+-------------------------------------------------------------------
 Wed Sep 18 16:42:39 UTC 2013 - lslezak@suse.cz
 
 - do not use *.spec.in template, use *.spec file with RPM macros
