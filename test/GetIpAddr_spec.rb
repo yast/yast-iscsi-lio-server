@@ -1,4 +1,4 @@
-#! env rspec
+#! /usr/bin/rspec
 require_relative '../src/modules/IscsiLioData'
 
 describe Yast::IscsiLioDataClass do
