@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Jan 14 13:06:31 CET 2014 - gs@suse.de
+
+- use /etc/iet/ietd.conf instead of /etc/ietd.conf (bnc#800956) 
+- 3.1.3
+
+-------------------------------------------------------------------
 Tue Dec  3 11:19:37 CET 2013 - gs@suse.de
 
 - disable authentication correctly for a new target (bnc #821613)
