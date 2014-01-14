@@ -12,7 +12,7 @@
 .etc.ietd
 
 `ag_ini(
-    `IniAgent( "/etc/ietd.conf",
+    `IniAgent( "/etc/iet/ietd.conf",
         $[
         "options" : [ "global_values", "comments_last", "line_can_continue", "join_multiline", "repeat_names" ],
         "comments": [
