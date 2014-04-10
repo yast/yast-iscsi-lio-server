@@ -268,7 +268,7 @@ module Yast
               IscsiLioServer.method(:SetStartService),
               "void (boolean)"
             ),
-            # radio button (starting iscsitarget service - option 1)
+            # radio button (starting LIO target service - option 1)
             "start_auto_button"      => _(
               "When &Booting"
             ),
@@ -287,7 +287,7 @@ module Yast
         ),
         # firewall
         "firewall"      => CWMFirewallInterfaces.CreateOpenFirewallWidget(
-          { "services" => ["service:iscsitarget"], "display_details" => true }
+          { "services" => ["service:target"], "display_details" => true }
         ),
         # discovery authentication dialog
         "global_config" => {
