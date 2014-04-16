@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Apr 30 12:12:38 CEST 2014 - gs@suse.de
+
+- fixed typos in help text (bnc #873026)
+- 3.1.5
+
+-------------------------------------------------------------------
 Mon Apr 14 10:49:19 CEST 2014 - gs@suse.de
 
 - name of firewall service is service:target
