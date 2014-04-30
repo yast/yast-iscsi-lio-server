@@ -124,7 +124,7 @@ module Yast
         "target-clnt"        => _(
            "<p>Use <b>Add</b> to give a client access for a LUN imported from target portal group." +
            " Specify which client is allowed to access it (client name is <i>InitiatorName</i> in" +
-           " '/etc/iscsci/initiatorname.iscsi' on iscsi inititiator). <b>Delete</b> will remove the" +
+           " '/etc/iscsi/initiatorname.iscsi' on iscsi initiator). <b>Delete</b> will remove the" +
            " client access to the LUN.</p>"
          ) +
           _(
