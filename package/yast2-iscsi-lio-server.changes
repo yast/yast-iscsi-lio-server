@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue May  6 09:20:58 CEST 2014 - gs@suse.de
+
+- fixed integer conversion to string (bnc #874963)
+- 3.1.6
+
+-------------------------------------------------------------------
 Wed Apr 30 12:12:38 CEST 2014 - gs@suse.de
 
 - fixed typos in help text (bnc #873026)
