@@ -1004,7 +1004,7 @@ module Yast
             Ops.add(
               Ops.get_integer(
                 tgmap,
-                [Ops.get_string(ls2, 0, ""), Ops.get_integer(ls2, 1, ""), "conn"],
+                [Ops.get_string(ls2, 0, ""), Ops.get_integer(ls2, 1, -1), "conn"],
                 0
               ),
               1
