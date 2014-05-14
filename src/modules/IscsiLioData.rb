@@ -1403,6 +1403,17 @@ module Yast
       nil
     end
 
+    def SaveSettings
+      dump_cmd = "/usr/sbin/lio_dump --stdout > /etc/target/lio_setup.sh"
+      if !LogExecCmd(dump_cmd)
+        Report.Error(_("Cannot save lio setup"))
+      end
+      setup_cmd = "/usr/sbin/tcm_dump --stdout > /etc/target/tcm_setup.sh"
+      if !LogExecCmd(setup_cmd)
+        Report.Error(_("Cannot save tcm setup"))
+      end
+    end
+
     publish :function => :CreateLunName, :type => "string (list <string>, string)"
     publish :function => :ParseConfigIetd, :type => "map <string, any> (map <string, any>)"
     publish :function => :AddNewTarget, :type => "void (string, integer, list <string>)"
@@ -1446,6 +1457,7 @@ module Yast
     publish :function => :DoRemoveClntLun, :type => "boolean (string, integer, string, integer)"
     publish :function => :DoCreateClntLun, :type => "boolean (string, integer, string, integer, integer)"
     publish :function => :UpdateConfig, :type => "void ()"
+    publish :function => :SaveSettings, :type => "void()"
   end
 
   IscsiLioData = IscsiLioDataClass.new

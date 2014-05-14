@@ -280,13 +280,12 @@ module Yast
       # IscsiLioServer write dialog caption
       caption = _("Saving iSCSI LIO Target Configuration")
 
-      # TODO FIXME And set the right number of stages
+      # number of stages
       steps = 2
 
       sl = 500
       Builtins.sleep(sl)
 
-      # TODO FIXME Names of real stages
       # We do not set help text here, because it was set outside
       Progress.New(
         caption,
@@ -294,15 +293,15 @@ module Yast
         steps,
         [
           # Progress stage 1/2
-          _("Write the settings"),
+          _("Write fire wall settings"),
           # Progress stage 2/2
-          _("Run SuSEconfig")
+          _("Write lio configuration")
         ],
         [
           # Progress step 1/2
-          _("Writing the settings..."),
+          _("Writing the fire wall settings..."),
           # Progress step 2/2
-          _("Running SuSEconfig..."),
+          _("Writing lio configuration..."),
           # Progress finished
           _("Finished")
         ],
@@ -315,6 +314,7 @@ module Yast
       Progress.set(true)
 
       Progress.NextStage
+      IscsiLioData.SaveSettings
       Builtins.sleep(sl)
       true
     end
