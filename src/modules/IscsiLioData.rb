@@ -1404,11 +1404,11 @@ module Yast
     end
 
     def SaveSettings
-      dump_cmd = "/usr/sbin/lio_dump --stdout > /etc/target/lio_setup.sh"
+      dump_cmd = "/usr/sbin/lio_dump --file /etc/target/lio_setup.sh"
       if !LogExecCmd(dump_cmd)
         Report.Error(_("Cannot save lio setup"))
       end
-      setup_cmd = "/usr/sbin/tcm_dump --stdout > /etc/target/tcm_setup.sh"
+      setup_cmd = "/usr/sbin/tcm_dump --file /etc/target/tcm_setup.sh"
       if !LogExecCmd(setup_cmd)
         Report.Error(_("Cannot save tcm setup"))
       end
