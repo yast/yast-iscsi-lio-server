@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu May 15 09:53:44 CEST 2014 - gs@suse.de
+
+- save configuration on Finish (call lio_dump and tcm_dump) 
+- 3.1.7
+
+-------------------------------------------------------------------
 Tue May  6 09:20:58 CEST 2014 - gs@suse.de
 
 - fixed integer conversion to string (bnc #874963)
