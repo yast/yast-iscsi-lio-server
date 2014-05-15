@@ -293,13 +293,13 @@ module Yast
         steps,
         [
           # Progress stage 1/2
-          _("Write fire wall settings"),
+          _("Write firewall settings"),
           # Progress stage 2/2
           _("Write lio configuration")
         ],
         [
           # Progress step 1/2
-          _("Writing the fire wall settings..."),
+          _("Writing the firewall settings..."),
           # Progress step 2/2
           _("Writing lio configuration..."),
           # Progress finished
