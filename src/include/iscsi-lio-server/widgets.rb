@@ -1013,14 +1013,14 @@ module Yast
       )
       ip = Convert.to_string(UI.QueryWidget(:ipaddr, :Value))
       port = Builtins.tointeger(UI.QueryWidget(:port, :Value))
+      add_all = Convert.to_boolean(UI.QueryWidget(:add_ip, :Value))
+
       Builtins.y2milestone("storeModify ip:%1 port:%2 ipp:%3", ip, port, ipp)
-      if IP.Check6(ip)
-         ip = "[#{ip}]" # brackets needed around IPv6
-      end
-      np = Builtins.sformat("%1:%2", ip, port)
-      if !Builtins.isempty(ip) && np != ipp
+
+      np = IscsiLioData.FormatIpPort(ip, port)
+      if (!ip.empty? && np != ipp) || add_all
         chg = true
-        if !IscsiLioData.SetNetworkPortal(@curr_target, @curr_tpg, np)
+        if !IscsiLioData.SetNetworkPortal(@curr_target, @curr_tpg, np, port, add_all)
           txt = Builtins.sformat(_("Problem setting network portal to %1"), np)
           Popup.Error(txt)
         end
