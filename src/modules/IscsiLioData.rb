@@ -418,7 +418,7 @@ module Yast
           if ip
             LogExecCmd("lio_node --delnp #{target_info} #{FormatIpPort(ip, port)}")
           else
-            Builtins.y2error("IP address missing in data")
+            Builtins.y2error("IP address missing in data #{ipp}")
           end
         end
       end
