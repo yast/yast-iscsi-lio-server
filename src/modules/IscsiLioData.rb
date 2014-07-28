@@ -369,15 +369,21 @@ module Yast
       deep_copy(ret)
     end
 
+    # format ip and port information for use in commands
+    def FormatIpPort(ip, port)
+      # brackets needed around IPv6
+      ip = "[#{ip}]" if IP.Check6(ip)
+      return "#{ip}:#{port}"
+    end
+
     def GetNetworkPortal(tgt, tpg)
       Builtins.y2milestone("Data: %1, tgt: %2, tpg: %3", @data, tgt, tpg)
       ret = Builtins.maplist(
         Ops.get_list(@data, ["tgt", tgt, tpg, "ep", "np"], [])
       ) do |n|
         ip = n["ip"] || ""
-        ip = "[#{ip}]" if IP.Check6(ip)
-        port = n["port"] || 1
-        ipp = Builtins.sformat("%1:%2", ip, port )
+        port = n["port"] || 3260
+        ipp = FormatIpPort(ip, port)
       end
       deep_copy(ret)
     end
@@ -399,28 +405,33 @@ module Yast
       deep_copy(ret)
     end
 
-    def SetNetworkPortal(tgt, tpg, np)
+    def SetNetworkPortal(tgt, tpg, np, new_port, add_all)
       Builtins.y2milestone("SetNetworkPortal tgt:%1 tpg:%2 np:%3", tgt, tpg, np)
-      kt = Ops.add(Ops.add(Ops.add(tgt, " "), tpg), " ")
-      if !Builtins.isempty(
-          Ops.get_list(@data, ["tgt", tgt, tpg, "ep", "np"], [])
-        )
-        LogExecCmd(
-          Ops.add(
-            Ops.add("lio_node --delnp ", kt),
-            Builtins.sformat(
-              "%1:%2",
-              Ops.get_string(@data, ["tgt", tgt, tpg, "ep", "np", 0, "ip"], ""),
-              Ops.get_integer(
-                @data,
-                ["tgt", tgt, tpg, "ep", "np", 0, "port"],
-                1
-              )
-            )
-          )
-        )
+
+      target_info = "#{tgt} #{tpg}"
+      ip_list = Ops.get_list(@data, ["tgt", tgt, tpg, "ep", "np"], [])
+
+      if !ip_list.empty? && !add_all
+        ip_list.each do |ipp|
+          ip = ipp["ip"]
+          port = ipp["port"] || 3260
+          if ip
+            LogExecCmd("lio_node --delnp #{target_info} #{FormatIpPort(ip, port)}")
+          else
+            Builtins.y2error("IP address missing in data #{ipp}")
+          end
+        end
       end
-      ret = LogExecCmd(Ops.add(Ops.add("lio_node --addnp ", kt), np))
+
+      if add_all
+        ret = true
+        IscsiLioData.GetIpAddr.each do |ip|
+          success = LogExecCmd("lio_node --addnp #{target_info} #{FormatIpPort(ip, new_port)}")
+          ret = false if !success 
+        end
+      else
+        ret = LogExecCmd("lio_node --addnp #{target_info} #{np}")
+      end
       ret
     end
 
@@ -1429,7 +1440,7 @@ module Yast
     publish :function => :GetTpgAuth, :type => "boolean (string, integer)"
     publish :function => :GetClntList, :type => "list <string> (string, integer)"
     publish :function => :GetClntLun, :type => "map <integer, integer> (string, integer, string)"
-    publish :function => :SetNetworkPortal, :type => "boolean (string, integer, string)"
+    publish :function => :SetNetworkPortal, :type => "boolean (string, integer, string, string, boolean)"
     publish :function => :GetTargets, :type => "list <list> ()"
     publish :function => :GetExportLun, :type => "string (integer, map)"
     publish :function => :GetExportAuth, :type => "list <map <string, any>> (string, integer)"

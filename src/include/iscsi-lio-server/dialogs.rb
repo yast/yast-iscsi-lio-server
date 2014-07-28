@@ -139,6 +139,8 @@ module Yast
                   ),
                   HWeight(1, InputField(Id(:port), _("Port number"), "3260"))
                 ),
+                VSpacing(0.2),
+                Left(HBox(CheckBox(Id(:add_ip), _("Bind all IP addresses"), false))),
                 VSpacing(0.5),
                 Left(HBox(CheckBox(Id(:auth), _("Use Authentication"), true))),
                 VSpacing(0.5),
