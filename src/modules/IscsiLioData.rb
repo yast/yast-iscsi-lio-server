@@ -373,7 +373,7 @@ module Yast
     def FormatIpPort(ip, port)
       # brackets needed around IPv6
       ip = "[#{ip}]" if IP.Check6(ip)
-      ip_port = Builtins.sformat("%1:%2", ip, port)
+      return "#{ip}:#{port}"
     end
 
     def GetNetworkPortal(tgt, tpg)
@@ -382,7 +382,7 @@ module Yast
         Ops.get_list(@data, ["tgt", tgt, tpg, "ep", "np"], [])
       ) do |n|
         ip = n["ip"] || ""
-        port = n["port"] || 1
+        port = n["port"] || 3260
         ipp = FormatIpPort(ip, port)
       end
       deep_copy(ret)
@@ -408,24 +408,25 @@ module Yast
     def SetNetworkPortal(tgt, tpg, np, new_port, add_all)
       Builtins.y2milestone("SetNetworkPortal tgt:%1 tpg:%2 np:%3", tgt, tpg, np)
 
-      kt = "#{tgt} #{tpg}"
+      target_info = "#{tgt} #{tpg}"
       ip_list = Ops.get_list(@data, ["tgt", tgt, tpg, "ep", "np"], [])
 
       if !ip_list.empty? && !add_all
         ip_list.each do |ipp|
-          ip = ipp["ip"] || ""
-          port = ipp["port"] || 1
-          LogExecCmd("lio_node --delnp #{kt} #{FormatIpPort(ip, port)}")
+          ip = ipp["ip"]
+          port = ipp["port"] || 3260
+          LogExecCmd("lio_node --delnp #{target_info} #{FormatIpPort(ip, port)}") if !ip.nil?
         end
       end
-      ret = true
-      if !add_all
-        ret = LogExecCmd("lio_node --addnp #{kt} #{np}")
-      else
+
+      if add_all
+        ret = true
         IscsiLioData.GetIpAddr.each do |ip|
-          success = LogExecCmd("lio_node --addnp #{kt} #{FormatIpPort(ip, new_port)}")
+          success = LogExecCmd("lio_node --addnp #{target_info} #{FormatIpPort(ip, new_port)}")
           ret = false if !success 
         end
+      else
+        ret = LogExecCmd("lio_node --addnp #{target_info} #{np}")
       end
       ret
     end
