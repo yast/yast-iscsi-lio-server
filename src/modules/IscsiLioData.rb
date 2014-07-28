@@ -415,7 +415,11 @@ module Yast
         ip_list.each do |ipp|
           ip = ipp["ip"]
           port = ipp["port"] || 3260
-          LogExecCmd("lio_node --delnp #{target_info} #{FormatIpPort(ip, port)}") if !ip.nil?
+          if ip
+            LogExecCmd("lio_node --delnp #{target_info} #{FormatIpPort(ip, port)}")
+          else
+            Builtins.y2error("IP address missing in data")
+          end
         end
       end
 
