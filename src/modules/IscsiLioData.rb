@@ -1256,40 +1256,40 @@ module Yast
       ret
     end
 
-    def SetAuth(tgt, tpg, clnt, inc, out)
-      inc = deep_copy(inc)
-      if inc.empty?
-        log_inc = []
+    def SetAuth(tgt, tpg, clnt, incoming, outgoing)
+      incoming = deep_copy(incoming)
+      if incoming.empty?
+        log_incoming = []
       else
-        log_inc = ["*****", "*****"]
+        log_incoming = ["*****", "*****"]
       end
-      out = deep_copy(out)
-      if out.empty?
-        log_out = []
+      outgoing = deep_copy(outgoing)
+      if outgoing.empty?
+        log_outgoing = []
       else
-        log_out = ["*****", "*****"]
+        log_outgoing = ["*****", "*****"]
       end
       Builtins.y2milestone(
         "SetAuth tgt:%1 tpg:%2 clnt:%3 in:%4 out:%5",
         tgt,
         tpg,
         clnt,
-        log_inc,
-        log_out
+        log_incoming,
+        log_outgoing
       )
       cmd = ""
       ret = true
       if Builtins.isempty(tgt)
         cmd = "lio_node --setchapdiscauth"
-        if !Builtins.isempty(inc)
-          ret = LogExecCmd("#{cmd} #{inc[0]||""} #{inc[1]||""}", do_log: false) && ret
+        if !Builtins.isempty(incoming)
+          ret = LogExecCmd("#{cmd} #{incoming[0]||""} #{incoming[1]||""}", do_log: false) && ret
           Builtins.y2milestone("Executing cmd: #{cmd} ***** *****")
         elsif HasIncomingAuth("", 0, "")
           ret = LogExecCmd("#{cmd} \"\" \"\" ") && ret
         end
         cmd = "lio_node --setchapdiscmutualauth"
-        if !Builtins.isempty(out)
-          ret = LogExecCmd("#{cmd} #{out[0]||""} #{out[1]||""}", do_log: false) && ret
+        if !Builtins.isempty(outgoing)
+          ret = LogExecCmd("#{cmd} #{outgoing[0]||""} #{outgoing[1]||""}", do_log: false) && ret
           Builtins.y2milestone("Executing cmd: #{cmd} ***** *****")
         elsif HasOutgoingAuth("", 0, "")
           ret = LogExecCmd("#{cmd} \"\" \"\" ") && ret
@@ -1297,15 +1297,15 @@ module Yast
       else
         param = "#{tgt} #{tpg} #{clnt}"
         cmd = "lio_node --setchapauth #{param}"
-        if !Builtins.isempty(inc)
-          ret = LogExecCmd("#{cmd} #{inc[0]||""} #{inc[1]||""}", do_log: false) && ret
+        if !Builtins.isempty(incoming)
+          ret = LogExecCmd("#{cmd} #{incoming[0]||""} #{incoming[1]||""}", do_log: false) && ret
           Builtins.y2milestone("Executing cmd: #{cmd} ***** *****")
         elsif HasIncomingAuth(tgt, tpg, clnt)
           ret = LogExecCmd("#{cmd} \"\" \"\" ") && ret
         end
         cmd = "lio_node --setchapmutualauth #{param}"
-        if !Builtins.isempty(out)
-          ret = LogExecCmd("#{cmd} #{out[0]||""} #{out[1]||""}", do_log: false) && ret
+        if !Builtins.isempty(outgoing)
+          ret = LogExecCmd("#{cmd} #{outgoing[0]||""} #{outgoing[1]||""}", do_log: false) && ret
           Builtins.y2milestone("Executing cmd: #{cmd} ***** *****")
         elsif HasOutgoingAuth(tgt, tpg, clnt)
           ret = LogExecCmd("#{cmd} \"\" \"\" ") && ret
