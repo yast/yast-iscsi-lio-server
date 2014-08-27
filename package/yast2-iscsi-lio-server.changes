@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Aug 27 12:26:10 CEST 2014 - gs@suse.de
+
+- do not write user/password info to YaST log-file (bnc #893362)
+- 3.1.9
+
+-------------------------------------------------------------------
 Thu Jul 24 11:59:18 CEST 2014 - gs@suse.de
 
 - bind all IP addresses to a target if requested by user 
