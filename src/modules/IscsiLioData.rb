@@ -261,7 +261,15 @@ module Yast
       Ops.get_boolean(@data, ["tgt", tgt, tpg, "ep", "enabled"], false)
     end
 
-    def LogExecCmd(cmd, do_log=true)
+    # Execute given command (using SCR.Execute) and return result.
+    # Logs the command to YaST log-file if allowed.
+    #
+    # @param [String]  cmd     Command to be excuted (make sure to quote correctly,
+    #                          for example "ls 'filename with spaces'")
+    # @param [Boolean] do_log: logging to y2log allowed?
+    # @return [Hash]           hash containing keys "exit", "stdout", "stderr"
+    #
+    def LogExecCmd(cmd, do_log: true)
       Builtins.y2milestone("Executing cmd:%1", cmd) if do_log
       ret = Convert.convert(
         SCR.Execute(path(".target.bash_output"), cmd),
@@ -1274,14 +1282,14 @@ module Yast
       if Builtins.isempty(tgt)
         cmd = "lio_node --setchapdiscauth"
         if !Builtins.isempty(inc)
-          ret = LogExecCmd("#{cmd} #{inc[0]||""} #{inc[1]||""}", false) && ret
+          ret = LogExecCmd("#{cmd} #{inc[0]||""} #{inc[1]||""}", do_log: false) && ret
           Builtins.y2milestone("Executing cmd: #{cmd} ***** *****")
         elsif HasIncomingAuth("", 0, "")
           ret = LogExecCmd("#{cmd} \"\" \"\" ") && ret
         end
         cmd = "lio_node --setchapdiscmutualauth"
         if !Builtins.isempty(out)
-          ret = LogExecCmd("#{cmd} #{out[0]||""} #{out[1]||""}", false) && ret
+          ret = LogExecCmd("#{cmd} #{out[0]||""} #{out[1]||""}", do_log: false) && ret
           Builtins.y2milestone("Executing cmd: #{cmd} ***** *****")
         elsif HasOutgoingAuth("", 0, "")
           ret = LogExecCmd("#{cmd} \"\" \"\" ") && ret
@@ -1290,14 +1298,14 @@ module Yast
         param = "#{tgt} #{tpg} #{clnt}"
         cmd = "lio_node --setchapauth #{param}"
         if !Builtins.isempty(inc)
-          ret = LogExecCmd("#{cmd} #{inc[0]||""} #{inc[1]||""}", false) && ret
+          ret = LogExecCmd("#{cmd} #{inc[0]||""} #{inc[1]||""}", do_log: false) && ret
           Builtins.y2milestone("Executing cmd: #{cmd} ***** *****")
         elsif HasIncomingAuth(tgt, tpg, clnt)
           ret = LogExecCmd("#{cmd} \"\" \"\" ") && ret
         end
         cmd = "lio_node --setchapmutualauth #{param}"
         if !Builtins.isempty(out)
-          ret = LogExecCmd("#{cmd} #{out[0]||""} #{out[1]||""}", false) && ret
+          ret = LogExecCmd("#{cmd} #{out[0]||""} #{out[1]||""}", do_log: false) && ret
           Builtins.y2milestone("Executing cmd: #{cmd} ***** *****")
         elsif HasOutgoingAuth(tgt, tpg, clnt)
           ret = LogExecCmd("#{cmd} \"\" \"\" ") && ret
