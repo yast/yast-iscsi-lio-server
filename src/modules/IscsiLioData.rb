@@ -1282,14 +1282,14 @@ module Yast
       if Builtins.isempty(tgt)
         cmd = "lio_node --setchapdiscauth"
         if !Builtins.isempty(incoming)
-          ret = LogExecCmd("#{cmd} #{incoming[0]||""} #{incoming[1]||""}", do_log: false) && ret
+          ret = LogExecCmd("#{cmd} #{incoming[0]} #{incoming[1]}", do_log: false) && ret
           Builtins.y2milestone("Executing cmd: #{cmd} ***** *****")
         elsif HasIncomingAuth("", 0, "")
           ret = LogExecCmd("#{cmd} \"\" \"\" ") && ret
         end
         cmd = "lio_node --setchapdiscmutualauth"
         if !Builtins.isempty(outgoing)
-          ret = LogExecCmd("#{cmd} #{outgoing[0]||""} #{outgoing[1]||""}", do_log: false) && ret
+          ret = LogExecCmd("#{cmd} #{outgoing[0]} #{outgoing[1]}", do_log: false) && ret
           Builtins.y2milestone("Executing cmd: #{cmd} ***** *****")
         elsif HasOutgoingAuth("", 0, "")
           ret = LogExecCmd("#{cmd} \"\" \"\" ") && ret
@@ -1298,14 +1298,14 @@ module Yast
         param = "#{tgt} #{tpg} #{clnt}"
         cmd = "lio_node --setchapauth #{param}"
         if !Builtins.isempty(incoming)
-          ret = LogExecCmd("#{cmd} #{incoming[0]||""} #{incoming[1]||""}", do_log: false) && ret
+          ret = LogExecCmd("#{cmd} #{incoming[0]} #{incoming[1]}", do_log: false) && ret
           Builtins.y2milestone("Executing cmd: #{cmd} ***** *****")
         elsif HasIncomingAuth(tgt, tpg, clnt)
           ret = LogExecCmd("#{cmd} \"\" \"\" ") && ret
         end
         cmd = "lio_node --setchapmutualauth #{param}"
         if !Builtins.isempty(outgoing)
-          ret = LogExecCmd("#{cmd} #{outgoing[0]||""} #{outgoing[1]||""}", do_log: false) && ret
+          ret = LogExecCmd("#{cmd} #{outgoing[0]} #{outgoing[1]}", do_log: false) && ret
           Builtins.y2milestone("Executing cmd: #{cmd} ***** *****")
         elsif HasOutgoingAuth(tgt, tpg, clnt)
           ret = LogExecCmd("#{cmd} \"\" \"\" ") && ret
