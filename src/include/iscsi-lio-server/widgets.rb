@@ -568,7 +568,7 @@ module Yast
       else
         lmap = IscsiLioData.GetAuth(@curr_target, @curr_tpg, clnt)
       end
-      Builtins.y2milestone("ClntAuthDialog map:%1", lmap)
+      Builtins.y2milestone("ClntAuthDialog auth already set") if !lmap.empty?
       auth_dialog = VBox(
         MarginBox(6, 2, AuthTerm(false)),
         ButtonBox(
@@ -605,7 +605,6 @@ module Yast
       end
       UI.CloseDialog
       Ops.set(@changed_auth, clnt, lmap) if lmap != nil
-      Builtins.y2milestone("ClntAuthDialog ret:%1", lmap)
       deep_copy(lmap)
     end
 
@@ -1349,8 +1348,8 @@ module Yast
             s = Ops.get_string(it, 1, "")
             Builtins.y2milestone("handleClient pos:%1 clnt:%2", edit_pos, s)
             auth = ClntAuthDialog(s)
-            Builtins.y2milestone("handleClient auth:%1", auth)
             if auth != nil
+              Builtins.y2milestone("handleClient auth is set")
               Ops.set(it, 3, GetAuthString(auth))
               Ops.set(items, edit_pos, it)
               UI.ChangeWidget(:clnt_table, :Items, items)
@@ -1539,8 +1538,7 @@ module Yast
                 Ops.get_string(ca, ["outgoing", 0], "") ||
               Ops.get_string(m, ["outgoing", 1], "") !=
                 Ops.get_string(ca, ["outgoing", 1], "")
-            Builtins.y2milestone("storeClient auth c:%1", c)
-            Builtins.y2milestone("storeClient cur:%1 new:%2", ca, m)
+            Builtins.y2milestone("storeClient set auth for client:%1", c)
             chg = true
             if !IscsiLioData.SetAuth(
                 @curr_target,

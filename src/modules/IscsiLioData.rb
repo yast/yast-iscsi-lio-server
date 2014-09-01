@@ -261,8 +261,16 @@ module Yast
       Ops.get_boolean(@data, ["tgt", tgt, tpg, "ep", "enabled"], false)
     end
 
-    def LogExecCmd(cmd)
-      Builtins.y2milestone("Executing cmd:%1", cmd)
+    # Execute given command (using SCR.Execute) and return result.
+    # Logs the command to YaST log-file if allowed.
+    #
+    # @param [String]  cmd     Command to be excuted (make sure to quote correctly,
+    #                          for example "ls 'filename with spaces'")
+    # @param [Boolean] do_log: logging to y2log allowed?
+    # @return [Hash]           hash containing keys "exit", "stdout", "stderr"
+    #
+    def LogExecCmd(cmd, do_log: true)
+      Builtins.y2milestone("Executing cmd:%1", cmd) if do_log
       ret = Convert.convert(
         SCR.Execute(path(".target.bash_output"), cmd),
         :from => "any",
@@ -314,8 +322,7 @@ module Yast
       m = Ops.get_map(m, ["clnt", clnt], {}) if !Builtins.isempty(clnt)
       ret = !Builtins.isempty(Ops.get_list(m, "incoming", []))
       Builtins.y2milestone(
-        "HasIncomingAuth m:%1 ret:%2",
-        Ops.get_list(m, "incoming", []),
+        "HasIncomingAuth ret:%1",
         ret
       )
       ret
@@ -326,8 +333,7 @@ module Yast
       m = Ops.get_map(m, ["clnt", clnt], {}) if !Builtins.isempty(clnt)
       ret = Ops.greater_than(Builtins.size(Ops.get_list(m, "outgoing", [])), 1)
       Builtins.y2milestone(
-        "HasOutgoingAuth m:%1 ret:%2",
-        Ops.get_list(m, "outgoing", []),
+        "HasOutgoingAuth ret:%1",
         ret
       )
       ret
@@ -377,7 +383,9 @@ module Yast
     end
 
     def GetNetworkPortal(tgt, tpg)
-      Builtins.y2milestone("Data: %1, tgt: %2, tpg: %3", @data, tgt, tpg)
+      Builtins.y2milestone("target: %1, target portal group: %2", tgt, tpg)
+      # log complete data only for debugging purposes (contains password/user info)
+      Builtins.y2debug("Data: %1", @data)
       ret = Builtins.maplist(
         Ops.get_list(@data, ["tgt", tgt, tpg, "ep", "np"], [])
       ) do |n|
@@ -1248,68 +1256,59 @@ module Yast
       ret
     end
 
-    def SetAuth(tgt, tpg, clnt, inc, out)
-      inc = deep_copy(inc)
-      out = deep_copy(out)
+    def SetAuth(tgt, tpg, clnt, incoming, outgoing)
+      incoming = deep_copy(incoming)
+      if incoming.empty?
+        log_incoming = []
+      else
+        log_incoming = ["*****", "*****"]
+      end
+      outgoing = deep_copy(outgoing)
+      if outgoing.empty?
+        log_outgoing = []
+      else
+        log_outgoing = ["*****", "*****"]
+      end
       Builtins.y2milestone(
         "SetAuth tgt:%1 tpg:%2 clnt:%3 in:%4 out:%5",
         tgt,
         tpg,
         clnt,
-        inc,
-        out
+        log_incoming,
+        log_outgoing
       )
       cmd = ""
       ret = true
       if Builtins.isempty(tgt)
-        cmd = "lio_node --setchapdiscauth "
-        if !Builtins.isempty(inc)
-          ret = LogExecCmd(
-            Ops.add(
-              Ops.add(Ops.add(cmd, Ops.get_string(inc, 0, "")), " "),
-              Ops.get_string(inc, 1, "")
-            )
-          ) && ret
+        cmd = "lio_node --setchapdiscauth"
+        if !Builtins.isempty(incoming)
+          ret = LogExecCmd("#{cmd} #{incoming[0]} #{incoming[1]}", do_log: false) && ret
+          Builtins.y2milestone("Executing cmd: #{cmd} ***** *****")
         elsif HasIncomingAuth("", 0, "")
-          ret = LogExecCmd(Ops.add(cmd, "\"\" \"\" ")) && ret
+          ret = LogExecCmd("#{cmd} \"\" \"\" ") && ret
         end
-        cmd = "lio_node --setchapdiscmutualauth "
-        if !Builtins.isempty(out)
-          ret = LogExecCmd(
-            Ops.add(
-              Ops.add(Ops.add(cmd, Ops.get_string(out, 0, "")), " "),
-              Ops.get_string(out, 1, "")
-            )
-          ) && ret
+        cmd = "lio_node --setchapdiscmutualauth"
+        if !Builtins.isempty(outgoing)
+          ret = LogExecCmd("#{cmd} #{outgoing[0]} #{outgoing[1]}", do_log: false) && ret
+          Builtins.y2milestone("Executing cmd: #{cmd} ***** *****")
         elsif HasOutgoingAuth("", 0, "")
-          ret = LogExecCmd(Ops.add(cmd, "\"\" \"\" ")) && ret
+          ret = LogExecCmd("#{cmd} \"\" \"\" ") && ret
         end
       else
-        param = Ops.add(
-          Ops.add(Ops.add(Ops.add(Ops.add(tgt, " "), tpg), " "), clnt),
-          " "
-        )
-        cmd = Ops.add("lio_node --setchapauth ", param)
-        if !Builtins.isempty(inc)
-          ret = LogExecCmd(
-            Ops.add(
-              Ops.add(Ops.add(cmd, Ops.get_string(inc, 0, "")), " "),
-              Ops.get_string(inc, 1, "")
-            )
-          ) && ret
+        param = "#{tgt} #{tpg} #{clnt}"
+        cmd = "lio_node --setchapauth #{param}"
+        if !Builtins.isempty(incoming)
+          ret = LogExecCmd("#{cmd} #{incoming[0]} #{incoming[1]}", do_log: false) && ret
+          Builtins.y2milestone("Executing cmd: #{cmd} ***** *****")
         elsif HasIncomingAuth(tgt, tpg, clnt)
-          ret = LogExecCmd(Ops.add(cmd, "\"\" \"\" ")) && ret
+          ret = LogExecCmd("#{cmd} \"\" \"\" ") && ret
         end
-        cmd = Ops.add("lio_node --setchapmutualauth ", param)
-        if !Builtins.isempty(out)
-          ret = LogExecCmd(
-            Ops.add(
-              Ops.add(Ops.add(cmd, Ops.get_string(out, 0, "")), " "),
-              Ops.get_string(out, 1, "")
-            )
-          ) && ret
+        cmd = "lio_node --setchapmutualauth #{param}"
+        if !Builtins.isempty(outgoing)
+          ret = LogExecCmd("#{cmd} #{outgoing[0]} #{outgoing[1]}", do_log: false) && ret
+          Builtins.y2milestone("Executing cmd: #{cmd} ***** *****")
         elsif HasOutgoingAuth(tgt, tpg, clnt)
-          ret = LogExecCmd(Ops.add(cmd, "\"\" \"\" ")) && ret
+          ret = LogExecCmd("#{cmd} \"\" \"\" ") && ret
         end
       end
       Builtins.y2milestone("SetAuth ret:%1", ret)
