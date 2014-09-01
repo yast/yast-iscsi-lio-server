@@ -31,4 +31,24 @@ describe Yast::IscsiLioDataClass do
       end
     end
   end
+
+  describe "#SetAuth" do
+    context "when called with user and password info" do
+      it "calls LogExecCmd correctly" do
+        tgt = ""
+        tpg = -42
+        clnt = ""
+        inc = ["User", "Password"]
+        out = []
+
+        expect(@iscsilib).to receive(:LogExecCmd) do |*args|
+          expect(args).to eq ["lio_node --setchapdiscauth User Password", {:do_log=>false}]
+        end
+
+        @iscsilib.SetAuth(tgt, tpg, clnt, inc, out)
+      end
+    end
+  end
+
+
 end
