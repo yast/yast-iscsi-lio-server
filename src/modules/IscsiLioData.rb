@@ -1318,10 +1318,11 @@ module Yast
     def SetTpgAuth(tgt, tpg, value)
       ret = true
       tgt_auth_info = GetTgt(@data, tgt, tpg)
-      Builtins.y2milestone("SetTpgAuth tgt:%1 tpg:%2 value:%3 auth_info:%4",
-                           tgt, tpg, value, tgt_auth_info)
+      current_value = tgt_auth_info.fetch("auth", false)
+      Builtins.y2milestone("SetTpgAuth tgt:%1 tpg:%2 auth:%3 current auth:%4",
+                           tgt, tpg, value, current_value)
 
-      value_changed = value != tgt_auth_info.fetch("auth", false)
+      value_changed = value != current_value
       if value_changed || tgt_auth_info.empty?
         auth = value ? "--enableauth" : "--disableauth"
         cmd = "lio_node #{auth} #{tgt} #{tpg}"
