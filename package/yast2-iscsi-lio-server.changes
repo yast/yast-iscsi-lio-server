@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Sep  3 12:01:01 CEST 2014 - gs@suse.de
+
+- don't log user/password info (additional bug-fix for bnc #893362)
+- 3.1.10
+
+-------------------------------------------------------------------
 Wed Aug 27 12:26:10 CEST 2014 - gs@suse.de
 
 - do not write user/password info to YaST log-file (bnc #893362)
