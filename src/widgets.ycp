@@ -830,6 +830,10 @@ void storeModify(string option_id, map option_map)
     string ip = (string)UI::QueryWidget(`ipaddr, `Value );
     integer port = tointeger(UI::QueryWidget(`port, `Value ));
     y2milestone( "storeModify ip:%1 port:%2 ipp:%3", ip, port, ipp );
+    if ( IP::Check6(ip) )
+    {
+        ip = sformat( "[%1]", ip );
+    }
     string np = sformat( "%1:%2", ip, port );
     if( !isempty(ip) && np != ipp )
         {

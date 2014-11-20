@@ -438,17 +438,28 @@ global list<string> GetIpAddr()
     {
     map out = (map) SCR::Execute (.target.bash_output, "LC_ALL=POSIX /sbin/ifconfig" );
     list<string> ls = filter( string ln, splitstring( out["stdout"]:"", "\n" ),
-                              ``(search(ln,"inet addr:")!=nil));
+                              ``(search(ln,"inet addr:")!=nil || search(ln, "inet6 addr:")!=nil));
     ls = maplist( string s, ls, 
         {
-        integer pos = search(s,"inet addr:");
-        s = substring( s, pos+10 );
-        pos = findfirstof(s,"\t ");
-        if( pos!=nil )
-            s = substring( s, 0, pos );
-        return(s);
+            integer pos = findfirstnotof( s," \t" );      // remove leading white spaces
+            s = substring( s, pos );
+            if ( search(s,"inet addr:") != nil )
+            {
+                s = substring( s, 10 );         // IPv4 starts
+                pos = findfirstof( s, "\t " );
+                if( pos!=nil )
+                    s = substring( s, 0, pos );
+            }
+            else if ( search(s,"inet6 addr: ") != nil )
+            {
+                s = substring( s, 12 );         // IPv6 starts
+                pos = findfirstof( s, "/" );
+                if ( pos!=nil )
+                    s = substring ( s, 0, pos );
+            }
+            return(s);
         });
-    ls = filter( string s, ls, ``(substring( s, 0, 4 )!="127."));
+    ls = filter( string s, ls, ``(substring( s, 0, 4 )!="127." && substring( s, 0, 3 ) != "::1") );
     if( size(ls)==0 )
 	ls = add( ls, "" );
     y2milestone( "GetIpAddr ls:%1", ls );
@@ -603,11 +614,24 @@ global map<string,any> ParseConfigLio()
                 i=i+1;
                 while( MyFind(ls[i]:"", "-> ")>0 )
                     {
-                    list<string> tls = SplitStringNE( SplitStringNE( ls[i]:"", " " )[1]:"", ":");
-                    integer port = tointeger( tls[1]:"" );
+                    string ip_port =  SplitStringNE( ls[i]:"", " " )[1]:"";
+                    list <string> ip_port_list = [];
+                    if ( findfirstof( ip_port, "[" ) == nil )           // IPv4
+                    {
+                        ip_port_list = SplitStringNE( ip_port, ":");
+                    }
+                    else        // IPv6
+                    {
+                        // e.g. [2620:113:80c0:8080:a00:27ff:fe6f:fd86]:3260
+                        ip_port = substring( ip_port, 1 );
+                        ip_port_list = SplitStringNE( ip_port, "]" );
+                        ip_port_list[1] = substring( ip_port_list[1]:"", 1 );     
+                    }
+                    y2milestone( "ip and port in list: %1", ip_port_list );
+                    integer port = tointeger( ip_port_list[1]:"" );
                     if( port!=nil )
                         endp[tgt,tpg,"np"] = add( endp[tgt,tpg,"np"]:[],
-                                                  $[ "ip" : tls[0]:"", "port" : port ] );
+                                                  $[ "ip" : ip_port_list[0]:"", "port" : port ] );
                     i=i+1;
                     }
                 i=i-1;
