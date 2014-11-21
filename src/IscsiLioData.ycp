@@ -37,6 +37,7 @@
 module "IscsiLioData";
 
 textdomain "iscsi-lio-server";
+import "IP";
 
 map<string,any> data = $[];
 
@@ -314,11 +315,18 @@ global list<list> GetLunList( string tgt, integer tpg )
 
 global list<string> GetNetworkPortal( string tgt, integer tpg )
     {
-    list<string> ret = maplist( map n, data["tgt",tgt,tpg,"ep","np"]:[],
+        list<string> ret = maplist( map n, data["tgt",tgt,tpg,"ep","np"]:[],
         {
-        return( sformat( "%1:%2", n["ip"]:"", n["port"]:1 ));
+            string ip = n["ip"]:"";
+            integer port = n["port"]:1;
+            if ( IP::Check6(ip) )
+            {
+                ip = sformat( "[%1]", ip );
+            }
+            return( sformat( "%1:%2", ip, port) );
         });
-    return( ret );
+        y2milestone( "Portals ret: %1", ret );
+        return( ret );
     }
 
 global boolean GetTpgAuth( string tgt, integer tpg )
