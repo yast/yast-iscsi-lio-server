@@ -748,11 +748,12 @@ void initModify (string key)
     UI::ChangeWidget( `id(`tpg), `Enabled, false);
     string ipp = IscsiLioData::GetNetworkPortal( curr_target, curr_tpg )[0]:"";
     y2milestone( "initModify ipp:%1", ipp );
-    UI::ChangeWidget( `id(`ipaddr), `Value, (splitstring(ipp, ":"))[0]:"");
+    list<string> ip_port_list = IscsiLioData::GetIpAndPort( ipp );
+    UI::ChangeWidget( `id(`ipaddr), `Value, (ip_port_list[0]:"") );
     UI::ChangeWidget( `id(`ipaddr), `Enabled, true);
-    UI::ChangeWidget( `id(`port), `Value, (splitstring(ipp, ":"))[1]:"3260");
+    UI::ChangeWidget( `id(`port), `Value, (ip_port_list[1]:"3260") );
     UI::ChangeWidget( `id(`port), `Enabled, true);
-    UI::ChangeWidget( `id(`auth), `Value, IscsiLioData::GetTpgAuth(curr_target,curr_tpg));
+    UI::ChangeWidget( `id(`auth), `Value, IscsiLioData::GetTpgAuth(curr_target,curr_tpg) );
     list<list> lun = IscsiLioData::GetLunList( curr_target, curr_tpg );
     y2milestone( "initModify lun:%1", lun );
     foreach( list l, lun,
