@@ -967,7 +967,8 @@ global boolean SetTpgAuth( string tgt, integer tpg, boolean value )
     {
     y2milestone( "SetTpgAuth tgt:%1 tpg:%2 auth:%3", tgt, tpg, value );
     boolean ret = true;
-    if( value!=GetTgt(data,tgt,tpg)["auth"]:false )
+    map<string,any> tgt_auth_info = GetTgt(data,tgt,tpg);
+    if( (value!=tgt_auth_info["auth"]:false) || isempty(tgt_auth_info) )
         {
         string cmd = "lio_node " + (value?"--enableauth":"--disableauth") + " " + tgt + " " + tpg;
         ret = LogExecCmd( cmd );
