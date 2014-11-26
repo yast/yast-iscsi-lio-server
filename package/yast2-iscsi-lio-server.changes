@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Nov 26 10:40:41 CET 2014 - gs@suse.de
+
+- 2.17.12
+- add IPv6 support (fate #314804)
+- disable authentication correctly for a new target (bnc #821613)
+
+-------------------------------------------------------------------
 Wed Apr 24 11:12:12 CEST 2013 - fehr@suse.de
 
 - 2.17.11
