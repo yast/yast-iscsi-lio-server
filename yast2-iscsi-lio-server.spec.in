@@ -2,8 +2,6 @@
 
 
 @HEADER@
-Group:  System/YaST
-License: GPL-2.0
 BuildRequires: docbook-xsl-stylesheets doxygen libxslt popt-devel sgml-skel update-desktop-files yast2 yast2-devtools yast2-packagemanager-devel yast2-testsuite
 Requires:       lio-utils
 
@@ -12,7 +10,7 @@ BuildArchitectures:	noarch
 Summary:	Configuration of iSCSI LIO target
 
 %description
-This package contains configuration of iSCSI LIO target
+-
 
 @PREP@
 
