@@ -315,7 +315,7 @@ global list<list> GetLunList( string tgt, integer tpg )
 
 global list<string> GetNetworkPortal( string tgt, integer tpg )
     {
-        list<string> ret = maplist( map n, data["tgt",tgt,tpg,"ep","np"]:[],
+    list<string> ret = maplist( map n, data["tgt",tgt,tpg,"ep","np"]:[],
         {
             string ip = n["ip"]:"";
             integer port = n["port"]:1;
@@ -325,8 +325,8 @@ global list<string> GetNetworkPortal( string tgt, integer tpg )
             }
             return( sformat( "%1:%2", ip, port) );
         });
-        y2milestone( "Portals ret: %1", ret );
-        return( ret );
+    y2milestone( "Portals ret: %1", ret );
+    return( ret );
     }
 
 global boolean GetTpgAuth( string tgt, integer tpg )
@@ -446,7 +446,7 @@ global list<string> GetIpAddr()
     {
     map out = (map) SCR::Execute (.target.bash_output, "LC_ALL=POSIX /sbin/ifconfig" );
     list<string> ls = filter( string ln, splitstring( out["stdout"]:"", "\n" ),
-                              ``(search(ln,"inet addr:")!=nil || search(ln, "inet6 addr:")!=nil));
+                              ``(search(ln, "inet addr:")!=nil || search(ln, "inet6 addr:")!=nil));
     ls = maplist( string s, ls, 
         {
             integer pos = findfirstnotof( s," \t" );      // remove leading white spaces
