@@ -481,8 +481,11 @@ map ClntAuthDialog( string clnt )
     if( haskey(changed_auth,clnt) )
         lmap = changed_auth[clnt]:$[];
     else
-        lmap = IscsiLioData::GetAuth(curr_target,curr_tpg,clnt); 
-    y2milestone( "ClntAuthDialog map:%1", lmap );
+        lmap = IscsiLioData::GetAuth(curr_target,curr_tpg,clnt);
+    
+    if ( !isempty(lmap) )
+        y2milestone( "ClntAuthDialog authorization already set" );
+    
     term auth_dialog = `VBox( `MarginBox( 6, 2, AuthTerm(false) ),
                               `ButtonBox(
                                   `PushButton(`id(`ok), `opt(`default), Label::OKButton() ),
@@ -524,7 +527,7 @@ map ClntAuthDialog( string clnt )
     UI::CloseDialog();
     if( lmap!=nil )
         changed_auth[clnt] = lmap;
-    y2milestone( "ClntAuthDialog ret:%1", lmap );
+    
     return lmap;
     }
 
@@ -1090,9 +1093,9 @@ symbol handleClient(string key, map event)
                 string s  = it[1]:"";
                 y2milestone( "handleClient pos:%1 clnt:%2", edit_pos, s );
                 map auth = ClntAuthDialog( s );
-                y2milestone( "handleClient auth:%1", auth );
                 if( auth!=nil )
                     {
+                    y2milestone( "handleClient: auth is set" );
                     it[3] = GetAuthString(auth);
                     items[edit_pos] = it;
                     UI::ChangeWidget(`clnt_table, `Items, items);
@@ -1250,8 +1253,7 @@ void storeClient(string option_id, map option_map)
                 m["outgoing",0]:""!=ca["outgoing",0]:"" ||
                 m["outgoing",1]:""!=ca["outgoing",1]:"" )
                 {
-                y2milestone( "storeClient auth c:%1", c );
-                y2milestone( "storeClient cur:%1 new:%2", ca, m );
+                y2milestone( "storeClient set auth for client: %1", c );
                 chg = true;
                 if( !IscsiLioData::SetAuth( curr_target, curr_tpg, c,
                                             m["incoming"]:[], m["outgoing"]:[] ))
