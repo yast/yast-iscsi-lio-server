@@ -225,6 +225,18 @@ boolean IsTpgActive( string tgt, integer tpg )
     return( data["tgt",tgt,tpg,"ep","enabled"]:false );
     }
 
+boolean LogExecAuthCmd( string cmd, string user, string password )
+    {
+    y2milestone( "Executing cmd:%1 ***** *****", cmd );
+    map ret = (map<string,any>)SCR::Execute( .target.bash_output,
+                                             sformat("%1 %2 %3", cmd, user, password) );
+    if( ret["exit"]:-1!=0 )
+        y2error( "Error ret:%1", ret );
+    else
+        y2milestone( "Ret:%1", ret );
+    return( ret["exit"]:-1==0 );
+    }
+
 boolean LogExecCmd( string cmd )
     {
     y2milestone( "Executing cmd:%1", cmd );
@@ -269,7 +281,7 @@ global boolean HasIncomingAuth( string tgt, integer tpg, string clnt )
     if( !isempty(clnt) )
         m = m["clnt",clnt]:$[];
     boolean ret = !isempty(m["incoming"]:[]);
-    y2milestone( "HasIncomingAuth m:%1 ret:%2", m["incoming"]:[], ret );
+    y2milestone( "HasIncomingAuth ret:%1", ret );
     return( ret );
     }
 
@@ -279,7 +291,7 @@ global boolean HasOutgoingAuth( string tgt, integer tpg, string clnt )
     if( !isempty(clnt) )
         m = m["clnt",clnt]:$[];
     boolean ret = size(m["outgoing"]:[])>1;
-    y2milestone( "HasOutgoingAuth m:%1 ret:%2", m["outgoing"]:[], ret );
+    y2milestone( "HasOutgoingAuth ret:%1", ret );
     return( ret );
     }
 
@@ -912,8 +924,18 @@ global boolean DelTarget( string tgt, integer tpg )
 
 global boolean SetAuth( string tgt, integer tpg, string clnt, list inc, list out  )
     {
+    list log_inc = [];
+    list log_out = [];
+    if( !isempty(inc) )
+        {
+        log_inc = ["*****", "*****"];
+        }
+    if( !isempty(out) )
+        {
+        log_out = ["*****", "*****"];
+        }
     y2milestone( "SetAuth tgt:%1 tpg:%2 clnt:%3 in:%4 out:%5", 
-                 tgt, tpg, clnt, inc, out );
+                 tgt, tpg, clnt, log_inc, log_out );
     string cmd = "";
     boolean ret = true;
     if( isempty(tgt) )
@@ -921,7 +943,7 @@ global boolean SetAuth( string tgt, integer tpg, string clnt, list inc, list out
 	cmd = "lio_node --setchapdiscauth ";
         if( !isempty(inc) )
             {
-            ret = LogExecCmd( cmd + inc[0]:"" + " " + inc[1]:"" ) && ret;
+            ret = LogExecAuthCmd( cmd, inc[0]:"", inc[1]:"" ) && ret;
             }
         else if(HasIncomingAuth("",0,""))
             {
@@ -930,7 +952,7 @@ global boolean SetAuth( string tgt, integer tpg, string clnt, list inc, list out
 	cmd = "lio_node --setchapdiscmutualauth ";
         if( !isempty(out) )
             {
-            ret = LogExecCmd( cmd + out[0]:"" + " " + out[1]:"" ) && ret;
+            ret = LogExecAuthCmd( cmd, out[0]:"", out[1]:"" ) && ret;
             }
         else if(HasOutgoingAuth("",0,""))
             {
@@ -943,7 +965,7 @@ global boolean SetAuth( string tgt, integer tpg, string clnt, list inc, list out
 	cmd = "lio_node --setchapauth " + param;
         if( !isempty(inc) )
             {
-            ret = LogExecCmd( cmd + inc[0]:"" + " " + inc[1]:"" ) && ret;
+            ret = LogExecAuthCmd( cmd, inc[0]:"", inc[1]:"" ) && ret;
             }
         else if(HasIncomingAuth(tgt,tpg,clnt))
             {
@@ -952,7 +974,7 @@ global boolean SetAuth( string tgt, integer tpg, string clnt, list inc, list out
 	cmd = "lio_node --setchapmutualauth " + param;
         if( !isempty(out) )
             {
-            ret = LogExecCmd( cmd + out[0]:"" + " " + out[1]:"" ) && ret;
+            ret = LogExecAuthCmd( cmd, out[0]:"", out[1]:"" ) && ret;
             }
         else if(HasOutgoingAuth(tgt,tpg,clnt))
             {
