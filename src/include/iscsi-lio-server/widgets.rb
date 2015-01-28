@@ -643,6 +643,9 @@ module Yast
           if @changed_lun.has_key?(s)
             txt = _("Client name already exists!")
           end
+          if s.index /["\*\?"]/
+            txt = _("Client name must not contain wildcards!")
+          end
           if !Builtins.isempty(txt)
             sym = :again
             UI.SetFocus(Id(:clnt))
@@ -1445,8 +1448,24 @@ module Yast
 
     def validateClient(key, event)
       event = deep_copy(event)
-      ret = true
-      ret
+      clients = Convert.convert(UI.QueryWidget(:clnt_table, :Items),
+                                :from => "any",
+                                :to   => "list <term>"
+                                )
+      if clients.empty?
+        return false if !Popup.AnyQuestion(
+                           Label.WarningMsg,
+                           _("There isn't any client specified.\n" +
+                             "To allow a client login to the target, please\n" +
+                             "use the 'Add' button and enter the name\n" + 
+                             "(see /etc/iscsi/initiatorname.iscsi on initiator).\n" +
+                             "Really want to continue without client access?"
+                             ),
+                            Label.ContinueButton,
+                            Label.CancelButton,
+                            :focus_no)
+      end
+      true
     end
 
     def removeClntLun(tgt, tpg, clnt, lun)
