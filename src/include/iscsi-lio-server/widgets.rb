@@ -1452,16 +1452,13 @@ module Yast
       continue = true
 
       if !clients.nil? && clients.empty?
-        continue = Popup.AnyQuestion( Label.WarningMsg,
-                                      _("There isn't any client specified.\n" +
+        continue = Popup.YesNoHeadline( Label.WarningMsg,
+                                        _("There isn't any client specified.\n" +
                                         "To allow a client login to the target, please\n" +
                                         "use the 'Add' button and enter the name\n" +
                                         "(see /etc/iscsi/initiatorname.iscsi on initiator).\n" +
                                         "Really want to continue without client access?"
-                                        ),
-                                      Label.ContinueButton,
-                                      Label.CancelButton,
-                                      :focus_no)
+                                        ))
       end
       continue
     end
