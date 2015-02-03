@@ -1448,24 +1448,22 @@ module Yast
 
     def validateClient(key, event)
       event = deep_copy(event)
-      clients = Convert.convert(UI.QueryWidget(:clnt_table, :Items),
-                                :from => "any",
-                                :to   => "list <term>"
-                                )
-      if clients.empty?
-        return false if !Popup.AnyQuestion(
-                           Label.WarningMsg,
-                           _("There isn't any client specified.\n" +
-                             "To allow a client login to the target, please\n" +
-                             "use the 'Add' button and enter the name\n" + 
-                             "(see /etc/iscsi/initiatorname.iscsi on initiator).\n" +
-                             "Really want to continue without client access?"
-                             ),
-                            Label.ContinueButton,
-                            Label.CancelButton,
-                            :focus_no)
+      clients = UI.QueryWidget(:clnt_table, :Items)
+      continue = true
+
+      if !clients.nil? && clients.empty?
+        continue = Popup.AnyQuestion( Label.WarningMsg,
+                                      _("There isn't any client specified.\n" +
+                                        "To allow a client login to the target, please\n" +
+                                        "use the 'Add' button and enter the name\n" +
+                                        "(see /etc/iscsi/initiatorname.iscsi on initiator).\n" +
+                                        "Really want to continue without client access?"
+                                        ),
+                                      Label.ContinueButton,
+                                      Label.CancelButton,
+                                      :focus_no)
       end
-      true
+      continue
     end
 
     def removeClntLun(tgt, tpg, clnt, lun)
