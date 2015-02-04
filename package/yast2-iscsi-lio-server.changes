@@ -1,8 +1,7 @@
 -------------------------------------------------------------------
 Tue Feb  3 09:41:55 CET 2015 - gs@suse.de
 
-- show a warning popup in case the target client list is empty,
-  validate client name (bnc #898054, bnc #898261)
+- show a warning popup in case of empty client list (bnc #898261)
 - 3.1.13
 
 -------------------------------------------------------------------

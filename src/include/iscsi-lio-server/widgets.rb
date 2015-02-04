@@ -643,9 +643,7 @@ module Yast
           if @changed_lun.has_key?(s)
             txt = _("Client name already exists!")
           end
-          if s.index /["\*\?"]/
-            txt = _("Client name must not contain wildcards!")
-          end
+          # TODO: check client name for valid chars (depends on solution for fate #318406)
           if !Builtins.isempty(txt)
             sym = :again
             UI.SetFocus(Id(:clnt))
