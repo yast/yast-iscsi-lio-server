@@ -643,6 +643,7 @@ module Yast
           if @changed_lun.has_key?(s)
             txt = _("Client name already exists!")
           end
+          # TODO: check client name for valid chars (depends on solution for fate #318406)
           if !Builtins.isempty(txt)
             sym = :again
             UI.SetFocus(Id(:clnt))
@@ -1445,8 +1446,19 @@ module Yast
 
     def validateClient(key, event)
       event = deep_copy(event)
-      ret = true
-      ret
+      clients = UI.QueryWidget(:clnt_table, :Items)
+      continue = true
+
+      if !clients.nil? && clients.empty?
+        continue = Popup.YesNoHeadline( Label.WarningMsg,
+                                        _("There isn't any client specified.\n" +
+                                        "To allow a client login to the target, please\n" +
+                                        "use the 'Add' button and enter the name\n" +
+                                        "(see /etc/iscsi/initiatorname.iscsi on initiator).\n" +
+                                        "Really want to continue without client access?"
+                                        ))
+      end
+      continue
     end
 
     def removeClntLun(tgt, tpg, clnt, lun)
