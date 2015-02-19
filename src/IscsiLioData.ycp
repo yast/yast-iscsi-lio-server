@@ -479,7 +479,9 @@ global list<string> GetIpAddr()
             }
             return(s);
         });
-    ls = filter( string s, ls, ``(substring( s, 0, 4 )!="127." && substring( s, 0, 3 ) != "::1") );
+    ls = filter( string s, ls, ``(substring( s, 0, 4 ) != "127."&&      // lo IPv4
+                                  substring( s, 0, 3 ) != "::1" &&      // lo IPv6
+                                  substring( s, 0, 5 ) != "fe80:") );   // scope link IPv6
     if( size(ls)==0 )
 	ls = add( ls, "" );
     y2milestone( "GetIpAddr ls:%1", ls );
