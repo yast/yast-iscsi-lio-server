@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Feb 24 09:53:45 CET 2015 - gs@suse.de
+
+- 2.17.14
+- filter out Scope:Link IPv6 address (related to fate #314804)
+- add description to spec file
+
+-------------------------------------------------------------------
 Wed Jan 14 10:24:36 CET 2015 - gs@suse.de
 
 - 2.17.13
