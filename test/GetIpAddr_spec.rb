@@ -42,6 +42,8 @@ describe Yast::IscsiLioDataClass do
                       "       valid_lft 3567sec preferred_lft 0sec",
                       "    inet6 2620:113:80c0:8080:a00:27ff:fe77:e82c/64 scope global dynamic",
                       "       valid_lft 3567sec preferred_lft 1767sec",
+                      "    inet6 0:0:0:0:0:0:101.45.75.219/64 scope global dynamic",
+                      "       valid_lft 3567sec preferred_lft 1767sec",
                       "    inet6 fe80::a00:27ff:fe77:e82c/64 scope link",
                       "       valid_lft forever preferred_lft forever"
                      ])
@@ -49,7 +51,8 @@ describe Yast::IscsiLioDataClass do
         ip_list.should eq(["10.160.65.187",
                            "2620:113:80c0:8080:10:160:68:237",
                            "2620:113:80c0:8080:610e:9a73:879a:4a8f",
-                           "2620:113:80c0:8080:a00:27ff:fe77:e82c"
+                           "2620:113:80c0:8080:a00:27ff:fe77:e82c",
+                           "0:0:0:0:0:0:101.45.75.219"
                           ])
       end
     end

@@ -566,7 +566,7 @@ module Yast
     end
 
     #
-    # Get information about network interfaces from 'ifconfig'
+    # Get information about network interfaces from 'ip addr show'
     #
     def GetNetConfig
       out = Convert.to_map(
@@ -577,7 +577,10 @@ module Yast
     end
 
     #
-    # Get list of IP addresses
+    # Get list of IP addresses (filters stdout of 'ip addr show')
+    #
+    # @return [Array]<String> list of IP addresses (IPv4 and IPv6), if no IP is found
+    #                         returns array with an empty string element
     #
     def GetIpAddr
       ip_list = GetNetConfig()
@@ -588,9 +591,9 @@ module Yast
       ip_list = ip_list.map do |ip|
         ip.lstrip!
         case ip
-        when /^inet *([.\w]+)\/.*/
+        when /^inet *([.\d]+)\/.*/
           $1
-        when /^inet6 *([:\w]+)\/.*/
+        when /^inet6 *([.:\w]+)\/.*/
           $1
         else
           ip
