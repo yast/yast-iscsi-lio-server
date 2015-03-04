@@ -48,7 +48,7 @@ describe Yast::IscsiLioDataClass do
                       "       valid_lft forever preferred_lft forever"
                      ])
         ip_list = @iscsilib.GetIpAddr()
-        ip_list.should eq(["10.160.65.187",
+        expect(ip_list).to eq(["10.160.65.187",
                            "2620:113:80c0:8080:10:160:68:237",
                            "2620:113:80c0:8080:610e:9a73:879a:4a8f",
                            "2620:113:80c0:8080:a00:27ff:fe77:e82c",
@@ -78,7 +78,7 @@ describe Yast::IscsiLioDataClass do
                       "       valid_lft forever preferred_lft forever"
                      ])
         ip_list = @iscsilib.GetIpAddr()
-        ip_list.should eq(["10.160.65.187",
+        expect(ip_list).to eq(["10.160.65.187",
                            "2620:113:80c0:8080:10:160:68:237",
                            "2620:113:80c0:8080:610e:9a73:879a:4a8f"
                           ])
@@ -95,7 +95,7 @@ describe Yast::IscsiLioDataClass do
                       "       valid_lft forever preferred_lft forever"
                      ])
         ip_list = @iscsilib.GetIpAddr()
-        ip_list.should eq([""])
+        expect(ip_list).to eq([""])
       end
     end
 
