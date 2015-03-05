@@ -10,7 +10,7 @@ BuildArchitectures:	noarch
 Summary:	Configuration of iSCSI LIO target
 
 %description
--
+This package contains configuration of iSCSI LIO targets.
 
 @PREP@
 
