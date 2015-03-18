@@ -566,31 +566,34 @@ module Yast
     end
 
     #
-    # Get information about network interfaces from 'ifconfig'
+    # Get information about network interfaces from 'ip addr show'
     #
     def GetNetConfig
       out = Convert.to_map(
-        SCR.Execute(path(".target.bash_output"), "LC_ALL=POSIX /sbin/ifconfig")
+        SCR.Execute(path(".target.bash_output"), "LC_ALL=POSIX ip addr show")
       )
       ls = out.fetch("stdout", "").split("\n")
       deep_copy(ls)
     end
 
     #
-    # Get list of IP addresses
+    # Get list of IP addresses (filters stdout of 'ip addr show')
+    #
+    # @return [Array]<String> list of IP addresses (IPv4 and IPv6), if no IP is found
+    #                         returns array with an empty string element
     #
     def GetIpAddr
       ip_list = GetNetConfig()
       ip_list.select! do |line|
-        line.include?("inet") && !line.include?("Scope:Link")
+        line.include?("inet") && !line.include?("deprecated") # don't show deprecated IPs
       end
 
       ip_list = ip_list.map do |ip|
         ip.lstrip!
         case ip
-        when /^inet addr: *([.\w]+)[\t ].*/
+        when /^inet *([.\d]+)\/.*/
           $1
-        when /^inet6 addr: *([:\w]+)\/.*/
+        when /^inet6 *([.:\w]+)\/.*/
           $1
         else
           ip
@@ -599,7 +602,8 @@ module Yast
 
       ip_list.reject! do |address|
         address.start_with?("127.") ||  # local IPv4
-          address.start_with?("::1") # local IPv6
+          address.start_with?("::1") || # local IPv6
+          address.start_with?("fe80:")  # scope link IPv6
       end
 
       ip_list = [""] if ip_list.empty?
