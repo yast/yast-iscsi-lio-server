@@ -317,7 +317,7 @@ module Yast
           "custom_widget" => VBox(
             Table(
               Id(:server),
-              Header(_("Targets"), Right(_("Portal group"))),
+              Header(_("Targets"), Right(_("Portal group")), Right(_("TPG Status"))),
               []
             ),
             Left(

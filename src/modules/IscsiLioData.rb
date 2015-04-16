@@ -445,10 +445,14 @@ module Yast
 
     def GetTargets
       ret = []
-      Builtins.foreach(Ops.get_map(@data, "tgt", {})) do |key, m|
-        Builtins.foreach(m) do |tpg, dummy|
-          ret = Builtins.add(ret, [key, tpg])
-          Builtins.y2milestone("GetTargets key:%1 tpg:%2", key, tpg)
+      target_info = @data["tgt"] || {}
+
+      target_info.each do |target, data|
+        data.each do |tpg, tpg_info|
+          end_point = tpg_info["ep"] || { }
+          status = end_point["enabled"] || false
+          ret = ret << [target, tpg, status]
+          Builtins.y2milestone("GetTargets target:%1 tpg:%2 enabled:%3", target, tpg, status)
           Builtins.y2milestone("GetTargets ret:%1", ret)
         end
       end

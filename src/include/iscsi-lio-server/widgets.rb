@@ -775,24 +775,26 @@ module Yast
       # create items from targets
       tgt = IscsiLioData.GetTargets
       cur = 0
-      Builtins.foreach(tgt) do |l|
+      tgt.each do |target|
         inc_items = Builtins.add(
           inc_items,
           Item(
             Id(count),
-            Ops.get_string(l, 0, ""),
-            Builtins.tostring(Ops.get_integer(l, 1, 0))
+            target[0] || "",
+            Builtins.tostring(target[1] || 0),
+            target[2] ? _("Enabled") : _("Disabled")
           )
         )
         Builtins.y2milestone(
-          "tgt:%1 tpg:%2 ctgt:%3 ctpg:%4",
-          Ops.get_string(l, 0, ""),
-          Ops.get_integer(l, 1, 0),
+          "tgt:%1 tpg:%2 enabled:%3 ctgt:%4 ctpg:%5",
+          target[0] || "",
+          target[1] || 0,
+          target[2] || false,
           @curr_target,
           @curr_tpg
         )
-        if @curr_target == Ops.get_string(l, 0, "") &&
-            @curr_tpg == Ops.get_integer(l, 1, 1)
+        if @curr_target == (target[0] || "") &&
+            @curr_tpg == (target[1] || 1)
           cur = count
         end
         count = Ops.add(count, 1)
