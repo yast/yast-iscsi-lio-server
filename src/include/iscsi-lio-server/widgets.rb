@@ -1180,11 +1180,19 @@ module Yast
       option_map = deep_copy(option_map)
       target = uiTarget
       Builtins.y2milestone("storeAddTarget %1", target)
+      if Builtins.isempty(Ops.get_string(target, 1, ""))
+       @curr_target = Builtins.sformat(
+        "%1%2",
+        Ops.get_string(target, 0, ""),
+        Ops.get_string(target, 1, "")
+      )
+      else
       @curr_target = Builtins.sformat(
         "%1:%2",
         Ops.get_string(target, 0, ""),
         Ops.get_string(target, 1, "")
       )
+      end
       @curr_tpg = Ops.get_integer(target, 2, -1)
       storeModify(option_id, option_map)
 
