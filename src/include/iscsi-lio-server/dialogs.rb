@@ -190,7 +190,7 @@ module Yast
                 ),
                 Table(
                   Id(:clnt_table),
-                  Header(_("Client"), _("Lun Mapping"), _("Auth")),
+                  Header(_("Initiator"), _("Lun Mapping"), _("Auth")),
                   []
                 ),
                 Left(
@@ -504,7 +504,7 @@ module Yast
     # discovery authentication dialog
     def AuthDialog
       @current_tab = "targets"
-      caption = _("Modify iSCSI Target Client Setup")
+      caption = _("Modify iSCSI Initiator ACLs Setup")
       w = CWM.CreateWidgets(["target-clnt"], @widgets)
       contents = VBox(
         VStretch(),
