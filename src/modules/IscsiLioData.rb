@@ -1261,6 +1261,12 @@ module Yast
     end
 
     def SetAuth(tgt, tpg, clnt, incoming, outgoing)
+    status= Convert.to_boolean(UI.QueryWidget(Id(:auth_none), :Value))
+	if status
+	$demo_mode=true
+	else
+	$demo_mode=false
+	end
       incoming = deep_copy(incoming)
       if incoming.empty?
         log_incoming = []
