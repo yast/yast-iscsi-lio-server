@@ -1261,12 +1261,6 @@ module Yast
     end
 
     def SetAuth(tgt, tpg, clnt, incoming, outgoing)
-      status= Convert.to_boolean(UI.QueryWidget(Id(:auth_none), :Value))
-      if status
-          IscsiLioServer.setDemo(status)
-      else
-           IscsiLioServer.setDemo(status)
-      end
       incoming = deep_copy(incoming)
       if incoming.empty?
         log_incoming = []
@@ -1322,6 +1316,7 @@ module Yast
         end
       end
       Builtins.y2milestone("SetAuth ret:%1", ret)
+      
       ret
     end
 

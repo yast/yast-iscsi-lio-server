@@ -180,6 +180,8 @@ module Yast
     # handle authentication dialog
     def handleAuth(key, event)
       event = deep_copy(event)
+      demo_mode_status=Convert.to_boolean(UI.QueryWidget(Id(:auth_none), :Value))
+      IscsiLioServer.setDemo(demo_mode_status)
       if Ops.get_string(event, "EventReason", "") == "ValueChanged"
         status = false
         # enable/disable none/incoming/outgoing authentication
