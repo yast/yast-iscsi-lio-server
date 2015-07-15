@@ -1316,6 +1316,7 @@ module Yast
         end
       end
       Builtins.y2milestone("SetAuth ret:%1", ret)
+      
       ret
     end
 

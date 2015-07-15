@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Jul 14 17:08:40 CET 2015 - lszhu@suse.de
+
+- set demo_mode, disable authentication, disable write protection
+  when no authentication(bnc#936990)
+- 3.16
+
+-------------------------------------------------------------------
 Wed May 27 15:45:03 CET 2015 - lszhu@suse.de
 
 - remove ":" in target name when identifier is empty (bnc#932170) 

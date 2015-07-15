@@ -59,6 +59,8 @@ module Yast
       @modified = false
       @configured = false
 
+      #Is the target set demo mode?
+      @demo = true
 
       @proposal_valid = false
 
@@ -71,6 +73,13 @@ module Yast
       @AbortFunction = fun_ref(method(:Modified), "boolean ()")
     end
 
+    def getDemo
+    @demo
+    end
+
+    def setDemo(status)
+    @demo = status
+    end
     # Abort function
     # @return [Boolean] return true if abort
     def Abort
