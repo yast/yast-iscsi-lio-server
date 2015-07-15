@@ -48,8 +48,6 @@ module Yast
       Yast.include include_target, "iscsi-lio-server/helps.rb"
       Yast.include include_target, "iscsi-lio-server/widgets.rb"
 
-      $demo_mode=true
-
       # store current here
       @current_tab = "service"
 

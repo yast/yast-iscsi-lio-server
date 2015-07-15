@@ -1589,14 +1589,15 @@ module Yast
       @changed_lun = {}
       Builtins.y2milestone("storeClient chg:%1", chg)
       IscsiLioData.UpdateConfig if chg
-    if $demo_mode
-    	cmd_set_demo_mode="lio_node --demomode" + " " + @curr_target + " "+ @curr_tpg.to_s
-    	cmd_disable_auth="lio_node --disableauth" + " " + @curr_target + " " + @curr_tpg.to_s
-    	cmd_disable_write_protection="echo 0 > /sys/kernel/config/target/iscsi/" + @curr_target + "/" + "tpgt_" + @curr_tpg.to_s + "/attrib/demo_mode_write_protect"
-    	SCR.Execute(path(".target.bash_output"), cmd_set_demo_mode)
-    	SCR.Execute(path(".target.bash_output"), cmd_disable_auth)
-    	SCR.Execute(path(".target.bash_output"), cmd_disable_write_protection)
-    end
+      status_demo = IscsiLioServer.getDemo
+      if status_demo
+    	 cmd_set_demo_mode="lio_node --demomode" + " " + @curr_target + " "+ @curr_tpg.to_s
+    	 cmd_disable_auth="lio_node --disableauth" + " " + @curr_target + " " + @curr_tpg.to_s
+    	 cmd_disable_write_protection="echo 0 > /sys/kernel/config/target/iscsi/" + @curr_target + "/" + "tpgt_" + @curr_tpg.to_s + "/attrib/demo_mode_write_protect"
+    	 SCR.Execute(path(".target.bash_output"), cmd_set_demo_mode)
+    	 SCR.Execute(path(".target.bash_output"), cmd_disable_auth)
+    	 SCR.Execute(path(".target.bash_output"), cmd_disable_write_protection)
+      end
       nil
     end
   end
