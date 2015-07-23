@@ -1,5 +1,12 @@
 -------------------------------------------------------------------
-Wed May 27 15:45:03 CET 2015 - lszhu@suse.de
+Thu Jul 23 08:48:24 UTC 2015 - izhu@suse.com
+
+- Generate dummy lio_setup.sh and tcm_setup.sh if they don't exist
+- That can avoid errors in systemctl status target.service(bnc#937222)
+- 3.1.16
+
+-------------------------------------------------------------------
+Wed May 27 15:45:03 CET 2015 - lszhu@suse.com
 
 - remove ":" in target name when identifier is empty (bnc#932170) 
 - 3.1.15
