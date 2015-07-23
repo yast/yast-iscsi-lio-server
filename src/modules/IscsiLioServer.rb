@@ -169,6 +169,18 @@ module Yast
         @statusOnStart = true
         @serviceStatus = true
       end
+      status = File.exist?("/etc/target/lio_setup.sh")
+      if !status
+      SCR.Execute(path(".target.bash_output"), "touch /etc/target/lio_setup.sh")
+      SCR.Execute(path(".target.bash_output"), "chmod 755 /etc/target/lio_setup.sh")
+      SCR.Execute(path(".target.bash_output"), "echo '#'!/bin/bash > /etc/target/lio_setup.sh")
+      end
+      status = File.exist?("/etc/target/tcm_setup.sh")
+      if !status
+      SCR.Execute(path(".target.bash_output"), "touch /etc/target/tcm_setup.sh")
+      SCR.Execute(path(".target.bash_output"), "chmod 755 /etc/target/tcm_setup.sh")
+      SCR.Execute(path(".target.bash_output"), "echo '#'!/bin/bash > /etc/target/tcm_setup.sh")
+      end
       Builtins.y2milestone("Service status = %1", @statusOnStart)
       if !@statusOnStart
         if !Service.Start("target")
