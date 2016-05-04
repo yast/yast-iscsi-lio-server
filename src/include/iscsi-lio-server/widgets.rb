@@ -248,7 +248,7 @@ module Yast
       end)
       Builtins.y2milestone("CheckLun other:%1", other)
       Builtins.y2milestone("CheckLun l:%1 ret:%2", l, ret)
-      Popup.Error(_("Selected Lun is already in use!")) if !ret && !silent
+      Popup.Error(_("Selected LUN is already in use!")) if !ret && !silent
       ret
     end
 
@@ -433,7 +433,7 @@ module Yast
           Table(
             Id(:lun),
             Opt(:keepSorting, :immediate, :notify, :notifyContextMenu),
-            Header(_("Client Lun"), _("Target LUN")),
+            Header(_("Initiator LUN"), _("Target LUN")),
             items
           )
         ),
@@ -616,7 +616,7 @@ module Yast
           4,
           1,
           VBox(
-            Left(Label(_("Client name:"))),
+            Left(Label(_("Initiator name:"))),
             MinWidth(50, InputField(Id(:clnt), Opt(:hstretch), "", "")),
             VSpacing(0.5),
             Left(CheckBox(Id(:import), _("Import LUNs from TPG"), true))
@@ -635,15 +635,15 @@ module Yast
         if sym == :ok
           txt = ""
           s = Convert.to_string(UI.QueryWidget(Id(:clnt), :Value))
-          txt = _("Client name must not be empty!") if Builtins.isempty(s)
-          Builtins.y2milestone("Changed_lun: %1 new client name: %2", @changed_lun, s)
+          txt = _("Initiator name must not be empty!") if Builtins.isempty(s)
+          Builtins.y2milestone("Changed_lun: %1 new initiator name: %2", @changed_lun, s)
           # Don't check IscsiLioData.GetClntList(@curr_target, @curr_tpg) for existing
-          # client name. It's allowed to have several LUNs accessable for same client.
+          # initiator name. It's allowed to have several LUNs accessable for same initiator.
           # TODO: verify whether it's necessary to check @changed_lun here?
           if @changed_lun.has_key?(s)
-            txt = _("Client name already exists!")
+            txt = _("Initiator name already exists!")
           end
-          # TODO: check client name for valid chars (depends on solution for fate #318406)
+          # TODO: check initiator name for valid chars (depends on solution for fate #318406)
           if !Builtins.isempty(txt)
             sym = :again
             UI.SetFocus(Id(:clnt))
@@ -664,7 +664,7 @@ module Yast
     end
 
     #
-    # Copy exisiting LUN, i.e. give additional client access to the LUN
+    # Copy exisiting LUN, i.e. give additional initiator access to the LUN
     # (which is allowed, makes sense e.g. with multipath)
     #
     def CopyClntDialog
@@ -675,7 +675,7 @@ module Yast
           4,
           1,
           VBox(
-            Left(Label(_("New client name:"))),
+            Left(Label(_("New initiator name:"))),
             MinWidth(50, InputField(Id(:clnt), Opt(:hstretch), "", ""))
           )
         ),
@@ -692,13 +692,13 @@ module Yast
         if sym == :ok
           txt = ""
           s = Convert.to_string(UI.QueryWidget(Id(:clnt), :Value))
-          txt = _("Client name must not be empty!") if Builtins.isempty(s)
+          txt = _("Initiator name must not be empty!") if Builtins.isempty(s)
           if Builtins.haskey(@changed_lun, s) ||
               Builtins.contains(
                 IscsiLioData.GetClntList(@curr_target, @curr_tpg),
                 s
               )
-            txt = _("Client name already exists!")
+            txt = _("Initiator name already exists!")
           end
           if !Builtins.isempty(txt)
             sym = :again
@@ -1449,11 +1449,11 @@ module Yast
 
       if !clients.nil? && clients.empty?
         continue = Popup.YesNoHeadline( Label.WarningMsg,
-                                        _("There isn't any client specified.\n" +
-                                        "To allow a client login to the target, please\n" +
+                                        _("There isn't any initiator specified.\n" +
+                                        "To allow an initiator login to the target, please\n" +
                                         "use the 'Add' button and enter the name\n" +
                                         "(see /etc/iscsi/initiatorname.iscsi on initiator).\n" +
-                                        "Really want to continue without client access?"
+                                        "Really want to continue without initiator access?"
                                         ))
       end
       continue
@@ -1463,7 +1463,7 @@ module Yast
       ret = IscsiLioData.DoRemoveClntLun(tgt, tpg, clnt, lun)
       if !ret
         txt = Builtins.sformat(
-          _("Problem removing lun %4 for client %3 in %1:%2"),
+          _("Problem removing LUN %4 for initiator %3 in %1:%2"),
           tgt,
           tpg,
           clnt,
@@ -1478,7 +1478,7 @@ module Yast
       ret = IscsiLioData.DoCreateClntLun(tgt, tpg, clnt, lun, tlun)
       if !ret
         txt = Builtins.sformat(
-          _("Problem adding lun %4:%5 for client %3 in %1:%2"),
+          _("Problem adding LUN %4:%5 for initiator %3 in %1:%2"),
           tgt,
           tpg,
           clnt,
@@ -1499,7 +1499,7 @@ module Yast
           chg = true
           if !IscsiLioData.DoRemoveClnt(@curr_target, @curr_tpg, c)
             txt = Builtins.sformat(
-              _("Problem removing client %3 from %1:%2"),
+              _("Problem removing initiator %3 from %1:%2"),
               @curr_target,
               @curr_tpg,
               c
@@ -1523,7 +1523,7 @@ module Yast
         chg = true
         if !IscsiLioData.DoCreateClnt(@curr_target, @curr_tpg, c)
           txt = Builtins.sformat(
-            _("Problem creating client %3 for %1:%2"),
+            _("Problem creating initiator %3 for %1:%2"),
             @curr_target,
             @curr_tpg,
             c
@@ -1558,7 +1558,7 @@ module Yast
                 Ops.get_list(m, "outgoing", [])
               )
               txt = Builtins.sformat(
-                _("Problem changing auth for client %3 in %1:%2"),
+                _("Problem changing auth for initiator %3 in %1:%2"),
                 @curr_target,
                 @curr_tpg,
                 c
