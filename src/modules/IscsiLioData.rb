@@ -451,7 +451,7 @@ module Yast
         data.each do |tpg, tpg_info|
           end_point = tpg_info["ep"] || { }
           status = end_point["enabled"] || false
-          ret = ret << [target, tpg, status]
+          ret << [target, tpg, status]
           Builtins.y2milestone("GetTargets target:%1 tpg:%2 enabled:%3", target, tpg, status)
           Builtins.y2milestone("GetTargets ret:%1", ret)
         end
