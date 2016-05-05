@@ -122,18 +122,19 @@ module Yast
         ),
         # target client setup.
         "target-clnt"        => _(
-           "<p>Use <b>Add</b> to give a client access for a LUN imported from target portal group." +
-           " Specify which client is allowed to access it (client name is <i>InitiatorName</i> in" +
-           " '/etc/iscsi/initiatorname.iscsi' on iscsi initiator). <b>Delete</b> will remove the" +
-           " client access to the LUN.</p>"
+           "<p>Use <b>Add</b> to give an initiator (iSCSI client) access to a LUN imported from\n" +
+           " target portal group. Specify which initiator is allowed to connect (use <i>InitiatorName</i>\n"  +
+           " from '/etc/iscsi/initiatorname.iscsi' on iSCSI initiator). <b>Delete</b> will remove the" +
+           " initiator access to the LUN.</p>"
          ) +
           _(
             "<p>With <b>Edit LUN</b> one can modify the LUN mapping. Please note that LUN target number" +
             " must be unique.<br>After pressing <b>Edit Auth</b>, select the type of authentication." +
             " Use <b>Incoming</b>, <b>Outgoing</b> or both together. Then insert <b>User</b> and <b>Password</b>." +
+            " Please make sure to set different values for incoming and outgoing authentication.\n" +
             " If <b>Use Authentication</b> is disabled in previous dialog, <b>Edit Auth</b> is disabled here.</p>"
           ) +
-        _( "<p><b>Copy</b> offers the possibility to give an additional client access to the LUN.</p>"),
+        _( "<p><b>Copy</b> offers the possibility to give an additional initiator access to the LUN.</p>"),
         # target dialog
         "server_table"       => _(
           "List of offered targets and target portal groups. Create a new target by clicking <b>Add</b>.\n" +

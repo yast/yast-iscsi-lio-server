@@ -1,4 +1,20 @@
 -------------------------------------------------------------------
+Wed May  4 12:32:45 CEST 2016 - gs@suse.de
+
+- replace iSCSI "client" by "initiator" in labels, popups and
+  help text (fate#319293)
+- add hint to use different user and password for incoming and
+  outgoing authentication (bsc#977173)
+- 3.1.17
+
+-------------------------------------------------------------------
+Wed Jul 15 12:40:08 CEST 2015 - gs@suse.de
+
+- add info about the tpg status to targets overview
+  (partial bug-fix for bnc#920380)
+- 3.1.16
+
+-------------------------------------------------------------------
 Wed May 27 15:45:03 CET 2015 - lszhu@suse.de
 
 - remove ":" in target name when identifier is empty (bnc#932170) 
