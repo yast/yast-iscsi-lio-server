@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Jun  7 10:47:30 UTC 2016 - igonzalezsosa@suse.com
+
+- Stop generating autodocs (fate#320356)
+- 3.1.18
+
+-------------------------------------------------------------------
 Wed May  4 12:32:45 CEST 2016 - gs@suse.de
 
 - replace iSCSI "client" by "initiator" in labels, popups and
