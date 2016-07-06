@@ -97,28 +97,39 @@ module Yast
     end
 
     #	**************** Global Dialog	*********************
+
+    # treat "NULL" as empty string, i.e. no authentication value is set
+    # (adapt YaST to 'lio-utils' behaviour, bnc#919474)
+    def adjustAuth(value)
+      (value == "NULL") ? "" : value
+    end
+
     def initGlobalValues(auth)
       auth = deep_copy(auth)
+
+      # incoming authentication
       user = ""
       pass = ""
-      # incoming authentication
-      if !Builtins.isempty(Ops.get_list(auth, "incoming", []))
-        user = Ops.get_string(auth, ["incoming", 0], "")
-        pass = Ops.get_string(auth, ["incoming", 1], "")
+      auth_in = auth["incoming"] || []
+      if !auth_in.empty?
+        user = adjustAuth(auth_in[0] || "")
+        pass = adjustAuth(auth_in[1] || "")
       end
       UI.ChangeWidget(Id(:user_in), :Value, user)
       UI.ChangeWidget(Id(:pass_in), :Value, pass)
-      SetAuthIn(!Builtins.isempty(Ops.get_list(auth, "incoming", [])))
+      SetAuthIn(!user.empty? && !pass.empty?)
+
       # outgoing authentication
       user = ""
       pass = ""
-      if !Builtins.isempty(Ops.get_list(auth, "outgoing", []))
-        user = Ops.get_string(auth, ["outgoing", 0], "")
-        pass = Ops.get_string(auth, ["outgoing", 1], "")
+      auth_out = auth["outgoing"] || []
+      if !auth_out.empty?
+        user = adjustAuth(auth_out[0] || "")
+        pass = adjustAuth(auth_out[1] || "")
       end
       UI.ChangeWidget(Id(:user_out), :Value, user)
       UI.ChangeWidget(Id(:pass_out), :Value, pass)
-      SetAuthOut(!Builtins.isempty(Ops.get_list(auth, "outgoing", [])))
+      SetAuthOut(!user.empty? && !pass.empty?)
 
       nil
     end
