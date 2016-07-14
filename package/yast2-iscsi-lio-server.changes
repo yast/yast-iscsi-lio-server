@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Jul  6 11:00:53 CEST 2016 - gs@suse.de
+
+- allow to remove global authentication values
+  (bnc#919474, bnc#977342)
+- 3.1.19
+
+-------------------------------------------------------------------
 Tue Jun  7 10:47:30 UTC 2016 - igonzalezsosa@suse.com
 
 - Stop generating autodocs (fate#320356)
@@ -9,8 +16,8 @@ Wed May  4 12:32:45 CEST 2016 - gs@suse.de
 
 - replace iSCSI "client" by "initiator" in labels, popups and
   help text (fate#319293)
-- add hint to use different user and password for incoming and
-  outgoing authentication (bsc#977173)
+- add hint to use different passwords for incoming and outgoing
+  authentication (bsc#977173)
 - 3.1.17
 
 -------------------------------------------------------------------

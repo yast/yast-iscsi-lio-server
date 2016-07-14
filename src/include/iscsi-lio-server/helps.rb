@@ -131,7 +131,7 @@ module Yast
             "<p>With <b>Edit LUN</b> one can modify the LUN mapping. Please note that LUN target number" +
             " must be unique.<br>After pressing <b>Edit Auth</b>, select the type of authentication." +
             " Use <b>Incoming</b>, <b>Outgoing</b> or both together. Then insert <b>User</b> and <b>Password</b>." +
-            " Please make sure to set different values for incoming and outgoing authentication.\n" +
+            " Please make sure to set different passwords for incoming and outgoing authentication.\n" +
             " If <b>Use Authentication</b> is disabled in previous dialog, <b>Edit Auth</b> is disabled here.</p>"
           ) +
         _( "<p><b>Copy</b> offers the possibility to give an additional initiator access to the LUN.</p>"),
