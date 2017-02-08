@@ -215,7 +215,7 @@ module Yast
       if discovery
         no_auth = VBox(
           Left(
-            CheckBox(Id(:auth_none), Opt(:notify), _("No Authentication"), true)
+            CheckBox(Id(:auth_none), Opt(:notify), _("No Discovery Authentication"), true)
           ),
           VSpacing(1.5)
         )
@@ -226,12 +226,12 @@ module Yast
           CheckBox(
             Id(:auth_in),
             Opt(:notify),
-            _("Incoming Authentication"),
+            _("Authentication by Targets"),
             false
           )
         ),
         HBox(
-          InputField(Id(:user_in), Opt(:hstretch), _("Username")),
+          InputField(Id(:user_in), Opt(:hstretch), _("UserID")),
           Password(Id(:pass_in), _("Password"))
         ),
         VSpacing(1.5),
@@ -239,13 +239,13 @@ module Yast
           CheckBox(
             Id(:auth_out),
             Opt(:notify),
-            _("Outgoing Authentication"),
+            _("Authentication by Initiators"),
             false
           )
         ),
         HBox(
-          InputField(Id(:user_out), Opt(:hstretch), _("Username")),
-          Password(Id(:pass_out), _("Password"))
+          InputField(Id(:user_out), Opt(:hstretch), _("Userid_Mutual")),
+          Password(Id(:pass_out), _("Password_Mutual"))
         )
       )
       deep_copy(t)
