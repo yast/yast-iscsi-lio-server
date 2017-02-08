@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Wed Feb 22 09:55:05 UTC 2017 - lszhu@suse.com
+
+- fate#318832, redesign authentication UI
+- changed online help
+- a bug fix for discovery session without authentication.
+-3.2.0
+
+-------------------------------------------------------------------
 Wed Jul  6 11:00:53 CEST 2016 - gs@suse.de
 
 - allow to remove global authentication values

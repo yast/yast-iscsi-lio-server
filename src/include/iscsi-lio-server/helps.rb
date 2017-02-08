@@ -33,6 +33,10 @@ module Yast
       textdomain "iscsi-lio-server"
 
       # All helps are here
+      use_login_auth = _("If you enable <b>Use Login Authentication</b>, you need to fill in <b>UserID</b> and  <b>Password</b> for both \
+             <b>Authentication for Targets</b> and <b>Authentication for Initiators</b>  \
+             in next pages. Even you disabled <b>Use Login Authentication</b>, it's still needed to add the initiators name \
+             of which you want to grant access to the targets in next page")
       @HELPS = {
         # Read dialog help 1/2
         "read"               => _(
@@ -117,8 +121,10 @@ module Yast
           ),
         # discovery authentication
         "global_config"      => _(
-          "Select the type of authentication. Use <b>No Authentication</b> or one of <b>Incoming</b>" +
-          " and <b>Outgoing</b> (can be both together). Then insert <b>User</b> and <b>Password</b>."
+          "This tab intends to configure authentication for discovery session. "+
+          "Use <b>No Discovery Authentication</b> to disable discovery authentication. Or you need to fill both <b>Authentication by Targets</b>" +
+          " and <b>Authentication by Initiators</b>. "+
+          "<b>Note: UserID / Password  can not be the same for initiators and targets!</b>"
         ),
         # target client setup.
         "target-clnt"        => _(
@@ -129,10 +135,10 @@ module Yast
          ) +
           _(
             "<p>With <b>Edit LUN</b> one can modify the LUN mapping. Please note that LUN target number" +
-            " must be unique.<br>After pressing <b>Edit Auth</b>, select the type of authentication." +
-            " Use <b>Incoming</b>, <b>Outgoing</b> or both together. Then insert <b>User</b> and <b>Password</b>." +
-            " Please make sure to set different passwords for incoming and outgoing authentication.\n" +
-            " If <b>Use Authentication</b> is disabled in previous dialog, <b>Edit Auth</b> is disabled here.</p>"
+            " must be unique.<br>After pressing <b>Edit Auth</b>, it's needed to " +
+            " Use <b>Authentication by Targets</b> and  <b>Authentication by Initiators</b> together. Then insert <b>UserID </b> and <b>Password</b>." +
+            " Please make sure they are  different usernames and passwords for the two kinds of  authentication.\n" +
+            " If <b>Use Login Authentication</b> is disabled in previous dialog, <b>Edit Auth</b> is disabled here.</p>"
           ) +
         _( "<p><b>Copy</b> offers the possibility to give an additional initiator access to the LUN.</p>"),
         # target dialog
@@ -155,7 +161,7 @@ module Yast
             "<p>Under <b>Ip Address</b> and <b>Port Number</b> you specify under which address\n" +
               "and port the service will be available. Default for port number is 3260.\n" +
               "Only ip addresses assigned to one of the network cards are possible."
-          ) + "</p>",
+          ) + "</p>" +"<p>" + use_login_auth + "</p>",
         # add target
         "target-add"         => _(
           "<h1>iSCSI Target IP/Port and LUN setup</h1>"
@@ -172,9 +178,9 @@ module Yast
           ) + "</p>" + "<p>" +
           _(
             "<p>Under <b>Ip Address</b> and <b>Port Number</b> you specify under which address\n" +
-              "and port the service will be available. Default for port number is 3260.\n" +
+             "and port the service will be available. Default for port number is 3260.\n" +
               "Only ip addresses assigned to one of the network cards are possible."
-          ) + "</p>",
+          ) + "</p>" + "<p>" + use_login_auth + "</p>",
         # expert dialog
         "expert"             => _("<h1>iSCSI Target</h1>") +
           _(
