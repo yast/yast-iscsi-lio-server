@@ -83,6 +83,16 @@ module Yast
       nil
     end
 
+    def EnableDiscoveryAuth()
+        cmd ="lio_node --setchapdiscenforce=1"
+        ret = LogExecCmd("#{cmd}", do_log: true)
+    end
+
+    def DisableDiscoveryAuth()
+      cmd ="lio_node --setchapdiscenforce=0"
+      ret = LogExecCmd("#{cmd}", do_log: true)
+    end
+
     def FindTcmKey(p)
       ret = Ops.get(
         Builtins.maplist(Builtins.filter(Ops.get_map(@data, "tcm", {})) do |k, m|
@@ -270,7 +280,6 @@ module Yast
     # @return [Hash]           hash containing keys "exit", "stdout", "stderr"
     #
     def LogExecCmd(cmd, do_log: true)
-      printf("cmd is %s.\n", cmd)
       Builtins.y2milestone("Executing cmd:%1", cmd) if do_log
       ret = Convert.convert(
         SCR.Execute(path(".target.bash_output"), cmd),
@@ -1319,14 +1328,6 @@ module Yast
         elsif HasOutgoingAuth(tgt, tpg, clnt)
           ret = LogExecCmd("#{cmd} \"\" \"\" ") && ret
         end
-      end
-      no_authentication=Convert.to_boolean(UI.QueryWidget(Id(:auth_none), :Value))
-      if no_authentication
-        cmd ="lio_node --setchapdiscenforce=0"
-        ret = LogExecCmd("#{cmd}", do_log: true)
-      else
-        cmd ="lio_node --setchapdiscenforce=1"
-        ret = LogExecCmd("#{cmd}", do_log: true)
       end
       Builtins.y2milestone("SetAuth ret:%1", ret)
       ret

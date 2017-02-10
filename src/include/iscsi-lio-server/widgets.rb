@@ -188,9 +188,21 @@ module Yast
     end
 
     #	**************** Target Auth	*******************
+    # handle the status of discovery authentication, enable or disable, enforce = 1 or 0.
+    def handleDiscAuthStatus()
+      no_discovery_auth = UI.QueryWidget(Id(:auth_none), :Value)
+      if no_discovery_auth
+        IscsiLioData.DisableDiscoveryAuth()
+      else
+        IscsiLioData.EnableDiscoveryAuth()
+      end
+    end
     # handle authentication dialog
     def handleAuth(key, event)
       event = deep_copy(event)
+      # we need to call handleDiscAuthStatus() here because we must handle pre set status of discovery authentication 
+      # like "disable" for defaulf.
+      handleDiscAuthStatus()
       if Ops.get_string(event, "EventReason", "") == "ValueChanged"
         status = false
         # enable/disable none/incoming/outgoing authentication
@@ -199,6 +211,9 @@ module Yast
             status = Convert.to_boolean(UI.QueryWidget(Id(:auth_none), :Value))
             SetAuthIn(!status)
             SetAuthOut(!status)
+            # we must also call handleDiscAuthStatus() here because once users enable / disable discovery authentication,
+            # we need to set the configfs attibutes  accrodingly.
+            handleDiscAuthStatus()
           when :auth_in
             status = Convert.to_boolean(UI.QueryWidget(Id(:auth_in), :Value))
             SetAuthIn(status)
@@ -244,8 +259,8 @@ module Yast
           )
         ),
         HBox(
-          InputField(Id(:user_out), Opt(:hstretch), _("Userid_Mutual")),
-          Password(Id(:pass_out), _("Password_Mutual"))
+          InputField(Id(:user_out), Opt(:hstretch), _("UserID")),
+          Password(Id(:pass_out), _("Password"))
         )
       )
       deep_copy(t)

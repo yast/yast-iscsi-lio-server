@@ -33,6 +33,10 @@ module Yast
       textdomain "iscsi-lio-server"
 
       # All helps are here
+      use_login_auth = "If you enable <b>Use Login Authentication</b>, you need to fill in <b>UserID</b> and  <b>Password</b> for both \
+             <b>Authentication for Targets</b> and <b>Authentication for Initiators</b>  \
+             in next pages. Even you disabled <b>Use Login Authentication</b>, it's still needed to add the initiators name \
+             of which you want to grant access to the targets in next page"
       @HELPS = {
         # Read dialog help 1/2
         "read"               => _(
@@ -117,10 +121,10 @@ module Yast
           ),
         # discovery authentication
         "global_config"      => _(
-          "This tab intends to configure authentication for discovery session."+
+          "This tab intends to configure authentication for discovery session. "+
           "Use <b>No Discovery Authentication</b> to disable discovery authentication. Or you need to fill both <b>Authentication by Targets</b>" +
-          " and <b>Authentication by Initiators</b>."+
-          "<b>Note: Userid / Password and Userid_Mutual / Password_Mutual can not be the same!</b>"
+          " and <b>Authentication by Initiators</b>. "+
+          "<b>Note: UserID / Password  can not be the same for initiators and targets!</b>"
         ),
         # target client setup.
         "target-clnt"        => _(
@@ -132,7 +136,7 @@ module Yast
           _(
             "<p>With <b>Edit LUN</b> one can modify the LUN mapping. Please note that LUN target number" +
             " must be unique.<br>After pressing <b>Edit Auth</b>, it's needed to " +
-            " Use <b>Authentication by Targets</b> and  <b>Authentication by Initiators</b> together. Then insert <b>UserID / Password</b> and <b>UserID_Mutual / Password_Mutual</b>." +
+            " Use <b>Authentication by Targets</b> and  <b>Authentication by Initiators</b> together. Then insert <b>UserID </b> and <b>Password</b>." +
             " Please make sure they are  different usernames and passwords for the two kinds of  authentication.\n" +
             " If <b>Use Login Authentication</b> is disabled in previous dialog, <b>Edit Auth</b> is disabled here.</p>"
           ) +
@@ -158,9 +162,8 @@ module Yast
               "and port the service will be available. Default for port number is 3260.\n" +
               "Only ip addresses assigned to one of the network cards are possible."
           ) + "</p>" +"<p>" +
-          _("If you enable <b>Use Login Authentication</b>, you need to fill in <b>userid / password</b>, <b>userid_mutual / password_mutual </b>" +
-             "for the initiators in next pages. Even you disabled <b>Use Login Authentication</b>, it's still needed to add the initiators name " +
-             "of which you want to grant access to the targets in next page"
+          _(
+            use_login_auth
           ) + "</p>",
         # add target
         "target-add"         => _(
@@ -181,9 +184,8 @@ module Yast
              "and port the service will be available. Default for port number is 3260.\n" +
               "Only ip addresses assigned to one of the network cards are possible."
           ) + "</p>" + "<p>" +
-          _("If you enable <b>Use Login Authentication</b>, you need to fill in <b>userid / password</b>, <b>userid_mutual / password_mutual </b>" +
-             "for the initiators in next pages. Even you disabled <b>Use Login Authentication</b>, it's still needed to add the initiators name " +
-             "of which you want to grant access to the targets in next page"
+          _(
+            use_login_auth
           ) + "</p>",
 
         # expert dialog
