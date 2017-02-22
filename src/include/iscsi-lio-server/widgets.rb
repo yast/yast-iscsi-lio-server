@@ -201,7 +201,7 @@ module Yast
     def handleAuth(key, event)
       event = deep_copy(event)
       # we need to call handleDiscAuthStatus() here because we must handle pre set status of discovery authentication 
-      # like "disable" for defaulf.
+      # like "disable" for default.
       handleDiscAuthStatus()
       if Ops.get_string(event, "EventReason", "") == "ValueChanged"
         status = false
@@ -212,7 +212,7 @@ module Yast
             SetAuthIn(!status)
             SetAuthOut(!status)
             # we must also call handleDiscAuthStatus() here because once users enable / disable discovery authentication,
-            # we need to set the configfs attibutes  accrodingly.
+            # we need to set the configFS attributes  accordingly.
             handleDiscAuthStatus()
           when :auth_in
             status = Convert.to_boolean(UI.QueryWidget(Id(:auth_in), :Value))

@@ -33,10 +33,10 @@ module Yast
       textdomain "iscsi-lio-server"
 
       # All helps are here
-      use_login_auth = "If you enable <b>Use Login Authentication</b>, you need to fill in <b>UserID</b> and  <b>Password</b> for both \
+      use_login_auth = _("If you enable <b>Use Login Authentication</b>, you need to fill in <b>UserID</b> and  <b>Password</b> for both \
              <b>Authentication for Targets</b> and <b>Authentication for Initiators</b>  \
              in next pages. Even you disabled <b>Use Login Authentication</b>, it's still needed to add the initiators name \
-             of which you want to grant access to the targets in next page"
+             of which you want to grant access to the targets in next page")
       @HELPS = {
         # Read dialog help 1/2
         "read"               => _(
@@ -161,10 +161,7 @@ module Yast
             "<p>Under <b>Ip Address</b> and <b>Port Number</b> you specify under which address\n" +
               "and port the service will be available. Default for port number is 3260.\n" +
               "Only ip addresses assigned to one of the network cards are possible."
-          ) + "</p>" +"<p>" +
-          _(
-            use_login_auth
-          ) + "</p>",
+          ) + "</p>" +"<p>" + use_login_auth + "</p>",
         # add target
         "target-add"         => _(
           "<h1>iSCSI Target IP/Port and LUN setup</h1>"
@@ -183,11 +180,7 @@ module Yast
             "<p>Under <b>Ip Address</b> and <b>Port Number</b> you specify under which address\n" +
              "and port the service will be available. Default for port number is 3260.\n" +
               "Only ip addresses assigned to one of the network cards are possible."
-          ) + "</p>" + "<p>" +
-          _(
-            use_login_auth
-          ) + "</p>",
-
+          ) + "</p>" + "<p>" + use_login_auth + "</p>",
         # expert dialog
         "expert"             => _("<h1>iSCSI Target</h1>") +
           _(
