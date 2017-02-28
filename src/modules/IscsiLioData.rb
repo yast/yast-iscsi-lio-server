@@ -83,6 +83,16 @@ module Yast
       nil
     end
 
+    def EnableDiscoveryAuth()
+        cmd ="lio_node --setchapdiscenforce=1"
+        ret = LogExecCmd("#{cmd}", do_log: true)
+    end
+
+    def DisableDiscoveryAuth()
+      cmd ="lio_node --setchapdiscenforce=0"
+      ret = LogExecCmd("#{cmd}", do_log: true)
+    end
+
     def FindTcmKey(p)
       ret = Ops.get(
         Builtins.maplist(Builtins.filter(Ops.get_map(@data, "tcm", {})) do |k, m|

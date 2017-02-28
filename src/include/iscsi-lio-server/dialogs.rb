@@ -142,7 +142,7 @@ module Yast
                 VSpacing(0.2),
                 Left(HBox(CheckBox(Id(:add_ip), _("Bind all IP addresses"), false))),
                 VSpacing(0.5),
-                Left(HBox(CheckBox(Id(:auth), _("Use Authentication"), true))),
+                Left(HBox(CheckBox(Id(:auth), _("Use Login Authentication"), true))),
                 VSpacing(0.5),
                 Table(
                   Id(:lun_table),
@@ -506,7 +506,7 @@ module Yast
     # (includes authentication)
     def AuthDialog
       @current_tab = "targets"
-      caption = _("Modify iSCSI Target Initiator Setup")
+      caption = _("Modify initiators ACLs")
       w = CWM.CreateWidgets(["target-clnt"], @widgets)
       contents = VBox(
         VStretch(),
