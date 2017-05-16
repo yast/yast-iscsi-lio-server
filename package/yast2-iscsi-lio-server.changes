@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue May 16 10:09:07 UTC 2017 - lszhu@suse.de
+
+- fix bsc#1037819, add translation markers in adding LUN page
+  Removed trailing ":" from labels.
+
+-------------------------------------------------------------------
 Wed Feb 22 09:55:05 UTC 2017 - lszhu@suse.com
 
 - fate#318832, redesign authentication UI
