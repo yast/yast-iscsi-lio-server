@@ -467,7 +467,7 @@ module Yast
           HBox(
             PushButton(Id(:add), _("Add")),
             PushButton(Id(:delete), _("Delete")),
-            Label(_("Change:")),
+            Label(_("Change")),
             ComboBox(Id(:change), Opt(:notify), "", lt)
           )
         ),
@@ -642,7 +642,7 @@ module Yast
           4,
           1,
           VBox(
-            Left(Label(_("Initiator name:"))),
+            Left(Label(_("Initiator name"))),
             MinWidth(50, InputField(Id(:clnt), Opt(:hstretch), "", "")),
             VSpacing(0.5),
             Left(CheckBox(Id(:import), _("Import LUNs from TPG"), true))
@@ -701,7 +701,7 @@ module Yast
           4,
           1,
           VBox(
-            Left(Label(_("New initiator name:"))),
+            Left(Label(_("New initiator name"))),
             MinWidth(50, InputField(Id(:clnt), Opt(:hstretch), "", ""))
           )
         ),
