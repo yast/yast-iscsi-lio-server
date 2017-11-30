@@ -23,6 +23,33 @@ module Yast
     include Yast::I18n
     include Yast::UIShortcuts
     include Yast::Logger
+
+    def installed_packages
+      if !PackageSystem.PackageInstalled("targetcli-fb")
+        confirm = Popup.AnyQuestionRichText(
+            "",
+            _("Yast iscsi-lio-server can't run without installing targetcli-fb package. Do you want to install?"),
+            40,
+            10,
+            Label.InstallButton,
+            Label.CancelButton,
+            :focus_yes
+        )
+
+        if confirm
+          PackageSystem.DoInstall(["targetcli-fb"])
+          if PackageSystem.PackageInstalled("targetcli-fb")
+            return true
+          else
+            return false
+          end
+        end
+        return false
+      else
+        return true
+      end
+    end
+
     def run
       textdomain "iscsi-lio-server"
       msg = ""
@@ -79,8 +106,13 @@ module Yast
   end
 end
 
-$target_data = TargetData.new
-$global_data = Global.new
-$global_data.execute_init_commands
-$discovery_auth = DiscoveryAuth.new
-Yast::ISCSILioServer.new.run
+
+iscsi_target_server = Yast::ISCSILioServer.new
+ret = iscsi_target_server.installed_packages
+if ret == true
+  $target_data = TargetData.new
+  $global_data = Global.new
+  $global_data.execute_init_commands
+  $discovery_auth = DiscoveryAuth.new
+  iscsi_target_server.run
+end
