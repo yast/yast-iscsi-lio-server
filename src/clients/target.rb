@@ -1,11 +1,10 @@
-# Simple example to demonstrate object API for CWM
-
-#require_relative "example_helper"
+require './src/lib/helps/iscsi-lio-server_helper.rb'
 require './src/lib/TargetData.rb'
 require './src/lib/dialogs/UI_dialogs.rb'
 require "cwm/widget"
 require "ui/service_status"
 require "yast"
+require "yast2/execute"
 
 Yast.import "CWM"
 Yast.import "CWMTab"
