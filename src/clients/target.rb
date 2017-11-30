@@ -43,24 +43,25 @@ module Yast
         mutual_password = $discovery_auth.fetch_mutual_password()
         cmd = 'targetcli'
         p1 = "iscsi/ set discovery_auth "
-        if userid.empty? != true
-          p1 += ("userid=" + userid + " ")
-        end
-        if password != nil
-          p1 += ("password=" + password + " ")
-        end
-        if mutual_userid != nil
-          p1 += ("mutual_userid=" + mutual_userid + " ")
-        end
-        if mutual_password != nil
-          p1 += ("mutual_password=" + mutual_password)
-        end
-
-        if status == true
+        # status == false means "No discovery auth" is not checked, means we need enable discovery auth
+        if status == false
+          if userid.empty? != true
+            p1 += ("userid=" + userid + " ")
+          end
+          if password.empty? != true
+            p1 += ("password=" + password + " ")
+          end
+          if mutual_userid.empty? != true
+            p1 += ("mutual_userid=" + mutual_userid + " ")
+          end
+          if mutual_password.empty? != true
+            p1 += ("mutual_password=" + mutual_password)
+          end
           p1 += " enable=1"
           if (userid == mutual_userid)
             msg = _("It seems that Authentication by Initiators and Authentication by Targets using a same username")
             msg += _("This may cause a CHAP negotiation error, an authenticaiton failure.")
+            Yast::Popup.Error(msg)
           end
         else
           p1 = "iscsi/ set discovery_auth enable = 0"

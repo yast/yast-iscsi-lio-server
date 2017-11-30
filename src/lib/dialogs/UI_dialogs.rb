@@ -43,7 +43,7 @@ class NoDiscoveryAuth_CheckBox < ::CWM::CheckBox
   end
 
   def handle
-    if self.value == false
+    if self.value == true
       @container_class.disable_discovery_auth_widgets()
     else
       @container_class.enable_discovery_auth_widgets()
@@ -630,7 +630,7 @@ class DiscoveryAuthWidget < CWM::CustomWidget
     else
       value = true
     end
-    @no_discovery_auth_checkbox = NoDiscoveryAuth_CheckBox.new(self, value)
+    @no_discovery_auth_checkbox = NoDiscoveryAuth_CheckBox.new(self, !value)
     @target_discovery_auth = TargetAuthDiscovery.new(value)
     @initiator_discovery_auth = InitiatorAuthDiscovery.new(value)
     self.handle_all_events = true
@@ -681,7 +681,7 @@ class DiscoveryAuthWidget < CWM::CustomWidget
   end
 
   def validate
-    if @no_discovery_auth_checkbox.value == true
+    if @no_discovery_auth_checkbox.value == false
       if (@target_discovery_auth.get_status == false) || (@initiator_discovery_auth.get_status ==false)
         err_msg = _("When Discovery Authentication is enabled.")
         err_msg += _("Plese use Authentication by initiator and Authentication by targets together.")
@@ -2016,13 +2016,12 @@ class AddTargetWidget < CWM::CustomWidget
       @target_portal_group_field = PortalGroupInput.new(1)
     else
       @mode = 'edit'
-      tpg_num = 0
+      tpg_num = 1
       target_list = $target_data.get_target_list
       target = target_list.fetch_target(target_name)
       tpg = target.get_default_tpg
       target = target_list.fetch_target(target_name)
       tpg_num = target.get_default_tpg.fetch_tpg_number
-      @tpg_num = tpg_num
       @target_tgp = tpg
       portals = tpg.fetch_portal
       ip = portals[0][0]
@@ -2045,7 +2044,8 @@ class AddTargetWidget < CWM::CustomWidget
     end
 
     if @mode == 'edit'
-      cmd = "targetcli iscsi/" + @target_name + "/tpg" + @tpg_num + "/ get attribute authentication"
+      tpg = @target_portal_group_field.value.to_s
+      cmd = "targetcli iscsi/" + @target_name + "/tpg" + tpg + "/ get attribute authentication"
       cmd_out = `#{cmd}`
       ret = cmd_out[15, cmd_out.length]
       if ret == "1 \n"
@@ -2154,7 +2154,6 @@ class AddTargetWidget < CWM::CustomWidget
       @lun_table_widget.set_target_info(@target_name, target_tpg)
       @target_info.push(@target_name)
       @target_info.push(target_tpg)
-      return true
     end
 
     if @mode == 'edit'
@@ -2202,16 +2201,16 @@ class AddTargetWidget < CWM::CustomWidget
           Yast::Popup.Error(err_msg + err)
         end
       end
-
     end
     @target_info.push(@target_name)
     @target_info.push(target_tpg)
     auth = @use_login_auth.value
+    tpg = @target_portal_group_field.value.to_s
     if auth == true
-      p1 = "iscsi/" + @target_name + "/tpg" + @tpg_num + "/ set attribute authentication=1 " + \
+      p1 = "iscsi/" + @target_name + "/tpg" + tpg + "/ set attribute authentication=1 " + \
            " demo_mode_write_protect=1" + " cache_dynamic_acls=0" + " generate_node_acls=0"
     else
-      p1 = "iscsi/" + @target_name + "/tpg" + @tpg_num + "/ set attribute authentication=0 " + \
+      p1 = "iscsi/" + @target_name + "/tpg" + tpg + "/ set attribute authentication=0 " + \
            " demo_mode_write_protect=0" + " cache_dynamic_acls=1" + " generate_node_acls=1"
     end
     begin
