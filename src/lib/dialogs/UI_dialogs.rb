@@ -1074,7 +1074,6 @@ class ACLTable < CWM::Table
     rescue Cheetah::ExecutionFailed => e
       if e.stderr != nil
         Yast::Popup.Error(e.stderr)
-        # TODO add log
       end
     end
   end
@@ -1087,7 +1086,6 @@ class ACLTable < CWM::Table
     rescue Cheetah::ExecutionFailed => e
       if e.stderr != nil
         Yast::Popup.Error(e.stderr)
-        # TODO add log
       end
     end
   end
@@ -1101,7 +1099,6 @@ class ACLTable < CWM::Table
       begin
         Cheetah.run(cmd, p1)
       rescue Cheetah::ExecutionFailed => e
-        #TODO add log here
       end
     end
 

@@ -562,7 +562,6 @@ class Global
         Cheetah.run(cmd, p1)
       rescue Cheetah::ExecutionFailed => e
         if e.stderr != nil
-          # TODO add log
         end
       end
     end
