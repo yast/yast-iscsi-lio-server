@@ -434,6 +434,19 @@ module Yast
     def label
       _('Service')
     end
+
+    def help
+      help_msg = _("<h1>iSCSI Target</h1>")
+      help_msg += _("<h2>Service Start</h2>")
+      help_msg += _("To start the service every time your computer is booted, \
+                   set <b>When Booting</b>. Otherwise set <b>Manually</b>.\n")
+      help_msg += _("<h2>Firewall Settings</h2>")
+      help_msg += _("To open the firewall to allow access to the service from remote computers, \
+                    set <b>Open Port in Firewall</b>.\n")
+      help_msg += _("To select interfaces on which to open the port, click <b>Firewall Details</b>. \
+                    This option is available only if the firewall is enabled.")
+      return help_msg
+    end
   end
 end
 
@@ -465,15 +478,6 @@ class TargetAuthDiscovery < CWM::CustomWidget
         )
 
     )
-=begin
-    VBox(
-        @auth_by_target,
-        HBox(
-            @user_name_input,
-            @password_input,
-        ),
-    )
-=end
   end
 
   def disable_checkbox()
@@ -528,7 +532,7 @@ class TargetAuthDiscovery < CWM::CustomWidget
   end
 
   def help
-    _('demo help')
+
   end
 end
 
@@ -609,7 +613,7 @@ class InitiatorAuthDiscovery < CWM::CustomWidget
   end
 
   def help
-    _('demo help')
+    _('')
   end
 end
 
@@ -692,10 +696,6 @@ class DiscoveryAuthWidget < CWM::CustomWidget
   def handle(event)
     nil
   end
-
-  def help
-    _('demo help')
-  end
 end
 
 class GlobalTab < ::CWM::Tab
@@ -716,6 +716,16 @@ class GlobalTab < ::CWM::Tab
   def label
     _('Global')
   end
+
+  def help
+    help_msg = _("<h1>iSCSI Target</h1>")
+    help_msg += _("This tab intends to configure authentication for discovery session. ")
+    help_msg += _("Use <b>No Discovery Authentication</b> to disable discovery authentication.")
+    help_msg += _(" Or you need to fill both <b>Authentication by Targets</b> and <b>Authentication by Initiators</b>.")
+    help_msg += _("<p>Note: <b>Username / Password can not be the same for initiators and targets! \
+                  Or there may be a CHAP error</b></p>")
+    return help_msg
+  end
 end
 
 class TargetsTab < ::CWM::Tab
@@ -735,6 +745,13 @@ class TargetsTab < ::CWM::Tab
 
   def label
     _('Targets')
+  end
+
+  def help
+    help_msg = _("<h1>iSCSI Target</h1>")
+    help_msg += _("List of offered targets and target portal groups. Create a new target by clicking <b>Add</b>. \
+                   To delete or modify an item, select it and press <b>Edit</b> or <b>Delete</b>.")
+    return help_msg
   end
 end
 
@@ -1513,10 +1530,6 @@ class EditLUNMappingWidget < CWM::CustomWidget
     end
     nil
   end
-
-  def help
-    _('demo help')
-  end
 end
 
 
@@ -1665,10 +1678,6 @@ class ACLInitiatorAuth < CWM::CustomWidget
     end
     return true
   end
-
-  def help
-    _('demo help')
-  end
 end
 
 class ACLTargetAuth < CWM::CustomWidget
@@ -1775,10 +1784,6 @@ class ACLTargetAuth < CWM::CustomWidget
     end
     return true
   end
-
-  def help
-    _('demo help')
-  end
 end
 
 # This classed used in EditAuthDialog
@@ -1835,10 +1840,6 @@ class EditAuthWidget < CWM::CustomWidget
 
   def handle(event)
     nil
-  end
-
-  def help
-    _('demo help')
   end
 end
 
@@ -2372,10 +2373,6 @@ class TargetsTableWidget < CWM::CustomWidget
     end
     nil
   end
-
-  def help
-    _('demo help')
-  end
 end
 
 class LUNTable < CWM::Table
@@ -2678,10 +2675,6 @@ class LUNPathEdit < CWM::CustomWidget
     end
     nil
   end
-
-  def help
-    _("Demo help")
-  end
 end
 
 # This is a class to config LUN path, number and name, used in LUNDetailsWidget contents
@@ -2718,10 +2711,6 @@ class LUNConfig < CWM::CustomWidget
 
   def get_lun_info
     @lun_info
-  end
-
-  def help
-    _("Demo help")
   end
 end
 
@@ -2876,9 +2865,5 @@ class LUNsTableWidget < CWM::CustomWidget
         end
     end
     nil
-  end
-
-  def help
-    _('demo help')
   end
 end
