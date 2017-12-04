@@ -832,7 +832,7 @@ class PortalGroupInput < CWM::IntField
   end
 
   def store
-    @config = value
+    @config = self.value
   end
 
   def minimum
@@ -1049,30 +1049,64 @@ class ACLTable < CWM::Table
         return item
       end
     end
+    return nil
   end
 
   def add_item(item)
-    @acls.push(item)
-    @acls_add.push(item)
-    self.change_items(@acls)
+    failed = false
+    cmd = "targetcli"
+    p1 = "iscsi/" + @target_name + "/tpg" + @tpg_num.to_s + "/acls create " + item[1]
+    if (item[0] < 5000)
+      enable_auto_add_mapped_luns()
+    else
+      disable_auto_add_mapped_luns()
+    end
+    begin
+      Cheetah.run(cmd, p1)
+    rescue Cheetah::ExecutionFailed => e
+      if e.stderr != nil
+        failed = true
+        err_msg = _("Failed to create ACL with initaitor name: ") + item[1]
+        err_msg += _("\nPlease check whether initiator names are valid.\n")
+        err_msg += e.stderr
+        Yast::Popup.Error(err_msg)
+      end
+    end
+    if (item[0] < 5000)
+      disable_auto_add_mapped_luns()
+    end
+
+    if failed == false
+      @acls.push(item)
+      self.change_items(@acls)
+    end
+
   end
 
   def delete_item(item)
-    @acls_delete.push(item)
-
-    @acls.each do |elem|
-      if elem[1] == item[1]
-        @acls.delete(elem)
+    failed = false
+    cmd = "targetcli"
+    p1 = "iscsi/" + @target_name + "/tpg" + @tpg_num.to_s + "/acls delete " + item[1]
+    begin
+      Cheetah.run(cmd, p1)
+    rescue Cheetah::ExecutionFailed => e
+      if e.stderr != nil
+        failed = true
+        err_msg = _("Failed to delete ACL with initaitor name: ") + item[1]
+        err_msg += _("\nPlease check whether the ACL still exists.\n")
+        err_msg += e.stderr
+        Yast::Popup.Error(err_msg)
       end
     end
 
-    @acls_add.each do |elem|
-      if elem[1] == item[1]
-        @acls_add.delete(elem)
+    if failed == false
+      @acls.each do |elem|
+        if elem[1] == item[1]
+          @acls.delete(elem)
+        end
       end
+      self.change_items(@acls)
     end
-
-    self.change_items(@acls)
   end
 
   def header
@@ -1106,50 +1140,6 @@ class ACLTable < CWM::Table
       end
     end
   end
-
-  def validate
-    cmd = "targetcli"
-    err_msg = _("Failed to create ACLs witn initiator name: ")
-    failed_acls = ""
-    @acls_delete.each do |elem|
-      p1 = "iscsi/" + @target_name + "/tpg" + @tpg_num.to_s + "/acls delete " + elem[1]
-      begin
-        Cheetah.run(cmd, p1)
-      rescue Cheetah::ExecutionFailed => e
-      end
-    end
-
-    @acls_add.each do |elem|
-      p1 = "iscsi/" + @target_name + "/tpg" + @tpg_num.to_s + "/acls create " + elem[1]
-      if (elem[0] < 5000)
-        enable_auto_add_mapped_luns()
-      else
-        disable_auto_add_mapped_luns()
-      end
-      begin
-        Cheetah.run(cmd, p1)
-      rescue Cheetah::ExecutionFailed => e
-        if e.stderr != nil
-          failed_acls += (elem[1] + "\n")
-          @acls.delete(elem)
-          self.change_items(@acls)
-        end
-      end
-      if (elem[0] < 5000)
-        disable_auto_add_mapped_luns()
-      end
-
-      if failed_acls.empty? != true
-        err_msg += failed_acls
-        err_msg += _("Please check whether initiator names are valid.")
-        Yast::Popup.Error(err_msg)
-        return false
-      end
-
-      true
-    end
-  end
-
 end
 
 
@@ -1164,6 +1154,7 @@ class InitiatorNameInput < CWM::InputField
 
   def init
     self.value = ""
+    @config = ""
   end
 
   def store
@@ -1304,8 +1295,10 @@ class LUNMappingTable < CWM::Table
         mapped_lun = value.get_mapped_lun()
       end
     end
-    mapped_lun.each do |key, value|
-      mapping.push([rand(999), value.fetch_mapping_lun_number, value.fetch_mapped_lun_number])
+    if mapped_lun != nil
+      mapped_lun.each do |key, value|
+        mapping.push([rand(999), value.fetch_mapping_lun_number, value.fetch_mapped_lun_number])
+      end
     end
     return mapping
   end
@@ -1582,8 +1575,13 @@ class ACLInitiatorAuth < CWM::CustomWidget
   def initialize(acl_hash, info)
     textdomain "iscsi-lio-server"
     @info = info
-    mutual_username = acl_hash.fetch_mutual_userid.gsub(/\s+/,'')
-    mutual_password = acl_hash.fetch_mutual_password.gsub(/\s+/,'')
+    if acl_hash != nil
+      mutual_username = acl_hash.fetch_mutual_userid.gsub(/\s+/,'')
+      mutual_password = acl_hash.fetch_mutual_password.gsub(/\s+/,'')
+    else
+      mutual_username = ""
+      mutual_password = ""
+    end
     @mutual_user_name_input = MutualUserName.new(mutual_username)
     @mutual_password_input = MutualPassword.new(mutual_password)
     if (mutual_password.empty? != true) && (mutual_username.empty? != true)
@@ -1658,7 +1656,7 @@ class ACLInitiatorAuth < CWM::CustomWidget
         Cheetah.run(cmd, p1)
       rescue Cheetah::ExecutionFailed => e
         if e.stderr != nil
-          err_msg = _("Failed to clear Authentication by Initiators.")
+          err_msg = _("Failed to clear Authentication by Initiators. Would you please check whether the ACL exist?")
           err_msg += e.stderr
           Yast::Popup.Error(err_msg)
           return false
@@ -1669,7 +1667,7 @@ class ACLInitiatorAuth < CWM::CustomWidget
         Cheetah.run(cmd, p2)
       rescue Cheetah::ExecutionFailed => e
         if e.stderr != nil
-          err_msg = _("Failed to clear Authentication by Initiators.")
+          err_msg = _("Failed to clear Authentication by Initiators. Would you please check whether the ACL exist?")
           err_msg += e.stderr
           Yast::Popup.Error(err_msg)
           return false
@@ -1688,8 +1686,13 @@ class ACLTargetAuth < CWM::CustomWidget
   def initialize(acl_hash, info)
     textdomain "iscsi-lio-server"
     @info = info
-    username = acl_hash.fetch_userid.gsub(/\s+/,'')
-    password = acl_hash.fetch_password.gsub(/\s+/,'')
+    if acl_hash != nil
+      username = acl_hash.fetch_userid.gsub(/\s+/,'')
+      password = acl_hash.fetch_password.gsub(/\s+/,'')
+    else
+      username = ""
+      password = ""
+    end
     @user_name_input = UserName.new(username)
     @password_input = Password.new(password)
     if (password.empty? != true) && (username.empty? != true)
@@ -1764,7 +1767,7 @@ class ACLTargetAuth < CWM::CustomWidget
         Cheetah.run(cmd, p1)
       rescue Cheetah::ExecutionFailed => e
         if e.stderr != nil
-          err_msg = _("Failed to clear Authentication by Targets.")
+          err_msg = _("Failed to clear Authentication by Targets. Would you please check whether the ACL exist?")
           err_msg += e.stderr
           Yast::Popup.Error(err_msg)
           return false
@@ -1775,7 +1778,7 @@ class ACLTargetAuth < CWM::CustomWidget
         Cheetah.run(cmd, p2)
       rescue Cheetah::ExecutionFailed => e
         if e.stderr != nil
-          err_msg = _("Failed to clear Authentication by Targets.")
+          err_msg = _("Failed to clear Authentication by Targets. Would you please check whether the ACL exist?")
           err_msg += e.stderr
           Yast::Popup.Error(err_msg)
           return false
@@ -1810,11 +1813,16 @@ class EditAuthWidget < CWM::CustomWidget
       all_acls_hash = acls_group_hash.get_all_acls()
     end
     info = [target_name, tpg_num, initiator_name]
-    all_acls_hash.each do |key, value|
-      if key == initiator_name
-        @acl_initiator_auth = ACLInitiatorAuth.new(value, info)
-        @acl_target_auth = ACLTargetAuth.new(value, info)
+    if all_acls_hash.empty? != true
+      all_acls_hash.each do |key, value|
+        if key == initiator_name
+          @acl_initiator_auth = ACLInitiatorAuth.new(value, info)
+          @acl_target_auth = ACLTargetAuth.new(value, info)
+        end
       end
+    else
+      @acl_initiator_auth = ACLInitiatorAuth.new(nil, info)
+      @acl_target_auth = ACLTargetAuth.new(nil, info)
     end
     self.handle_all_events = true
   end
@@ -1943,7 +1951,7 @@ class InitiatorACLs < CWM::CustomWidget
         info = @add_acl_dialog.run
         initiator_name = info[0]
         mapped_all_luns = info[1]
-        if initiator_name.empty? != true
+        if (initiator_name.empty? != true) &&  (initiator_name != nil)
           item = Array.new()
           # item[0] < 5000 means we will map all luns, item[0] > 5000 means we don't map all luns
           if(mapped_all_luns == true)
@@ -1963,9 +1971,11 @@ class InitiatorACLs < CWM::CustomWidget
         ret = edit_lun_mapping_dialog.run
       when :edit_auth
         item = @acls_table.get_selected()
-        initiator_name = item[1]
-        @edit_auth_dialog = EditAuthDialog.new(initiator_name, @target_name,@target_tpg)
-        @edit_auth_dialog.run
+        if item != nil
+          initiator_name = item[1]
+          @edit_auth_dialog = EditAuthDialog.new(initiator_name, @target_name, @target_tpg)
+          @edit_auth_dialog.run
+        end
       when :delete
         item = @acls_table.get_selected()
         @acls_table.delete_item(item)
@@ -1974,7 +1984,16 @@ class InitiatorACLs < CWM::CustomWidget
   end
 
   def help
-    _("demo help in InitaitorACLs")
+    help_msg = _("<p>Use <b>Add</b> to give an initiator (iSCSI client) access to a LUN imported \
+                  from target portal group. Specify which initiator is allowed to connect \
+                  (use InitiatorName from '/etc/iscsi/initiatorname.iscsi' on iSCSI initiator). \
+                  <b>Delete</b> will remove the initiator access to the LUN.</p>")
+    help_msg += _("<p>With <b>Edit LUN</b> one can modify the LUN mapping. Please note that LUN \
+                   target number must be unique.</p>")
+    help_msg += _("<p>After pressing <b>Edit Auth</b>, it's needed to <b>Use Authentication by Targets</b> and \
+                   <b>Authentication by Initiators</b> together. Then input UserName and Password. \
+                   Please make sure they are different usernames and passwords for the two kinds \
+                   of authentication. Or there may be a CHAP error.")
   end
 end
 
@@ -2015,7 +2034,6 @@ class AddTargetWidget < CWM::CustomWidget
       target_list = $target_data.get_target_list
       target = target_list.fetch_target(target_name)
       tpg = target.get_default_tpg
-      target = target_list.fetch_target(target_name)
       tpg_num = target.get_default_tpg.fetch_tpg_number
       @target_tgp = tpg
       portals = tpg.fetch_portal
@@ -2039,8 +2057,7 @@ class AddTargetWidget < CWM::CustomWidget
     end
 
     if @mode == 'edit'
-      tpg = @target_portal_group_field.value.to_s
-      cmd = "targetcli iscsi/" + @target_name + "/tpg" + tpg + "/ get attribute authentication"
+      cmd = "targetcli iscsi/" + @target_name + "/tpg" + tpg_num   + "/ get attribute authentication"
       cmd_out = `#{cmd}`
       ret = cmd_out[15, cmd_out.length]
       if ret == "1 \n"
@@ -2224,6 +2241,24 @@ class AddTargetWidget < CWM::CustomWidget
   def get_target_info
     info = @target_info
     return info
+  end
+
+  def help
+    help_msg = _("<h1>iSCSI Target IP/Port and LUN setup</h1>")
+    help_msg += _("<p>Create or edit a target.</p>")
+    help_msg += _("<p>It is possible to make arbitrary block devices or files available under a lun. \
+                  You have to provide <b>LUN path</b> to either block devices or file. The <b>LUN name</b> is an \
+                  arbitrary name to uniquely identify the LUN. The name needs to be unique within the \
+                  target portal group. If the user does not provide a name for LUN, \
+                  it is generated automatically.</p>")
+    help_msg += _("<p>Under <b>Ip Address</b> and <b>Port Number</b> you specify under which address and port \
+                  the service will be available. Default for port number is 3260. Only ip addresses \
+                  assigned to one of the network cards are possible.</p>")
+    help_msg += _("<p><b>Bind all IP addresses</b> means the service will be avaiable under all IPs this \
+                   target server has.</p>")
+    help_msg += _("<p>When <b>Use Login Authentication</b> is enabled, you need to add <b>ACL</b> rules \
+                   for this target. If <b>Use Login Authentication</b> is disabled, this target will work in \
+                   <b>Demo Mode</b>, this means any initiators can access this target without any authentications </p>")
   end
 
 end
