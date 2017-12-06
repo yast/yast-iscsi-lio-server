@@ -2093,21 +2093,48 @@ class AddTargetWidget < CWM::CustomWidget
 
   def contents
     VBox(
-      HBox(
-        @target_name_input_field,
-        @target_identifier_input_field,
-        @target_portal_group_field
-      ),
-      HBox(
-        @IP_selsection_box,
-        @target_port_num_field
-      ),
-      VBox(
-        @target_bind_all_ip_checkbox,
-        @use_login_auth
-      ),
-      @lun_table_widget
-    )
+        VSpacing(2),
+        HBox(
+            HSpacing(15),
+            @target_name_input_field,
+            @target_identifier_input_field,
+            @target_portal_group_field,
+            HSpacing(15),
+            ),
+        HBox(
+            HSpacing(17),
+            Left(
+                HBox(
+                    @IP_selsection_box,
+                    @target_port_num_field,
+                    HSpacing(100),
+                    )
+            ),
+            HSpacing(20),
+            ),
+        VBox(
+            HBox(
+                HSpacing(15),
+                VBox(
+                    Left(@target_bind_all_ip_checkbox,),
+                    ),
+                HSpacing(15),
+                ),
+            HBox(
+                HSpacing(15),
+                VBox(
+                    Left(@use_login_auth,),
+                    ),
+                HSpacing(15),
+                ),
+            ),
+        HBox(
+            HSpacing(15),
+            @lun_table_widget,
+            HSpacing(15),
+            ),
+        VSpacing(2),
+        )
   end
 
   def validate
@@ -2829,11 +2856,11 @@ class LUNsTableWidget < CWM::CustomWidget
 
   def contents
     VBox(
-      @lun_table,
-      HBox(
-        PushButton(Id(:add), _('Add')),
-        PushButton(Id(:delete), _('Delete'))
-      )
+        @lun_table,
+        HBox(
+            PushButton(Id(:add), _('Add')),
+            PushButton(Id(:delete), _('Delete'))
+        )
     )
   end
 
