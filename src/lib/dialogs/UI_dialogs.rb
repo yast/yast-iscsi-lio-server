@@ -479,17 +479,17 @@ class TargetAuthDiscovery < CWM::CustomWidget
     self.handle_all_events = true
   end
 
-
   def contents
-    HCenter(
+    HBox(
+        HSpacing(25),
         VBox(
-            @auth_by_target,
+            Left(@auth_by_target,),
             HBox(
                 @user_name_input,
                 @password_input,
+                ),
             ),
-        )
-
+        HSpacing(25),
     )
   end
 
@@ -565,13 +565,18 @@ class InitiatorAuthDiscovery < CWM::CustomWidget
   end
 
   def contents
-    VBox(
-        @auth_by_initiator,
-        HBox(
-            @mutual_user_name_input,
-            @mutual_password_input,
-        ),
-    )
+    HBox(
+        HSpacing(25),
+        VBox(
+            Left(@auth_by_initiator,),
+            HBox(
+                @mutual_user_name_input,
+                @mutual_password_input,
+                ),
+            ),
+        HSpacing(25),
+        )
+
   end
 
   def disable_checkbox()
@@ -671,23 +676,24 @@ class DiscoveryAuthWidget < CWM::CustomWidget
   end
 
   def contents
-    HVCenter(
+    HBox(
+        VSpacing(5),
         VBox(
-            HSpacing(2),
+            VSpacing(2),
             Left(
-                @no_discovery_auth_checkbox
+                HBox(
+                    HSpacing(25),
+                    @no_discovery_auth_checkbox,
+                    HSpacing(25),
+                    )
             ),
+            VSpacing(1),
             @target_discovery_auth,
             @initiator_discovery_auth,
-        ),
-    )
-=begin
-    VBox(
-        @no_discovery_auth_checkbox,
-        @target_discovery_auth,
-        @initiator_discovery_auth,
-    )
-=end
+            VSpacing(2),
+            ),
+        VSpacing(5),
+        )
   end
 
   def opt
