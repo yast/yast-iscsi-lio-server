@@ -101,6 +101,7 @@ module Yast
             Yast::Popup.Error(err_msg)
           end
         end
+        $global_data.execute_exit_commands
       end
     end
   end

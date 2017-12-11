@@ -568,6 +568,22 @@ class Global
 
   end
 
+  def execute_exit_commands()
+    cmd = "targetcli"
+    commands = [
+        "saveconfig",
+    ]
+    commands.each do |p1|
+      begin
+        Cheetah.run(cmd, p1)
+      rescue Cheetah::ExecutionFailed => e
+        if e.stderr != nil
+        end
+      end
+    end
+
+  end
+
   def disable_warning_del_lun
     @show_del_lun_warning = false
   end
