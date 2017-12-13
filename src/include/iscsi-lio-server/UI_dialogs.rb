@@ -1,5 +1,5 @@
-require './src/lib/helps/iscsi-lio-server_helper.rb'
-require './src/lib/TargetData.rb'
+require_relative './iscsi-lio-server_helper.rb'
+require_relative './TargetData.rb'
 require 'cwm/widget'
 require 'ui/service_status'
 require 'yast'

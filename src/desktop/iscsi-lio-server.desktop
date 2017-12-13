@@ -1,0 +1,23 @@
+[Desktop Entry]
+Type=Application
+Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-Net_advanced;
+
+X-KDE-ModuleType=Library
+X-KDE-RootOnly=true
+X-KDE-HasReadOnlyMode=true
+X-SuSE-YaST-Call=iscsi-lio-server
+
+X-SuSE-YaST-Group=Net_advanced
+X-SuSE-YaST-Argument=
+X-SuSE-YaST-RootOnly=true
+X-SuSE-YaST-AutoInst=all
+X-SuSE-YaST-Geometry=
+X-SuSE-YaST-SortKey=
+X-SuSE-YaST-AutoInstResource=iscsi-lio-servers
+
+Icon=yast-iscsi-server
+Exec=xdg-su -c "/sbin/yast2 iscsi-lio-server" 
+Name=iSCSI LIO Target
+GenericName=Configure an iSCSI target via LIO
+X-KDE-SubstituteUID=true
+StartupNotify=true

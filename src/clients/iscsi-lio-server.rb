@@ -1,6 +1,9 @@
-require './src/lib/helps/iscsi-lio-server_helper.rb'
-require './src/lib/TargetData.rb'
-require './src/lib/dialogs/UI_dialogs.rb'
+#require '../include/iscsi-lio-server/iscsi-lio-server_helper.rb'
+require_relative '../include/iscsi-lio-server/iscsi-lio-server_helper.rb'
+#require '../include/iscsi-lio-server/TargetData.rb'
+require_relative '../include/iscsi-lio-server/TargetData.rb'
+#require '../include/iscsi-lio-server/UI_dialogs.rb'
+require_relative '../include/iscsi-lio-server/UI_dialogs.rb'
 require "cwm/widget"
 require "ui/service_status"
 require "yast"
@@ -16,13 +19,18 @@ Yast.import "CWMFirewallInterfaces"
 Yast.import "Service"
 Yast.import "CWMServiceStart"
 Yast.import "UI"
-
+Yast.import "Confirm"
 
 module Yast
   class ISCSILioServer
     include Yast::I18n
     include Yast::UIShortcuts
     include Yast::Logger
+
+    def is_root
+      ret =Confirm.MustBeRoot
+      return ret
+    end
 
     def installed_packages
       if !PackageSystem.PackageInstalled("targetcli-fb")
@@ -109,6 +117,10 @@ end
 
 
 iscsi_target_server = Yast::ISCSILioServer.new
+ret = iscsi_target_server.is_root
+if ret == false
+  exit
+end
 ret = iscsi_target_server.installed_packages
 if ret == true
   $target_data = TargetData.new
