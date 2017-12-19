@@ -414,7 +414,9 @@ module Yast
       self.initial = true
       @service = Yast::SystemdService.find("sshd.service")
       @service_status = ::UI::ServiceStatus.new(@service, reload_flag: true, reload_flag_label: :restart)
-      @firewall_widget = nil
+      @firewall_widget = ::CWM::WrapperWidget.new(
+           CWMFirewallInterfaces.CreateOpenFirewallWidget("services" => ["service:target"]),
+         )
     end
 
     def contents
@@ -425,7 +427,7 @@ module Yast
               HSpacing(1),
               VBox(@service_status.widget,
                    VSpacing(2),
-                   #@firewall_widget,
+                   @firewall_widget,
                    VSpacing(2)),
               HSpacing(1),
               HStretch()
