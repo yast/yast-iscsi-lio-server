@@ -33,7 +33,8 @@ BuildRequires:  yast2
 BuildRequires:  yast2-devtools >= 3.1.10
 BuildRequires:  yast2-packagemanager-devel
 BuildRequires:  yast2-testsuite
-BuildRequires:  rubygem(rspec)
+BuildRequires:  rubygem(%rb_default_ruby_abi:rspec)
+BuildRequires:  rubygem(%rb_default_ruby_abi:yast-rake)
 Requires:       python-configshell-fb
 Requires:       python-rtslib-fb
 Requires:       targetcli-fb
@@ -58,10 +59,12 @@ This package contains configuration of iSCSI LIO target
 %setup -n %{name}-%{version}
 
 %build
-%yast_build
+
+%check
+rake test:unit
 
 %install
-%yast_install
+rake install DESTDIR="%{buildroot}"
 
 %files
 %defattr(-,root,root)
