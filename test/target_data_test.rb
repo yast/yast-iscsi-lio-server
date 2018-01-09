@@ -20,15 +20,7 @@ describe TargetData do
     end
 
     it "parses a typical output" do
-      output = <<EOS
-I don't know how the typical output looks like
-Let's assume this is fine ;-)
-
-iqn.9999-99.aaa ... [TPGs: 99]
-tpg99 whatever
-acls .............. [ACLs: 99] 
-iqn.9999-99.aaa ... [bbb ccc Mapped LUNs: 99]
-EOS
+      output = fixture("ls-typical")
       # Anyway, the problem is that the method calls it multiple times
       # with various arguments. Refactoring is needed to make this work.
       expect_any_instance_of(described_class)
@@ -36,14 +28,26 @@ EOS
         .with("targetcli ls")
         .and_return(output)
 
-      acl_output = "please don't steal our secrets"
-      expect_any_instance_of(described_class)
-        .to receive(:`)
-        .with("targetcli iscsi/iqn.9999-99.foo/tpg44/acls/iqn.9999-99.bla/ get auth userid")
-        .and_return(acl_output)
+      acl = "iscsi/iqn.2018-01.cz.suse:2e149e55-4d2e-43b7-bc6b-a999c837d6fe/tpg1/acls/iqn.2018-01.cz.suse:2e149e55-4d2e-43b7-bc6b-a999c837d6fe/"
+
+      expect_any_instance_of(described_class).to receive(:`)
+        .with("targetcli #{acl} get auth userid")
+        .and_return("userid=teddybear")
+
+      expect_any_instance_of(described_class).to receive(:`)
+        .with("targetcli #{acl} get auth password")
+        .and_return("password=plush")
+
+      expect_any_instance_of(described_class).to receive(:`)
+        .with("targetcli #{acl} get auth mutual_userid")
+        .and_return("mutual_userid=foo")
+
+      expect_any_instance_of(described_class).to receive(:`)
+        .with("targetcli #{acl} get auth mutual_password")
+        .and_return("mutual_password=bar")
 
       td = TargetData.new
-      expect(td.get_target_names_array).to eq(["iqn.9999-99.aaa"])
+      expect(td.get_target_names_array).to eq(["iqn.2018-01.cz.suse:2e149e55-4d2e-43b7-bc6b-a999c837d6fe"])
     end
 
     it "parses an error output" do

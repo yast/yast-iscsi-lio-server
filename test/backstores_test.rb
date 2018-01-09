@@ -23,7 +23,7 @@ EOS
       expect(Yast::Execute).to receive(:locally).and_return(output)
 
       bs = Backstores.new
-      expect(bs.get_backstores_list).to eq([42])
+      expect(bs.get_backstores_list).to eq([])
     end
 
     it "parses an error output" do
