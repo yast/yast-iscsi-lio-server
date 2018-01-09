@@ -1,8 +1,5 @@
-#require '../include/iscsi-lio-server/iscsi-lio-server_helper.rb'
 require_relative '../include/iscsi-lio-server/iscsi-lio-server_helper.rb'
-#require '../include/iscsi-lio-server/TargetData.rb'
 require_relative '../include/iscsi-lio-server/TargetData.rb'
-#require '../include/iscsi-lio-server/UI_dialogs.rb'
 require_relative '../include/iscsi-lio-server/UI_dialogs.rb'
 require "cwm/widget"
 require "ui/service_status"
@@ -28,8 +25,7 @@ module Yast
     include Yast::Logger
 
     def is_root
-      ret =Confirm.MustBeRoot
-      return ret
+      Confirm.MustBeRoot
     end
 
     def installed_packages
@@ -47,14 +43,14 @@ module Yast
         if confirm
           PackageSystem.DoInstall(["targetcli-fb"])
           if PackageSystem.PackageInstalled("targetcli-fb")
-            return true
+            true
           else
-            return false
+            false
           end
         end
-        return false
+        false
       else
-        return true
+        true
       end
     end
 
@@ -70,29 +66,29 @@ module Yast
       ret = CWM.show(contents, caption: _("Yast iSCSI Targets"),next_button: _("Finish"))
       Yast::Wizard.CloseDialog
       if ret == :next
-        status = $discovery_auth.fetch_status()
-        userid = $discovery_auth.fetch_userid()
-        password = $discovery_auth.fetch_password()
-        mutual_userid = $discovery_auth.fetch_mutual_userid()
-        mutual_password = $discovery_auth.fetch_mutual_password()
+        status = $discovery_auth.fetch_status
+        userid = $discovery_auth.fetch_userid
+        password = $discovery_auth.fetch_password
+        mutual_userid = $discovery_auth.fetch_mutual_userid
+        mutual_password = $discovery_auth.fetch_mutual_password
         cmd = 'targetcli'
         p1 = "iscsi/ set discovery_auth "
         # status == false means "No discovery auth" is not checked, means we need enable discovery auth
-        if status == false
-          if userid.empty? != true
+        if !status
+          unless userid.empty?
             p1 += ("userid=" + userid + " ")
           end
-          if password.empty? != true
+          unless password.empty?
             p1 += ("password=" + password + " ")
           end
-          if mutual_userid.empty? != true
+          unless mutual_userid.empty?
             p1 += ("mutual_userid=" + mutual_userid + " ")
           end
-          if mutual_password.empty? != true
+          if !mutual_password.empty?
             p1 += ("mutual_password=" + mutual_password)
           end
           p1 += " enable=1"
-          if (userid == mutual_userid)
+          if userid == mutual_userid
             msg = _("It seems that Authentication by Initiators and Authentication by Targets using a same username")
             msg += _("This may cause a CHAP negotiation error, an authenticaiton failure.")
             Yast::Popup.Error(msg)
@@ -112,17 +108,18 @@ module Yast
         $global_data.execute_exit_commands
       end
     end
+
   end
 end
 
 
 iscsi_target_server = Yast::ISCSILioServer.new
 ret = iscsi_target_server.is_root
-if ret == false
+if !ret
   exit
 end
 ret = iscsi_target_server.installed_packages
-if ret == true
+if ret
   $target_data = TargetData.new
   $global_data = Global.new
   $global_data.execute_init_commands

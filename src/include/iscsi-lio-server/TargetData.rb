@@ -2,7 +2,7 @@ class Backstores
   def initialize()
     @backstore_path = nil
     @re_backstore_path = Regexp.new(/\/[\w\/\.]+\s/)
-    @backstores_list = Array.new
+    @backstores_list = []
     self.analyze
   end
 
@@ -17,7 +17,7 @@ class Backstores
   end
 
   def get_backstores_list
-    return @backstores_list
+    @backstores_list
   end
 
   #This function will return whether the backstore(path) already exsited
@@ -27,15 +27,15 @@ class Backstores
         return true
       end
     end
-    return false
+    false
   end
 end
 
 class ACL_group
   @initiator_rules_hash_list = nil
   @up_level_TPG = nil
-  def initialize()
-    @initiator_rules_hash_list = Hash.new
+  def initialize
+    @initiator_rules_hash_list = {}
   end
 
   def store_rule(name)
@@ -48,7 +48,7 @@ class ACL_group
 
   def get_all_acls
     all_acls = @initiator_rules_hash_list
-    return all_acls
+    all_acls
   end
 end
 
@@ -63,14 +63,14 @@ class ACL_rule
 
   def initialize(name)
     @initiator_name =name
-    @mapped_luns_hash_list = Hash.new
+    @mapped_luns_hash_list = {}
   end
 
   def store_userid(id)
     @userid = id
   end
 
-  def fetch_userid()
+  def fetch_userid
     @userid
   end
 
@@ -78,7 +78,7 @@ class ACL_rule
     @password = password
   end
 
-  def fetch_password()
+  def fetch_password
     @password
   end
 
@@ -86,7 +86,7 @@ class ACL_rule
     @mutual_userid = id
   end
 
-  def fetch_mutual_userid()
+  def fetch_mutual_userid
     @mutual_userid
   end
 
@@ -94,7 +94,7 @@ class ACL_rule
     @mutual_password = password
   end
 
-  def fetch_mutual_password()
+  def fetch_mutual_password
     @mutual_password
   end
 
@@ -106,9 +106,8 @@ class ACL_rule
      @mapped_luns_hash_list.fetch(mapping_lun_number)
   end
 
-  def get_mapped_lun()
-    mapped_luns = @mapped_luns_hash_list
-    return mapped_luns
+  def get_mapped_lun
+    @mapped_luns_hash_list
   end
 end
 
@@ -126,10 +125,10 @@ class Mapped_LUN
   def store_mapped_lun_number(num)
     @mapped_lun_number = num
   end
-  def fetch_mapping_lun_number()
+  def fetch_mapping_lun_number
     @mapping_lun_number
   end
-  def fetch_mapped_lun_number()
+  def fetch_mapped_lun_number
     @mapped_lun_number
   end
 end
@@ -141,17 +140,17 @@ class TPG
   @luns_list = nil
   def initialize(number)
     @tpg_number = number
-    @acls_hash_list = Hash.new
-    @luns_list = Hash.new
-    @portals_array = Array.new
+    @acls_hash_list = {}
+    @luns_list = {}
+    @portals_array = []
   end
 
-  def fetch_tpg_number()
+  def fetch_tpg_number
     @tpg_number
   end
 
   def get_luns_list
-    return @luns_list
+    @luns_list
   end
   # for now, we only have one acl group in a tpg, called "acls", so we only have one key-value pair
   # in the hash. The key is fixed "acls" in store and fetch. We have a paremeter acls_name
@@ -177,23 +176,22 @@ class TPG
     @portals_array.push([ip, port])
   end
 
-  def fetch_portal()
-    return @portals_array
+  def fetch_portal
+    @portals_array
   end
 
   # This function will return a Hast list contain all luns in the TPG
-  def get_luns()
-    return @luns_list
+  def get_luns
+    @luns_list
   end
 
-  def get_luns_array()
-    luns = Array.new
+  def get_luns_array
+    luns = []
     @luns_list.each do |key,value|
       luns.push(value)
     end
-    return luns
+    luns
   end
-
 end
 
 class Target
@@ -201,7 +199,7 @@ class Target
   @tpg_hash_list=nil
   def initialize(name)
     @target_name = name
-    @tpg_hash_list = Hash.new
+    @tpg_hash_list = {}
   end
 
   def store_tpg(tpg_number)
@@ -215,40 +213,34 @@ class Target
   #For now, Yast only support the case that only has one TPG, this function will return the only TPG,
   # if there are more than one TPG in the target, it will return the first one.
   def get_default_tpg()
-    if @tpg_hash_list.empty? == true
-      return nil
+    if @tpg_hash_list.empty?
+      nil
     else
       @tpg_hash_list.each do |key,value|
-        return value
+        value
       end
     end
 
   end
 
-  def fetch_target_name()
+  def fetch_target_name
     @target_name
   end
 end
 
 class TargetList
   @target_hash_list = nil
-  def print_list()
-    @target_hash_list.each do |key, value|
-      p value
-    end
-  end
-
 #This function will return a array of target names
   def get_target_names()
-    target_names_array = Array.new
+    target_names_array = []
     @target_hash_list.each do |key, value|
       target_names_array.push(key)
     end
-    return target_names_array
+    target_names_array
   end
 
-  def initialize()
-    @target_hash_list = Hash.new
+  def initialize
+    @target_hash_list = {}
   end
   def store_target(target_name)
     @target_hash_list.store(target_name, Target.new(target_name))
@@ -260,8 +252,7 @@ class TargetList
 end
 
 class TargetData
-
-  def initialize()
+  def initialize
     @re_iqn_target = Regexp.new(/iqn\.\d{4}\-\d{2}\.[\w\.:\-]+\s\.+\s\[TPGs:\s\d+\]/)
     @re_iqn_name = Regexp.new(/iqn\.\d{4}-\d{2}\.[\w\.:\-]+/)
 
@@ -332,7 +323,7 @@ class TargetData
   end
 
 
-  def analyze()
+  def analyze
     # We need to re-new @target_list, because something may be deleted
     @targets_list = TargetList.new
     @target_outout = `targetcli ls`.split("\n")
@@ -375,20 +366,20 @@ class TargetData
         @current_acls_group.store_rule(@initiator_name)
         @current_acl_rule = @current_acls_group.fetch_rule(@initiator_name)
         # get authentication information here.
-        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name() + \
-            "/tpg" + @current_tpg.fetch_tpg_number() + "/acls/" + @initiator_name + "/ get auth userid"
+        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name + \
+            "/tpg" + @current_tpg.fetch_tpg_number + "/acls/" + @initiator_name + "/ get auth userid"
         @cmd_out = `#{@cmd}`
         @current_acl_rule.store_userid(@cmd_out[7 , @cmd.length])
-        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name() + \
-            "/tpg" + @current_tpg.fetch_tpg_number() + "/acls/" + @initiator_name + "/ get auth password"
+        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name + \
+            "/tpg" + @current_tpg.fetch_tpg_number + "/acls/" + @initiator_name + "/ get auth password"
         @cmd_out = `#{@cmd}`
         @current_acl_rule.store_password(@cmd_out[9 , @cmd.length])
-        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name() + \
-            "/tpg" + @current_tpg.fetch_tpg_number() + "/acls/" + @initiator_name + "/ get auth mutual_userid"
+        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name + \
+            "/tpg" + @current_tpg.fetch_tpg_number + "/acls/" + @initiator_name + "/ get auth mutual_userid"
         @cmd_out = `#{@cmd}`
         @current_acl_rule.store_mutual_userid(@cmd_out[14 , @cmd.length])
         @cmd = "targetcli iscsi/" + @current_target.fetch_target_name() + \
-            "/tpg" + @current_tpg.fetch_tpg_number() + "/acls/" + @initiator_name + "/ get auth mutual_password"
+            "/tpg" + @current_tpg.fetch_tpg_number + "/acls/" + @initiator_name + "/ get auth mutual_password"
         @cmd_out = `#{@cmd}`
         @current_acl_rule.store_mutual_password(@cmd_out[16 , @cmd.length])
       end
@@ -397,20 +388,20 @@ class TargetData
         @initiator_name = @re_eui_name.match(line).to_s
         @current_acls_group.store_rule(@initiator_name)
         @current_acl_rule = @current_acls_group.fetch_rule(@initiator_name)
-        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name() + \
-            "/tpg" + @current_tpg.fetch_tpg_number() + "/acls/" + @initiator_name + "/ get auth userid"
+        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name + \
+            "/tpg" + @current_tpg.fetch_tpg_number + "/acls/" + @initiator_name + "/ get auth userid"
         @cmd_out = `#{@cmd}`
         @current_acl_rule.store_userid(@cmd_out[7 , @cmd.length])
-        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name() + \
-            "/tpg" + @current_tpg.fetch_tpg_number() + "/acls/" + @initiator_name + "/ get auth password"
+        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name + \
+            "/tpg" + @current_tpg.fetch_tpg_number + "/acls/" + @initiator_name + "/ get auth password"
         @cmd_out = `#{@cmd}`
         @current_acl_rule.store_password(@cmd_out[9 , @cmd.length])
-        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name() + \
-            "/tpg" + @current_tpg.fetch_tpg_number() + "/acls/" + @initiator_name + "/ get auth mutual_userid"
+        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name + \
+            "/tpg" + @current_tpg.fetch_tpg_number + "/acls/" + @initiator_name + "/ get auth mutual_userid"
         @cmd_out = `#{@cmd}`
         @current_acl_rule.store_mutual_userid(@cmd_out[14 , @cmd.length])
-        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name() + \
-            "/tpg" + @current_tpg.fetch_tpg_number() + "/acls/" + @initiator_name + "/ get auth mutual_password"
+        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name + \
+            "/tpg" + @current_tpg.fetch_tpg_number + "/acls/" + @initiator_name + "/ get auth mutual_password"
         @cmd_out = `#{@cmd}`
         @current_acl_rule.store_mutual_password(@cmd_out[16 , @cmd.length])
       end
@@ -454,34 +445,28 @@ class TargetData
 
   end # end of the function
 
-  def print_targets()
-    @targets_list.print_list()
-  end
-
  # this function will return are created target names.
-  def get_target_names_array()
-    names = Array.new
-    names = @targets_list.get_target_names()
-    return names
+  def get_target_names_array
+    @targets_list.get_target_names
   end
 
   # This function will return the Hash list target_list
   def get_target_list()
     list = @targets_list
-    return list
+    list
   end
 end
 
 class DiscoveryAuth
   def initialize
-    @discovery_auth = Hash.new()
+    @discovery_auth = {}
   end
 
   def store_status(status)
     @discovery_auth.store("status", status)
   end
 
-  def fetch_status()
+  def fetch_status
     @discovery_auth.fetch("status")
   end
 
@@ -489,7 +474,7 @@ class DiscoveryAuth
     @discovery_auth.store("userid", userid)
   end
 
-  def fetch_userid()
+  def fetch_userid
     @discovery_auth.fetch("userid")
   end
 
@@ -497,7 +482,7 @@ class DiscoveryAuth
     @discovery_auth.store("password", password)
   end
 
-  def fetch_password()
+  def fetch_password
     @discovery_auth.fetch("password")
   end
 
@@ -505,7 +490,7 @@ class DiscoveryAuth
     @discovery_auth.store("mutual_userid", mutual_userid)
   end
 
-  def fetch_mutual_userid()
+  def fetch_mutual_userid
     @discovery_auth.fetch("mutual_userid")
   end
 
@@ -513,11 +498,11 @@ class DiscoveryAuth
     @discovery_auth.store("mutual_password", mutual_password)
   end
 
-  def fetch_mutual_password()
+  def fetch_mutual_password
     @discovery_auth.fetch("mutual_password")
   end
 
-  def analyze()
+  def analyze
     cmd = "targetcli iscsi/ get discovery_auth enable"
     cmd_out = `#{cmd}`
     status = cmd_out[7,cmd_out.length]
@@ -551,7 +536,7 @@ class Global
     @show_del_lun_warning = true
   end
 
-  def execute_init_commands()
+  def execute_init_commands
     cmd = "targetcli"
     commands = [
         "set global auto_add_mapped_luns=false",
@@ -568,7 +553,7 @@ class Global
 
   end
 
-  def execute_exit_commands()
+  def execute_exit_commands
     cmd = "targetcli"
     commands = [
         "saveconfig",
