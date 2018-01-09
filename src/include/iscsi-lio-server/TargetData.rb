@@ -1,7 +1,8 @@
 class Backstores
+  RE_BACKSTORE_PATH = /\/[\w\/\.]+\s/
+
   def initialize()
     @backstore_path = nil
-    @re_backstore_path = Regexp.new(/\/[\w\/\.]+\s/)
     @backstores_list = []
     self.analyze
   end
@@ -10,7 +11,7 @@ class Backstores
     @output = Yast::Execute.locally("targetcli", "backstores/ ls", stdout: :capture)
     @backstores_output = @output.split("\n")
     @backstores_output.each do |line|
-      if @backstore_path = @re_backstore_path.match(line)
+      if @backstore_path = RE_BACKSTORE_PATH.match(line)
         @backstores_list.push(@backstore_path.to_s.strip)
       end
     end
@@ -252,42 +253,43 @@ class TargetList
 end
 
 class TargetData
+  RE_IQN_TARGET = /iqn\.\d{4}\-\d{2}\.[\w\.:\-]+\s\.+\s\[TPGs:\s\d+\]/
+  RE_IQN_NAME = /iqn\.\d{4}-\d{2}\.[\w\.:\-]+/
+
+  RE_EUI_TARGET = /eui\.\w+\s\.+\s\[TPGs:\s\d+\]/
+  RE_EUI_NAME = /eui\.\w+/
+
+  RE_TPG = /tpg\d+\s/
+
+  RE_ACLS_GROUP = /acls\s\.+\s\[ACLs\:\s\d+\]/
+
+  RE_ACL_IQN_RULE = /iqn\.\d{4}\-\d{2}\.[\w\.:\-]+\s\.+\s\[[\w\-\s\,]*Mapped\sLUNs\:\s\d+\]/
+  RE_ACL_EUI_RULE = /eui\.\w+\s\.+\s\[[\w\-\s\,]*Mapped\sLUNs\:\s\d+\]/
+
+  #match a line like this:
+  #mapped_lun1 .......................................................................... [lun2 fileio/iscsi_file1 (rw)]
+  RE_MAPPED_LUN_LINE = /mapped_lun\d+\s\.+\s\[lun\d+\s/
+
+  # match the mapped lun like "mapped_lun1", we matched one more \s here to aovid bugs in configfs / targetcli
+  # mismatch, need to strip when use
+  RE_MAPPING_LUN = /mapped_lun\d+\s/
+
+  #match the mapped lun, like "[lun2" in "[lun2 fileio/iscsi_file1 (rw)]", we matched one more \s to avoid bugs.
+  RE_MAPPED_LUN = /\[lun\d+\s/
+
+  #match a line like "| | | | o- lun2 ...................... [fileio/iscsi_file1 (/home/lszhu/target1.raw) (default_tg_pt_gp)]"
+  #or "o- lun0 .................................................................. [block/iscsi_sdb (/dev/sdb) (default_tg_pt_gp)]"
+  RE_LUN = /\-\slun\d+\s\.+\s\[(fileio|block)\//
+  #match lun number like lun0, lun1, lun2....
+  RE_LUN_NUM = /\-\slun\d+\s/
+  #match lun name like [fileio/iscsi_file1 or [block/iscsi_sdb
+  RE_LUN_NAME = /\[(fileio|block)\/[\w\_\-\d]+\s/
+  #match lun patch like:(/home/lszhu/target1.raw) or (/dev/sdb)
+  RE_LUN_PATH = /[(]\/(\w|\.|\/)+[)]/
+  # match portal like 0.12.121.121:3260
+  RE_PORTAL = /(\d{1,3}\.){3}\d{1,3}:\d{1,5}/
+
   def initialize
-    @re_iqn_target = Regexp.new(/iqn\.\d{4}\-\d{2}\.[\w\.:\-]+\s\.+\s\[TPGs:\s\d+\]/)
-    @re_iqn_name = Regexp.new(/iqn\.\d{4}-\d{2}\.[\w\.:\-]+/)
-
-    @re_eui_target = Regexp.new(/eui\.\w+\s\.+\s\[TPGs:\s\d+\]/)
-    @re_eui_name = Regexp.new(/eui\.\w+/)
-
-    @re_tpg = Regexp.new(/tpg\d+\s/)
-
-    @re_acls_group = Regexp.new(/acls\s\.+\s\[ACLs\:\s\d+\]/)
-
-    @re_acl_iqn_rule = Regexp.new(/iqn\.\d{4}\-\d{2}\.[\w\.:\-]+\s\.+\s\[[\w\-\s\,]*Mapped\sLUNs\:\s\d+\]/)
-    @re_acl_eui_rule = Regexp.new(/eui\.\w+\s\.+\s\[[\w\-\s\,]*Mapped\sLUNs\:\s\d+\]/)
-
-    #match a line like this:
-    #mapped_lun1 .......................................................................... [lun2 fileio/iscsi_file1 (rw)]
-    @re_mapped_lun_line = Regexp.new(/mapped_lun\d+\s\.+\s\[lun\d+\s/)
-
-    # match the mapped lun like "mapped_lun1", we matched one more \s here to aovid bugs in configfs / targetcli
-    # mismatch, need to strip when use
-    @re_mapping_lun = Regexp.new(/mapped_lun\d+\s/)
-
-    #match the mapped lun, like "[lun2" in "[lun2 fileio/iscsi_file1 (rw)]", we matched one more \s to avoid bugs.
-    @re_mapped_lun = Regexp.new(/\[lun\d+\s/)
-
-    #match a line like "| | | | o- lun2 ...................... [fileio/iscsi_file1 (/home/lszhu/target1.raw) (default_tg_pt_gp)]"
-    #or "o- lun0 .................................................................. [block/iscsi_sdb (/dev/sdb) (default_tg_pt_gp)]"
-    @re_lun = Regexp.new(/\-\slun\d+\s\.+\s\[(fileio|block)\//)
-    #match lun number like lun0, lun1, lun2....
-    @re_lun_num = Regexp.new(/\-\slun\d+\s/)
-    #match lun name like [fileio/iscsi_file1 or [block/iscsi_sdb
-    @re_lun_name = Regexp.new(/\[(fileio|block)\/[\w\_\-\d]+\s/)
-    #match lun patch like:(/home/lszhu/target1.raw) or (/dev/sdb)
-    @re_lun_path = Regexp.new(/[(]\/(\w|\.|\/)+[)]/)
-    # match portal like 0.12.121.121:3260
-    @re_portal = Regexp.new(/(\d{1,3}\.){3}\d{1,3}:\d{1,5}/)
     #iqn_name or eui_name would be a MatchData, but target_name would be a string.
     @iqn_name= nil
     @eui_name= nil
@@ -329,8 +331,8 @@ class TargetData
     @target_outout = `targetcli ls`.split("\n")
     @target_outout.each do |line|
       #handle iqn targets here.
-      if @re_iqn_target.match(line)
-         if @iqn_name = @re_iqn_name.match(line)
+      if RE_IQN_TARGET.match(line)
+         if @iqn_name = RE_IQN_NAME.match(line)
            @target_name=@iqn_name.to_s
            @targets_list.store_target(@target_name)
            @current_target = @targets_list.fetch_target(@target_name)
@@ -338,8 +340,8 @@ class TargetData
       end
 
       # handle eui targets here.
-      if @re_eui_target.match(line)
-         if @eui_name = @re_eui_name.match(line)
+      if RE_EUI_TARGET.match(line)
+         if @eui_name = RE_EUI_NAME.match(line)
            @target_name=@eui_name.to_s
            @targets_list.store_target(@target_name)
            @current_target = @targets_list.fetch_target(@target_name)
@@ -347,7 +349,7 @@ class TargetData
       end
 
       # handle TPGs here.
-      if @tpg_name = @re_tpg.match(line)
+      if @tpg_name = RE_TPG.match(line)
          #find the tpg number
          @tpg_num = /\d+/.match(@tpg_name.to_s.strip)
          @current_target.store_tpg(@tpg_num.to_s.strip)
@@ -355,14 +357,14 @@ class TargetData
       end
 
       # handle ACLs group here
-      if @re_acls_group.match(line)
+      if RE_ACLS_GROUP.match(line)
         @current_tpg.store_acls("acls")
         @current_acls_group = @current_tpg.fetch_acls("acls")
       end
 
       # handle acl rules for an IQN initaitor here
-      if @re_acl_iqn_rule.match(line)
-        @initiator_name = @re_iqn_name.match(line).to_s
+      if RE_ACL_IQN_RULE.match(line)
+        @initiator_name = RE_IQN_NAME.match(line).to_s
         @current_acls_group.store_rule(@initiator_name)
         @current_acl_rule = @current_acls_group.fetch_rule(@initiator_name)
         # get authentication information here.
@@ -384,8 +386,8 @@ class TargetData
         @current_acl_rule.store_mutual_password(@cmd_out[16 , @cmd.length])
       end
       # handle acl rules for an EUI initaitor here
-      if @re_acl_eui_rule.match(line)
-        @initiator_name = @re_eui_name.match(line).to_s
+      if RE_ACL_EUI_RULE.match(line)
+        @initiator_name = RE_EUI_NAME.match(line).to_s
         @current_acls_group.store_rule(@initiator_name)
         @current_acl_rule = @current_acls_group.fetch_rule(@initiator_name)
         @cmd = "targetcli iscsi/" + @current_target.fetch_target_name + \
@@ -407,9 +409,9 @@ class TargetData
       end
 
       # handle mapped luns here
-      if @re_mapped_lun_line.match(line)
-        @mapping_lun_name = @re_mapping_lun.match(line).to_s.strip
-        @mapped_lun_name = @re_mapped_lun.match(line).to_s.strip
+      if RE_MAPPED_LUN_LINE.match(line)
+        @mapping_lun_name = RE_MAPPING_LUN.match(line).to_s.strip
+        @mapped_lun_name = RE_MAPPED_LUN.match(line).to_s.strip
         @mapped_lun_name.slice!("[")
         mapping_lun_num = @mapping_lun_name[10,@mapping_lun_name.length]
         @current_acl_rule.store_mapped_lun(mapping_lun_num)
@@ -418,22 +420,22 @@ class TargetData
       end
 
       # handle luns here
-      if @re_lun.match(line)
+      if RE_LUN.match(line)
         # lun_num is a string like lun0, lun1,lun2....
-        lun_num_tmp = @re_lun_num.match(line).to_s
+        lun_num_tmp = RE_LUN_NUM.match(line).to_s
         lun_num = lun_num_tmp[2,lun_num_tmp.length]
         lun_name_tmp = line[line.index("[")+1 .. line.index("(")-2]
         lun_name = lun_name_tmp[lun_name_tmp.index("/")+1 .. lun_name_tmp.length]
         # lun_num_int is a number like 1,3,57.
         lun_num_int = lun_num[3,lun_num.length]
-        lun_path_tmp = @re_lun_path.match(line).to_s
+        lun_path_tmp = RE_LUN_PATH.match(line).to_s
         lun_path = lun_path_tmp[1,lun_path_tmp.length-2]
         @current_tpg.store_lun(lun_num,[rand(9999), lun_num_int, lun_name, lun_path, File.ftype(lun_path)])
       end
 
       # handle portals here
-      if @re_portal.match(line)
-        portal_line = @re_portal.match(line).to_s
+      if RE_PORTAL.match(line)
+        portal_line = RE_PORTAL.match(line).to_s
         index = portal_line.index(":")
         ip = portal_line[0,index]
         port = portal_line[index+1, portal_line.length]
