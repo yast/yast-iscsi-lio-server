@@ -51,6 +51,15 @@ class ACL_group
     all_acls = @initiator_rules_hash_list
     all_acls
   end
+
+  #This function is used in unit tests
+  def get_acl_intitiator_names
+    names = []
+    @initiator_rules_hash_list.each do |key, value|
+      names.push(key)
+    end
+    return names
+  end
 end
 
 # class ACL_rule is the acl rule for a specific initaitor
@@ -110,6 +119,7 @@ class ACL_rule
   def get_mapped_lun
     @mapped_luns_hash_list
   end
+
 end
 
 class Mapped_LUN
@@ -123,12 +133,15 @@ class Mapped_LUN
   def store_mapping_lun_number(num)
     @mapping_lun_number = num
   end
+
   def store_mapped_lun_number(num)
     @mapped_lun_number = num
   end
+
   def fetch_mapping_lun_number
     @mapping_lun_number
   end
+
   def fetch_mapped_lun_number
     @mapped_lun_number
   end
@@ -170,6 +183,15 @@ class TPG
 
   def store_lun(lun_num, lun_name)
     @luns_list.store(lun_num, lun_name)
+  end
+
+  #This function is used in unit test
+  def get_luns_info
+    info = @luns_list.dup
+    info.each do |key, value|
+      value.delete_at(0)
+    end
+    return info
   end
 
   # Yast only support one ip port pair now
@@ -218,7 +240,7 @@ class Target
       nil
     else
       @tpg_hash_list.each do |key,value|
-        value
+        return value
       end
     end
 
@@ -243,11 +265,21 @@ class TargetList
   def initialize
     @target_hash_list = {}
   end
+
   def store_target(target_name)
     @target_hash_list.store(target_name, Target.new(target_name))
   end
+
   def fetch_target(target_name)
-     @target_hash_list.fetch(target_name)
+    @target_hash_list.fetch(target_name)
+  end
+
+  def get_keys
+    test = nil
+    @target_hash_list.each do |key, value|
+       test = key
+    end
+    return test
   end
 
 end
@@ -457,6 +489,7 @@ class TargetData
     list = @targets_list
     list
   end
+
 end
 
 class DiscoveryAuth
