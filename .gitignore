@@ -7,6 +7,7 @@ config.sub
 configure
 configure.ac
 configure.in
+/coverage/
 install-sh
 Makefile
 Makefile.in
