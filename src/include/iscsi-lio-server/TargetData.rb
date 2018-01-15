@@ -612,3 +612,22 @@ class Global
     return @show_del_lun_warning
   end
 end
+
+#This class used for setup unit test env.
+class Test_Utils
+  def setup
+    commands = [["dd", "if=/dev/zero", "of=/var/tmp/target.raw", "bs=1M", "count=1"]]
+    commands.each do |cmd|
+      begin
+        Cheetah.run(cmd)
+      rescue Cheetah::ExecutionFailed => e
+        if e.stderr != nil
+          puts "Failed to setup test env."
+          puts e.stderr
+          return -1
+        end
+      end
+    end
+    return 0
+  end
+end

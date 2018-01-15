@@ -51,12 +51,12 @@
         "unmap_granularity_alignment": 0, 
         "unmap_zeroes_data": 0
       }, 
-      "dev": "/home/lszhu/target.raw", 
-      "name": "home-lszhu-target.raw", 
+      "dev": "/var/tmp/target.raw", 
+      "name": "var-tmp-target.raw", 
       "plugin": "fileio", 
-      "size": 104857600, 
+      "size": 1048576, 
       "write_back": false, 
-      "wwn": "7e526eb9-7ef8-4e86-813e-eda51577500d"
+      "wwn": "2b3c0c6e-53d4-4b4f-9f96-e177dd02817b"
     }
   ], 
   "targets": [
@@ -83,10 +83,10 @@
           "enable": true, 
           "luns": [
             {
-              "alias": "56394aa814", 
+              "alias": "e94a8416cf", 
               "alua_tg_pt_gp_name": "default_tg_pt_gp", 
-              "index": 1, 
-              "storage_object": "/backstores/fileio/home-lszhu-target.raw"
+              "index": 0, 
+              "storage_object": "/backstores/fileio/var-tmp-target.raw"
             }
           ], 
           "node_acls": [
@@ -103,9 +103,9 @@
               }, 
               "mapped_luns": [
                 {
-                  "alias": "2e8cc132f1", 
+                  "alias": "a7e429107d", 
                   "index": 7, 
-                  "tpg_lun": 1, 
+                  "tpg_lun": 0, 
                   "write_protect": false
                 }
               ], 
