@@ -646,19 +646,14 @@ class DiscoveryAuthWidget < CWM::CustomWidget
     textdomain "iscsi-lio-server"
     $discovery_auth.analyze
     @status = $discovery_auth.fetch_status
-    if @status == "False \n"
-      value = false
-    else
-      value = true
-    end
-    @no_discovery_auth_checkbox = NoDiscoveryAuth_CheckBox.new(self, !value)
-    @target_discovery_auth = TargetAuthDiscovery.new(value)
-    @initiator_discovery_auth = InitiatorAuthDiscovery.new(value)
+    @no_discovery_auth_checkbox = NoDiscoveryAuth_CheckBox.new(self, !@status)
+    @target_discovery_auth = TargetAuthDiscovery.new(@status)
+    @initiator_discovery_auth = InitiatorAuthDiscovery.new(@status)
     self.handle_all_events = true
   end
 
   def init
-    if @status == "False \n"
+    if @status == false
       disable_discovery_auth_widgets
     end
   end

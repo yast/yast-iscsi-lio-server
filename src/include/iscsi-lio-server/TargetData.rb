@@ -502,7 +502,12 @@ class DiscoveryAuth
   end
 
   def fetch_status
-    @discovery_auth.fetch("status")
+    ret = @discovery_auth.fetch("status")
+    if ret == "False \n"
+      false
+    else
+      true
+    end
   end
 
   def store_userid(userid)
