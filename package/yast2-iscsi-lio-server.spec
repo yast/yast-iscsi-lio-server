@@ -23,16 +23,9 @@ Release:        0
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Source0:        %{name}-%{version}.tar.bz2
 
-BuildRequires:  docbook-xsl-stylesheets
-BuildRequires:  doxygen
-BuildRequires:  libxslt
-BuildRequires:  popt-devel
-BuildRequires:  sgml-skel
 BuildRequires:  update-desktop-files
 BuildRequires:  yast2
 BuildRequires:  yast2-devtools >= 3.1.10
-BuildRequires:  yast2-packagemanager-devel
-BuildRequires:  yast2-testsuite
 BuildRequires:  rubygem(%rb_default_ruby_abi:rspec)
 BuildRequires:  rubygem(%rb_default_ruby_abi:yast-rake)
 Requires:       python-configshell-fb
