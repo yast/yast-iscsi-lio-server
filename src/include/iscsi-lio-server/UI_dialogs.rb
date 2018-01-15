@@ -2316,6 +2316,7 @@ class TargetTable < CWM::Table
     item_array = nil
     @targets = []
     @targets_names.each do |elem|
+      #We only support only one Portal Group for now.
       @targets.push([rand(9999), elem, 1, 'Enabled'])
     end
     item_array = @targets
@@ -2323,7 +2324,7 @@ class TargetTable < CWM::Table
   end
 
   def header
-    [_('Targets'), _('Portal Group'), _('TPG Status')]
+    [_('Targets'), _('Number of Portal Groups'), _('TPG Status')]
   end
 
   def items

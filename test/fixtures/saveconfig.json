@@ -39,63 +39,6 @@
         "enforce_pr_isids": 1, 
         "force_pr_aptpl": 0, 
         "is_nonrot": 0, 
-        "max_unmap_block_desc_count": 0, 
-        "max_unmap_lba_count": 0, 
-        "max_write_same_len": 65535, 
-        "optimal_sectors": 8192, 
-        "pi_prot_format": 0, 
-        "pi_prot_type": 0, 
-        "pi_prot_verify": 0, 
-        "queue_depth": 128, 
-        "unmap_granularity": 0, 
-        "unmap_granularity_alignment": 0, 
-        "unmap_zeroes_data": 0
-      }, 
-      "dev": "/dev/sdb", 
-      "name": "dev-sdb", 
-      "plugin": "block", 
-      "readonly": false, 
-      "write_back": false, 
-      "wwn": "e454fc97-9120-4946-b245-996934f8482f"
-    }, 
-    {
-      "alua_tpgs": [
-        {
-          "alua_access_state": 0, 
-          "alua_access_status": 0, 
-          "alua_access_type": 3, 
-          "alua_support_active_nonoptimized": 1, 
-          "alua_support_active_optimized": 1, 
-          "alua_support_offline": 1, 
-          "alua_support_standby": 1, 
-          "alua_support_transitioning": 1, 
-          "alua_support_unavailable": 1, 
-          "alua_write_metadata": 0, 
-          "implicit_trans_secs": 0, 
-          "name": "default_tg_pt_gp", 
-          "nonop_delay_msecs": 100, 
-          "preferred": 0, 
-          "tg_pt_gp_id": 0, 
-          "trans_delay_msecs": 0
-        }
-      ], 
-      "attributes": {
-        "block_size": 512, 
-        "emulate_3pc": 1, 
-        "emulate_caw": 1, 
-        "emulate_dpo": 1, 
-        "emulate_fua_read": 1, 
-        "emulate_fua_write": 1, 
-        "emulate_model_alias": 0, 
-        "emulate_rest_reord": 0, 
-        "emulate_tas": 1, 
-        "emulate_tpu": 0, 
-        "emulate_tpws": 0, 
-        "emulate_ua_intlck_ctrl": 0, 
-        "emulate_write_cache": 0, 
-        "enforce_pr_isids": 1, 
-        "force_pr_aptpl": 0, 
-        "is_nonrot": 0, 
         "max_unmap_block_desc_count": 1, 
         "max_unmap_lba_count": 8192, 
         "max_write_same_len": 4096, 
@@ -140,12 +83,6 @@
           "enable": true, 
           "luns": [
             {
-              "alias": "ed2418b7e5", 
-              "alua_tg_pt_gp_name": "default_tg_pt_gp", 
-              "index": 0, 
-              "storage_object": "/backstores/block/dev-sdb"
-            }, 
-            {
               "alias": "56394aa814", 
               "alua_tg_pt_gp_name": "default_tg_pt_gp", 
               "index": 1, 
@@ -166,9 +103,9 @@
               }, 
               "mapped_luns": [
                 {
-                  "alias": "3982b342de", 
+                  "alias": "2e8cc132f1", 
                   "index": 7, 
-                  "tpg_lun": 0, 
+                  "tpg_lun": 1, 
                   "write_protect": false
                 }
               ], 

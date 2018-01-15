@@ -31,7 +31,7 @@ describe TargetData do
       acl = "iscsi/iqn.2018-01.suse.com.lszhu.target/tpg5/acls/iqn.2018-01.suse.com.lszhu.init/"
       target_name = "iqn.2018-01.suse.com.lszhu.target"
       tpg_num = "5"
-      lun_info = {"lun0 "=>["0 ", "dev-sdb", "/dev/sdb", "blockSpecial"], "lun1 "=>["1 ", "home-lszhu-target.raw", "/home/lszhu/target.raw", "file"]}
+      lun_info = {"lun1 "=>["1 ", "home-lszhu-target.raw", "/home/lszhu/target.raw", "file"]}
       portals = ["192.168.100.12", "1234"], ["192.168.101.12", "1234"]
       acl_initiator_names = ["iqn.2018-01.suse.com.lszhu.init"]
       user_id = "teddybear"
@@ -39,7 +39,7 @@ describe TargetData do
       mutual_userid = "foo"
       mutual_password = "bar"
       mapping_lun_num = "7"
-      mapped_lun_num = "0"
+      mapped_lun_num = "1"
 
       expect_any_instance_of(described_class).to receive(:`)
         .with("targetcli #{acl} get auth userid")
