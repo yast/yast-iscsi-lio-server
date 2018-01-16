@@ -13,11 +13,10 @@ X-SuSE-YaST-RootOnly=true
 X-SuSE-YaST-AutoInst=all
 X-SuSE-YaST-Geometry=
 X-SuSE-YaST-SortKey=
-X-SuSE-YaST-AutoInstResource=iscsi-lio-server
+X-SuSE-YaST-AutoInstResource=iscsi-lio-servers
 
 Icon=yast-iscsi-server
-Exec=/sbin/yast2 iscsi-lio-server 
-
+Exec=xdg-su -c "/sbin/yast2 iscsi-lio-server" 
 Name=iSCSI LIO Target
 GenericName=Configure an iSCSI target via LIO
 X-KDE-SubstituteUID=true

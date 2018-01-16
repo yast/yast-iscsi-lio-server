@@ -1,7 +1,7 @@
 #
 # spec file for package yast2-iscsi-lio-server
 #
-# Copyright (c) 2013 SUSE LINUX Products GmbH, Nuernberg, Germany.
+# Copyright (c) 2017 SUSE LINUX GmbH, Nuernberg, Germany.
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -17,29 +17,33 @@
 
 
 Name:           yast2-iscsi-lio-server
-Version:        3.2.1
+Version:        4.0.0
 Release:        0
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Source0:        %{name}-%{version}.tar.bz2
 
-Group:          System/YaST
-License:        GPL-2.0
-BuildRequires:  docbook-xsl-stylesheets doxygen libxslt popt-devel sgml-skel update-desktop-files yast2 yast2-packagemanager-devel yast2-testsuite
+BuildRequires:  update-desktop-files
+BuildRequires:  yast2
 BuildRequires:  yast2-devtools >= 3.1.10
-BuildRequires:  rubygem(rspec)
-Requires:       lio-utils
+BuildRequires:  rubygem(%rb_default_ruby_abi:rspec)
+BuildRequires:  rubygem(%rb_default_ruby_abi:yast-rake)
+Requires:       python-configshell-fb
+Requires:       python-rtslib-fb
+Requires:       targetcli-fb
 
 # network needs Wizard::OpenCancelOKDialog()
 #  function from yast2-2.18.2
 # Wizard::SetDesktopTitleAndIcon()
 Requires:       yast2 >= 2.21.22
 
-BuildArchitectures:	noarch
+BuildArch:      noarch
 
 Requires:       yast2-ruby-bindings >= 1.0.0
 
-Summary:	Configuration of iSCSI LIO target
+Summary:        Configuration of iSCSI LIO target
+License:        GPL-2.0
+Group:          System/YaST
 
 %description
 This package contains configuration of iSCSI LIO target
@@ -48,20 +52,19 @@ This package contains configuration of iSCSI LIO target
 %setup -n %{name}-%{version}
 
 %build
-%yast_build
+
+%check
+rake test:unit
 
 %install
-%yast_install
-
+rake install DESTDIR="%{buildroot}"
 
 %files
 %defattr(-,root,root)
 %dir %{yast_yncludedir}/iscsi-lio-server
 %{yast_yncludedir}/iscsi-lio-server/*
 %{yast_clientdir}/iscsi-lio-server.rb
-%{yast_clientdir}/iscsi-lio-server_*.rb
-%{yast_moduledir}/IscsiLioServer*
-%{yast_moduledir}/IscsiLioData*
 %{yast_desktopdir}/iscsi-lio-server.desktop
-%{yast_scrconfdir}/ietd.scr
 %doc %{yast_docdir}
+
+%changelog
