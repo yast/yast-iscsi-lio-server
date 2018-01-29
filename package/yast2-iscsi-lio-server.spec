@@ -17,7 +17,7 @@
 
 
 Name:           yast2-iscsi-lio-server
-Version:        4.0.0
+Version:        4.0.1
 Release:        0
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
@@ -32,10 +32,8 @@ Requires:       python-configshell-fb
 Requires:       python-rtslib-fb
 Requires:       targetcli-fb
 
-# network needs Wizard::OpenCancelOKDialog()
-#  function from yast2-2.18.2
-# Wizard::SetDesktopTitleAndIcon()
-Requires:       yast2 >= 2.21.22
+#Replace SuSEFirewall2 by firewalld
+Requires:       yast2 >= 4.0.39
 
 BuildArch:      noarch
 
