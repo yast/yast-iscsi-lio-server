@@ -12,8 +12,7 @@ Wed Dec 13 09:40:01 UTC 2017 - lszhu@suse.com
 - 4.0.0
 
 -------------------------------------------------------------------
-Tue May 16 10:09:07 UTC 2017 - lszhu@suse.de
->>>>>>> Bump version & changelog.
+Tue May 16 10:09:07 UTC 2017 - lszhu@suse.com
 
 - fix bsc#1037819, add translation markers in adding LUN page
   Removed trailing ":" from labels.

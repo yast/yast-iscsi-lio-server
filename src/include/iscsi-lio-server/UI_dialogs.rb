@@ -14,7 +14,6 @@ Yast.import 'CWMServiceStart'
 Yast.import 'Popup'
 Yast.import 'Wizard'
 Yast.import 'CWMFirewallInterfaces'
-Yast.import 'SuSEFirewall'
 Yast.import 'Service'
 Yast.import 'CWMServiceStart'
 Yast.import 'UI'
@@ -415,7 +414,7 @@ module Yast
       @service = Yast::SystemdService.find("sshd.service")
       @service_status = ::UI::ServiceStatus.new(@service, reload_flag: true, reload_flag_label: :restart)
       @firewall_widget = ::CWM::WrapperWidget.new(
-          CWMFirewallInterfaces.CreateOpenFirewallWidget("services" => ["service:target"]),
+          CWMFirewallInterfaces.CreateOpenFirewallWidget("services" => ["iscsi-target"]),
           )
     end
 
