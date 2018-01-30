@@ -19,7 +19,6 @@ Yast.import "CWMServiceStart"
 Yast.import "UI"
 Yast.import "Confirm"
 
-
 module Yast
   class ISCSILioServer
     include Yast::I18n
@@ -52,7 +51,6 @@ module Yast
             false
           end
         end
-        false
       else
         true
       end
@@ -98,11 +96,6 @@ module Yast
             p1 += ("mutual_password=" + mutual_password)
           end
           p1 += " enable=1"
-          if userid == mutual_userid
-            msg = _("It seems that Authentication by Initiators and Authentication by Targets using a same username.")
-            msg += _("This may cause a CHAP negotiation error, an authenticaiton failure.")
-            Yast::Popup.Error(msg)
-          end
         else
           p1 = "iscsi/ set discovery_auth enable = 0"
         end
