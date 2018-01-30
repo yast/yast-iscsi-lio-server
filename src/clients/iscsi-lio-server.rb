@@ -5,6 +5,7 @@ require "cwm/widget"
 require "ui/service_status"
 require "yast"
 require "yast2/execute"
+require "y2firewall/firewalld"
 
 Yast.import "CWM"
 Yast.import "CWMTab"
@@ -29,7 +30,7 @@ module Yast
     end
 
     def installed_packages
-      if !PackageSystem.PackageInstalled("targetcli-fb")
+      if !PackageSystem.PackageInstalled("python3-targetcli-fb")
         confirm = Popup.AnyQuestionRichText(
             "",
             _("Yast iscsi-lio-server can't run without installing targetcli-fb package. Do you want to install?"),
@@ -41,22 +42,28 @@ module Yast
         )
 
         if confirm
-          PackageSystem.DoInstall(["targetcli-fb"])
-          if PackageSystem.PackageInstalled("targetcli-fb")
-            true
+          PackageSystem.DoInstall(["python3-targetcli-fb"])
+          if PackageSystem.PackageInstalled("python3-targetcli-fb")
+            return true
           else
+            err_msg = _("Failed to install targetcli-fb and related packages.")
+            Yast::Popup.Error(err_msg)
             false
           end
         end
-        false
       else
         true
       end
     end
 
+    def firewalld
+      Y2Firewall::Firewalld.instance
+    end
+
     def run
       textdomain "iscsi-lio-server"
       msg = ""
+      firewalld.read
       global_tab = GlobalTab.new
       targets_tab = TargetsTab.new
       service_tab = ServiceTab.new
@@ -66,6 +73,7 @@ module Yast
       ret = CWM.show(contents, caption: _("Yast iSCSI Targets"),next_button: _("Finish"))
       Yast::Wizard.CloseDialog
       if ret == :next
+        firewalld.write
         status = $discovery_auth.fetch_status
         userid = $discovery_auth.fetch_userid
         password = $discovery_auth.fetch_password
@@ -88,11 +96,6 @@ module Yast
             p1 += ("mutual_password=" + mutual_password)
           end
           p1 += " enable=1"
-          if userid == mutual_userid
-            msg = _("It seems that Authentication by Initiators and Authentication by Targets using a same username")
-            msg += _("This may cause a CHAP negotiation error, an authenticaiton failure.")
-            Yast::Popup.Error(msg)
-          end
         else
           p1 = "iscsi/ set discovery_auth enable = 0"
         end
