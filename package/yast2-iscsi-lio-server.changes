@@ -1,6 +1,7 @@
 -------------------------------------------------------------------
 Tue Jan 30 13:50:53 UTC 2018 - lszhu@suse.com
 
+- fate#323460, fate#319238
 - Add firewalld read / write
 - Rename required backend package to python3-targetcli-fb
 - Add message when failed to install python3-targetcli-fb
