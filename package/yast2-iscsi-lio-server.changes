@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Feb  1 11:41:10 UTC 2018 - lszhu@suse.com
+
+- fate#319238
+  Replace targetcli-fb python2 requirements with python3 packages.
+- 4.0.3
+
+-------------------------------------------------------------------
 Tue Jan 30 13:50:53 UTC 2018 - lszhu@suse.com
 
 - fate#323460, fate#319238

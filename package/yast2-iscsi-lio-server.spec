@@ -17,7 +17,7 @@
 
 
 Name:           yast2-iscsi-lio-server
-Version:        4.0.2
+Version:        4.0.3
 Release:        0
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
@@ -28,9 +28,9 @@ BuildRequires:  yast2
 BuildRequires:  yast2-devtools >= 3.1.10
 BuildRequires:  rubygem(%rb_default_ruby_abi:rspec)
 BuildRequires:  rubygem(%rb_default_ruby_abi:yast-rake)
-Requires:       python-configshell-fb
-Requires:       python-rtslib-fb
-Requires:       targetcli-fb
+Requires:       python3-configshell-fb
+Requires:       python3-rtslib-fb
+Requires:       python3-targetcli-fb
 
 #Replace SuSEFirewall2 by firewalld
 Requires:       yast2 >= 4.0.39
