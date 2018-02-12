@@ -411,7 +411,7 @@ module Yast
     def initialize
       textdomain "iscsi-lio-server"
       self.initial = true
-      @service = Yast::SystemdService.find("sshd.service")
+      @service = Yast::SystemdService.find("targetcli.service")
       @service_status = ::UI::ServiceStatus.new(@service, reload_flag: true, reload_flag_label: :restart)
       @firewall_widget = ::CWM::WrapperWidget.new(
           CWMFirewallInterfaces.CreateOpenFirewallWidget("services" => ["iscsi-target"]),
@@ -436,8 +436,12 @@ module Yast
     end
 
     def handle(event)
-      puts event
       @service_status.handle_input(event["ID"])
+      if @service_status.enabled_flag?
+        @service.enable
+      else
+        @service.disable
+      end
       nil
     end
 
