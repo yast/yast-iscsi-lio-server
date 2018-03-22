@@ -285,6 +285,10 @@ class TargetList
 end
 
 class TargetData
+  include Yast::UIShortcuts
+  include Yast::I18n
+  include Yast::Logger
+
   RE_IQN_TARGET = /iqn\.\d{4}\-\d{2}\.[\w\.:\-]+\s\.+\s\[TPGs:\s\d+\]/
   RE_IQN_NAME = /iqn\.\d{4}-\d{2}\.[\w\.:\-]+/
 
@@ -462,7 +466,11 @@ class TargetData
         lun_num_int = lun_num[3,lun_num.length]
         lun_path_tmp = RE_LUN_PATH.match(line).to_s
         lun_path = lun_path_tmp[1,lun_path_tmp.length-2]
-        @current_tpg.store_lun(lun_num,[rand(9999), lun_num_int, lun_name, lun_path, File.ftype(lun_path)])
+        if !File.exist?(lun_path)
+          Yast::Popup.Error(_("Can not access the storage ") + lun_path + _(". Please consider re-connect the storage or delete then  re-create the target which using this storage.\n"))
+        else
+          @current_tpg.store_lun(lun_num,[rand(9999), lun_num_int, lun_name, lun_path, File.ftype(lun_path)])
+        end
       end
 
       # handle portals here

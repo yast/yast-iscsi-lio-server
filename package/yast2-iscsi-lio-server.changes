@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Mar 22 06:11:48 UTC 2018 - lszhu@suse.com
+
+- bsc#1085421
+  Handle the case that the storage of a LUN get disconnected
+  accidentally.
+
+-------------------------------------------------------------------
 Mon Feb 12 13:59:06 UTC 2018 - lszhu@suse.com
 
 - fate#319238
