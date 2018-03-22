@@ -467,7 +467,10 @@ class TargetData
         lun_path_tmp = RE_LUN_PATH.match(line).to_s
         lun_path = lun_path_tmp[1,lun_path_tmp.length-2]
         if !File.exist?(lun_path)
-          Yast::Popup.Error(_("Can not access the storage ") + lun_path + _(". Please consider re-connect the storage or delete then  re-create the target which using this storage.\n"))
+          msg = format(_("Cannot access the storage %s.\n" \
+            "Please consider reconnecting the storage or\n" \
+            "deleting then recreating the target which is using this storage."), lun_path)
+          Yast::Popup.Error(msg)
         else
           @current_tpg.store_lun(lun_num,[rand(9999), lun_num_int, lun_name, lun_path, File.ftype(lun_path)])
         end
