@@ -1,7 +1,8 @@
 -------------------------------------------------------------------
 Fri Mar 23 07:24:02 UTC 2018 - lszhu@suse.com
 
-- Handle the case that users want to delete a LUNs which
+- bsc#1086029
+  Handle the case that users want to delete a LUNs which
   are not created yet(LUNs have data structure in memory but
   not execute command to create them).
 
