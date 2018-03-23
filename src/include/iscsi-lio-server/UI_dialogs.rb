@@ -2562,7 +2562,7 @@ class LUNTable < CWM::Table
       rescue Cheetah::ExecutionFailed => e
         if e.stderr != nil
           failed_storage += (lun[3] + "\n")
-          table_remove_lun_item(lun[0])
+          table_remove_lun(lun[3])
           update_table
           next
         end
@@ -2892,7 +2892,12 @@ class LUNsTableWidget < CWM::CustomWidget
           end
         end
       when :delete
-        lun = @lun_table.get_selected
+        lun_array = @lun_table.get_selected
+        lun = lun_array[0]
+        if lun[1] == -1
+          @lun_table.table_remove_lun(lun[3])
+          return nil
+        end
         cmd = "targetcli"
         p1 = "backstores/"
         if lun[4] == "file"
