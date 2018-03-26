@@ -1,3 +1,5 @@
+require "yast"
+
 class Backstores
   RE_BACKSTORE_PATH = /\/[\w\/\.]+\s/
 
@@ -326,6 +328,7 @@ class TargetData
   RE_PORTAL = /(\d{1,3}\.){3}\d{1,3}:\d{1,5}/
 
   def initialize
+    textdomain "iscsi-lio-server"
     #iqn_name or eui_name would be a MatchData, but target_name would be a string.
     @iqn_name= nil
     @eui_name= nil
