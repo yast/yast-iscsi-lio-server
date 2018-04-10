@@ -2085,7 +2085,7 @@ class AddTargetWidget < CWM::CustomWidget
 
   def contents
     VBox(
-        VSpacing(0),
+        VSpacing(2),
         HBox(
             HSpacing(15),
             @target_name_input_field,
