@@ -2085,7 +2085,7 @@ class AddTargetWidget < CWM::CustomWidget
 
   def contents
     VBox(
-        VSpacing(2),
+        VSpacing(0),
         HBox(
             HSpacing(15),
             @target_name_input_field,
@@ -2094,15 +2094,10 @@ class AddTargetWidget < CWM::CustomWidget
             HSpacing(15),
             ),
         HBox(
-            HSpacing(17),
-            Left(
-                HBox(
-                    @IP_selsection_box,
-                    @target_port_num_field,
-                    HSpacing(100),
-                    )
-            ),
-            HSpacing(20),
+            HSpacing(15),
+            @IP_selsection_box,
+            @target_port_num_field,
+            HSpacing(15),
             ),
         VBox(
             HBox(

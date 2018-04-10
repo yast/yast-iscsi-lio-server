@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Apr 10 08:58:28 UTC 2018 - lszhu@localhost
+
+- bsc#1088677
+  A better UI layout for IP selection combox and port input field
+ in AddTarget Page. 
+-4.08
+
+-------------------------------------------------------------------
 Mon Mar 26 13:22:53 UTC 2018 - cwh@suse.com
 
 - Added missing textdomain that breaks generating POT file
