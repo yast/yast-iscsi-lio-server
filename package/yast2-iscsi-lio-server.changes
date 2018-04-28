@@ -6,7 +6,7 @@ Sat Apr 28 05:59:05 UTC 2018 - lszhu@suse.com
   path input field, avoid unaligned UI.
 
 -------------------------------------------------------------------
-Tue Apr 10 08:58:28 UTC 2018 - lszhu@localhost
+Tue Apr 10 08:58:28 UTC 2018 - lszhu@suse.com
 
 - bsc#1088677
   A better UI layout for IP selection combox and port input field
