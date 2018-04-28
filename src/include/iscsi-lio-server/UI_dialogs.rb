@@ -2687,9 +2687,9 @@ class LUNPathEdit < CWM::CustomWidget
   end
 
   def contents
-    HBox(
+    VBox(
         @lun_path_input,
-        PushButton(Id(:browse), _('Browse'))
+        PushButton(Id(:browse), _('Browse')),
     )
   end
 
