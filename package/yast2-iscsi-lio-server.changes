@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Wed May  2 09:43:35 UTC 2018 - lszhu@suse.com
+
+- bsc#1091626
+  Change regular expression for matching a LUN path, in order
+  to pick file names include special characters.
+- 4.10
+
+-------------------------------------------------------------------
 Sat Apr 28 05:59:05 UTC 2018 - lszhu@suse.com
 
 - bsc#1091194
