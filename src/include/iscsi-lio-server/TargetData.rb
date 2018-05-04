@@ -323,7 +323,7 @@ class TargetData
   #match lun name like [fileio/iscsi_file1 or [block/iscsi_sdb
   RE_LUN_NAME = /\[(fileio|block)\/[\w\_\-\d]+\s/
   #match lun patch like:(/home/lszhu/target1.raw) or (/dev/sdb)
-  RE_LUN_PATH = /[(]\/(\w|\.|\/)+[)]/
+  RE_LUN_PATH = /\(\/.+\)\ /
   # match portal like 0.12.121.121:3260
   RE_PORTAL = /(\d{1,3}\.){3}\d{1,3}:\d{1,5}/
 
@@ -468,7 +468,7 @@ class TargetData
         # lun_num_int is a number like 1,3,57.
         lun_num_int = lun_num[3,lun_num.length]
         lun_path_tmp = RE_LUN_PATH.match(line).to_s
-        lun_path = lun_path_tmp[1,lun_path_tmp.length-2]
+        lun_path = lun_path_tmp[1,lun_path_tmp.length-3]
         if !File.exist?(lun_path)
           msg = format(_("Cannot access the storage %s.\n" \
             "Please consider reconnecting the storage or\n" \
