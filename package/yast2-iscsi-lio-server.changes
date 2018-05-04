@@ -4,7 +4,7 @@ Wed May  2 09:43:35 UTC 2018 - lszhu@suse.com
 - bsc#1091626
   Change regular expression for matching a LUN path, in order
   to pick file names include special characters.
-- 4.10
+- 4.0.10
 
 -------------------------------------------------------------------
 Sat Apr 28 05:59:05 UTC 2018 - lszhu@suse.com
@@ -12,6 +12,7 @@ Sat Apr 28 05:59:05 UTC 2018 - lszhu@suse.com
 - bsc#1091194
   Change Adding LUN dialog UI, place "Browse" button under LUN
   path input field, avoid unaligned UI.
+- 4.0.9
 
 -------------------------------------------------------------------
 Tue Apr 10 08:58:28 UTC 2018 - lszhu@suse.com
@@ -19,7 +20,7 @@ Tue Apr 10 08:58:28 UTC 2018 - lszhu@suse.com
 - bsc#1088677
   A better UI layout for IP selection combox and port input field
   in AddTarget Page.
--4.08
+- 4.0.8
 
 -------------------------------------------------------------------
 Mon Mar 26 13:22:53 UTC 2018 - cwh@suse.com
