@@ -14,6 +14,7 @@ X-SuSE-YaST-AutoInst=all
 X-SuSE-YaST-Geometry=
 X-SuSE-YaST-SortKey=
 X-SuSE-YaST-AutoInstResource=iscsi-lio-servers
+X-SuSE-YaST-Keywords=iscsi,lio,network,system
 
 Icon=yast-iscsi-server
 Exec=xdg-su -c "/sbin/yast2 iscsi-lio-server" 
