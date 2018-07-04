@@ -2,6 +2,7 @@
 Wed Jun 27 15:21:50 CEST 2018 - schubi@suse.de
 
 - Added additional searchkeys to desktop file (fate#321043).
+- Changed UI layout.
 - 4.0.11
 
 -------------------------------------------------------------------
