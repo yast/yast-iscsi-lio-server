@@ -457,7 +457,7 @@ module Yast
       help_msg  = _("<h1>iSCSI Target</h1>")
       help_msg += _("<h2>Service Start</h2>")
       help_msg += _("To start the service every time your computer is booted, \
-                   set <b>When Booting</b>. Otherwise set <b>Manually</b>.\n")
+                    set to <b>Start on boot</b>. Otherwise choose <b>Do not start</b>.\n")
       help_msg += _("<h2>Firewall Settings</h2>")
       help_msg += _("To open the firewall to allow access to the service from remote computers, \
                     set <b>Open Port in Firewall</b>.\n")
