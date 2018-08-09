@@ -1,21 +1,22 @@
 require_relative './iscsi-lio-server_helper.rb'
 require_relative './TargetData.rb'
-require 'cwm/widget'
-require 'ui/service_status'
+
 require 'yast'
+require 'yast2/execute'
+require 'yast2/system_service'
+
 require 'cwm/table'
 require 'cwm/dialog'
-require 'yast2/execute'
+require 'cwm/widget'
+require 'cwm/service_widget'
 
 Yast.import 'CWM'
 Yast.import 'CWMTab'
 Yast.import 'TablePopup'
-Yast.import 'CWMServiceStart'
 Yast.import 'Popup'
 Yast.import 'Wizard'
 Yast.import 'CWMFirewallInterfaces'
 Yast.import 'Service'
-Yast.import 'CWMServiceStart'
 Yast.import 'UI'
 Yast.import 'TablePopup'
 
@@ -411,8 +412,8 @@ module Yast
     def initialize
       textdomain "iscsi-lio-server"
       self.initial = true
-      @service = Yast::SystemdService.find("targetcli.service")
-      @service_status = ::UI::ServiceStatus.new(@service, reload_flag: true, reload_flag_label: :restart)
+      @service = Yast2::SystemService.find("targetcli")
+      @service_widget = ::CWM::ServiceWidget.new(@service)
       @firewall_widget = ::CWM::WrapperWidget.new(
           CWMFirewallInterfaces.CreateOpenFirewallWidget("services" => ["iscsi-target"]),
           )
@@ -420,29 +421,34 @@ module Yast
 
     def contents
       VBox(
-          VStretch(),
-          HBox(
-              HStretch(),
-              HSpacing(1),
-              VBox(@service_status.widget,
-                   VSpacing(2),
-                   @firewall_widget,
-                   VSpacing(2)),
-              HSpacing(1),
-              HStretch()
+        VStretch(),
+        HBox(
+          HStretch(),
+          HSpacing(1),
+          VBox(
+            @service_widget,
+            VSpacing(2),
+            @firewall_widget,
+            VSpacing(2)
           ),
-          VStretch()
+          HSpacing(1),
+          HStretch()
+        ),
+        VStretch()
       )
     end
 
-    def handle(event)
-      @service_status.handle_input(event["ID"])
-      if @service_status.enabled_flag?
-        @service.enable
-      else
-        @service.disable
-      end
-      nil
+    def store
+      @service_widget.store
+    end
+
+    # Saves the service with current settings
+    #
+    # @see Yast2::SystemService
+    #
+    # @return [Boolean] true if service is saved with success; false otherwise
+    def write
+      @service.save
     end
 
     def opt

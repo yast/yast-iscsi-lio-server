@@ -1,8 +1,6 @@
 require_relative '../include/iscsi-lio-server/iscsi-lio-server_helper.rb'
 require_relative '../include/iscsi-lio-server/TargetData.rb'
 require_relative '../include/iscsi-lio-server/UI_dialogs.rb'
-require "cwm/widget"
-require "ui/service_status"
 require "yast"
 require "yast2/execute"
 require "y2firewall/firewalld"
@@ -10,12 +8,9 @@ require "y2firewall/firewalld"
 Yast.import "CWM"
 Yast.import "CWMTab"
 Yast.import "TablePopup"
-Yast.import "CWMServiceStart"
 Yast.import "Popup"
 Yast.import "Wizard"
 Yast.import "CWMFirewallInterfaces"
-Yast.import "Service"
-Yast.import "CWMServiceStart"
 Yast.import "UI"
 Yast.import "Confirm"
 
@@ -74,6 +69,7 @@ module Yast
       Yast::Wizard.CloseDialog
       if ret == :next
         firewalld.write
+        service_tab.write
         status = $discovery_auth.fetch_status
         userid = $discovery_auth.fetch_userid
         password = $discovery_auth.fetch_password
