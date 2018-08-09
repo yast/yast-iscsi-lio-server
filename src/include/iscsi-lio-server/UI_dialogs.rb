@@ -1,6 +1,3 @@
-require_relative './iscsi-lio-server_helper.rb'
-require_relative './TargetData.rb'
-
 require 'yast'
 require 'yast2/execute'
 require 'yast2/system_service'
@@ -10,15 +7,15 @@ require 'cwm/dialog'
 require 'cwm/widget'
 require 'cwm/service_widget'
 
+require_relative './iscsi-lio-server_helper.rb'
+require_relative './TargetData.rb'
+
 Yast.import 'CWM'
-Yast.import 'CWMTab'
 Yast.import 'TablePopup'
 Yast.import 'Popup'
 Yast.import 'Wizard'
 Yast.import 'CWMFirewallInterfaces'
-Yast.import 'Service'
 Yast.import 'UI'
-Yast.import 'TablePopup'
 
 class NoDiscoveryAuth_CheckBox < ::CWM::CheckBox
   def initialize(container,value)
@@ -409,14 +406,20 @@ module Yast
   class ServiceTab < ::CWM::Tab
     include Yast::I18n
     include Yast::UIShortcuts
+
     def initialize
       textdomain "iscsi-lio-server"
+
       self.initial = true
       @service = Yast2::SystemService.find("targetcli")
       @service_widget = ::CWM::ServiceWidget.new(@service)
       @firewall_widget = ::CWM::WrapperWidget.new(
-          CWMFirewallInterfaces.CreateOpenFirewallWidget("services" => ["iscsi-target"]),
-          )
+        CWMFirewallInterfaces.CreateOpenFirewallWidget("services" => ["iscsi-target"]),
+      )
+    end
+
+    def label
+      _('Service')
     end
 
     def contents
@@ -442,11 +445,6 @@ module Yast
       @service_widget.store
     end
 
-    # Saves the service with current settings
-    #
-    # @see Yast2::SystemService
-    #
-    # @return [Boolean] true if service is saved with success; false otherwise
     def write
       @service.save
     end
@@ -455,12 +453,8 @@ module Yast
       [:notify]
     end
 
-    def label
-      _('Service')
-    end
-
     def help
-      help_msg = _("<h1>iSCSI Target</h1>")
+      help_msg  = _("<h1>iSCSI Target</h1>")
       help_msg += _("<h2>Service Start</h2>")
       help_msg += _("To start the service every time your computer is booted, \
                    set <b>When Booting</b>. Otherwise set <b>Manually</b>.\n")

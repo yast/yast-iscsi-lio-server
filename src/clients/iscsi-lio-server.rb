@@ -6,7 +6,6 @@ require "yast2/execute"
 require "y2firewall/firewalld"
 
 Yast.import "CWM"
-Yast.import "CWMTab"
 Yast.import "TablePopup"
 Yast.import "Popup"
 Yast.import "Wizard"
@@ -66,7 +65,6 @@ module Yast
       contents = VBox(tabs,VStretch())
       Yast::Wizard.CreateDialog
       ret = CWM.show(contents, caption: _("Yast iSCSI Targets"),next_button: _("Finish"))
-      Yast::Wizard.CloseDialog
       if ret == :next
         firewalld.write
         service_tab.write
@@ -106,8 +104,8 @@ module Yast
         end
         $global_data.execute_exit_commands
       end
+      Yast::Wizard.CloseDialog
     end
-
   end
 end
 
