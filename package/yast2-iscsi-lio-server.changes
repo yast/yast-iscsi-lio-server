@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Aug 22 10:16:49 UTC 2018 - dgonzalez@suse.com
+
+- Update calls to YaST2 services classes (related to fate#319428)
+- 4.1.1
+
+-------------------------------------------------------------------
 Mon Aug 20 10:26:02 CEST 2018 - schubi@suse.de
 
 - Switched license in spec file from SPDX2 to SPDX3 format.
