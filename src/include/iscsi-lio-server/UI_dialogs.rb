@@ -1,23 +1,21 @@
-require_relative './iscsi-lio-server_helper.rb'
-require_relative './TargetData.rb'
-require 'cwm/widget'
-require 'ui/service_status'
 require 'yast'
+require 'yast2/execute'
+require 'yast2/system_service'
+
 require 'cwm/table'
 require 'cwm/dialog'
-require 'yast2/execute'
+require 'cwm/widget'
+require 'cwm/service_widget'
+
+require_relative './iscsi-lio-server_helper.rb'
+require_relative './TargetData.rb'
 
 Yast.import 'CWM'
-Yast.import 'CWMTab'
 Yast.import 'TablePopup'
-Yast.import 'CWMServiceStart'
 Yast.import 'Popup'
 Yast.import 'Wizard'
 Yast.import 'CWMFirewallInterfaces'
-Yast.import 'Service'
-Yast.import 'CWMServiceStart'
 Yast.import 'UI'
-Yast.import 'TablePopup'
 
 class NoDiscoveryAuth_CheckBox < ::CWM::CheckBox
   def initialize(container,value)
@@ -408,56 +406,58 @@ module Yast
   class ServiceTab < ::CWM::Tab
     include Yast::I18n
     include Yast::UIShortcuts
+
     def initialize
       textdomain "iscsi-lio-server"
+
       self.initial = true
-      @service = Yast::SystemdService.find("targetcli.service")
-      @service_status = ::UI::ServiceStatus.new(@service, reload_flag: true, reload_flag_label: :restart)
+      @service = Yast2::SystemService.find("targetcli")
+      @service_widget = ::CWM::ServiceWidget.new(@service)
       @firewall_widget = ::CWM::WrapperWidget.new(
-          CWMFirewallInterfaces.CreateOpenFirewallWidget("services" => ["iscsi-target"]),
-          )
-    end
-
-    def contents
-      VBox(
-          VStretch(),
-          HBox(
-              HStretch(),
-              HSpacing(1),
-              VBox(@service_status.widget,
-                   VSpacing(2),
-                   @firewall_widget,
-                   VSpacing(2)),
-              HSpacing(1),
-              HStretch()
-          ),
-          VStretch()
+        CWMFirewallInterfaces.CreateOpenFirewallWidget("services" => ["iscsi-target"]),
       )
-    end
-
-    def handle(event)
-      @service_status.handle_input(event["ID"])
-      if @service_status.enabled_flag?
-        @service.enable
-      else
-        @service.disable
-      end
-      nil
-    end
-
-    def opt
-      [:notify]
     end
 
     def label
       _('Service')
     end
 
+    def contents
+      VBox(
+        VStretch(),
+        HBox(
+          HStretch(),
+          HSpacing(1),
+          VBox(
+            @service_widget,
+            VSpacing(2),
+            @firewall_widget,
+            VSpacing(2)
+          ),
+          HSpacing(1),
+          HStretch()
+        ),
+        VStretch()
+      )
+    end
+
+    def store
+      @service_widget.store
+    end
+
+    def write
+      @service.save
+    end
+
+    def opt
+      [:notify]
+    end
+
     def help
-      help_msg = _("<h1>iSCSI Target</h1>")
+      help_msg  = _("<h1>iSCSI Target</h1>")
       help_msg += _("<h2>Service Start</h2>")
       help_msg += _("To start the service every time your computer is booted, \
-                   set <b>When Booting</b>. Otherwise set <b>Manually</b>.\n")
+                    set to <b>Start on boot</b>. Otherwise choose <b>Do not start</b>.\n")
       help_msg += _("<h2>Firewall Settings</h2>")
       help_msg += _("To open the firewall to allow access to the service from remote computers, \
                     set <b>Open Port in Firewall</b>.\n")
