@@ -65,5 +65,6 @@ rake install DESTDIR="%{buildroot}"
 %{yast_clientdir}/iscsi-lio-server.rb
 %{yast_desktopdir}/iscsi-lio-server.desktop
 %doc %{yast_docdir}
+%license COPYING
 
 %changelog
