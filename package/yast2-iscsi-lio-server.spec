@@ -17,7 +17,7 @@
 
 
 Name:           yast2-iscsi-lio-server
-Version:        4.1.0
+Version:        4.1.1
 Release:        0
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
@@ -65,6 +65,7 @@ rake install DESTDIR="%{buildroot}"
 %{yast_clientdir}/iscsi-lio-server.rb
 %{yast_desktopdir}/iscsi-lio-server.desktop
 %doc %{yast_docdir}
+%{yast_icondir}
 %license COPYING
 
 %changelog
