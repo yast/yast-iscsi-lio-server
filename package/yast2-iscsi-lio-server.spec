@@ -24,8 +24,8 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Source0:        %{name}-%{version}.tar.bz2
 
 BuildRequires:  update-desktop-files
-# Yast2::ServiceWidget
-BuildRequires:  yast2 >= 4.1.0
+# Yast2::Execute.stdout
+BuildRequires:  yast2 >= 4.1.42
 BuildRequires:  yast2-devtools >= 3.1.10
 BuildRequires:  rubygem(%rb_default_ruby_abi:rspec)
 BuildRequires:  rubygem(%rb_default_ruby_abi:yast-rake)
@@ -33,8 +33,8 @@ Requires:       python3-configshell-fb
 Requires:       python3-rtslib-fb
 Requires:       python3-targetcli-fb
 
-# Yast2::ServiceWidget
-Requires:       yast2 >= 4.1.0
+# Yast2::Execute.stdout
+Requires:       yast2 >= 4.1.42
 
 BuildArch:      noarch
 
