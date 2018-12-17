@@ -1,4 +1,26 @@
+# encoding: utf-8
+
+# Copyright (c) [2017] SUSE LLC
+#
+# All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of version 2 of the GNU General Public License as published
+# by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+# more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, contact SUSE LLC.
+#
+# To contact SUSE LLC about this file by physical or electronic mail, you may
+# find current contact information at www.suse.com.
+
 require "yast"
+require "yast2/execute"
 
 class Backstores
   RE_BACKSTORE_PATH = /\/[\w\/\.]+\s/
@@ -340,7 +362,7 @@ class TargetData
     @tpg_num = nil
 
     #the string for a mapping lun, like mapped_lun1
-   @mapping_lun_name = nil
+    @mapping_lun_name = nil
     #the string for a mapped lun, like "lun2" in "[lun2 fileio/iscsi_file1 (rw)]"
     @mapped_lun_name = nil
 
@@ -356,18 +378,14 @@ class TargetData
     #A pointer points to the acl rule for a specific initiator we are handling
     @current_acl_rule = nil
 
-    # the command need to execute  and the result
-    @cmd = nil
-    @cmd_out = nil
     @targets_list = TargetList.new
     self.analyze
   end
 
-
   def analyze
     # We need to re-new @target_list, because something may be deleted
     @targets_list = TargetList.new
-    @target_outout = `targetcli ls`.split("\n")
+    @target_outout = Yast::Execute.locally!.stdout("targetcli", "ls").split("\n")
     @target_outout.each do |line|
       #handle iqn targets here.
       if RE_IQN_TARGET.match(line)
@@ -401,50 +419,19 @@ class TargetData
         @current_acls_group = @current_tpg.fetch_acls("acls")
       end
 
-      # handle acl rules for an IQN initaitor here
+      # handle acl rules for an IQN initiator here
       if RE_ACL_IQN_RULE.match(line)
         @initiator_name = RE_IQN_NAME.match(line).to_s
         @current_acls_group.store_rule(@initiator_name)
-        @current_acl_rule = @current_acls_group.fetch_rule(@initiator_name)
-        # get authentication information here.
-        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name + \
-            "/tpg" + @current_tpg.fetch_tpg_number + "/acls/" + @initiator_name + "/ get auth userid"
-        @cmd_out = `#{@cmd}`
-        @current_acl_rule.store_userid(@cmd_out[7 , @cmd.length])
-        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name + \
-            "/tpg" + @current_tpg.fetch_tpg_number + "/acls/" + @initiator_name + "/ get auth password"
-        @cmd_out = `#{@cmd}`
-        @current_acl_rule.store_password(@cmd_out[9 , @cmd.length])
-        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name + \
-            "/tpg" + @current_tpg.fetch_tpg_number + "/acls/" + @initiator_name + "/ get auth mutual_userid"
-        @cmd_out = `#{@cmd}`
-        @current_acl_rule.store_mutual_userid(@cmd_out[14 , @cmd.length])
-        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name() + \
-            "/tpg" + @current_tpg.fetch_tpg_number + "/acls/" + @initiator_name + "/ get auth mutual_password"
-        @cmd_out = `#{@cmd}`
-        @current_acl_rule.store_mutual_password(@cmd_out[16 , @cmd.length])
+
+        save_current_acl_rule
       end
       # handle acl rules for an EUI initaitor here
       if RE_ACL_EUI_RULE.match(line)
         @initiator_name = RE_EUI_NAME.match(line).to_s
         @current_acls_group.store_rule(@initiator_name)
-        @current_acl_rule = @current_acls_group.fetch_rule(@initiator_name)
-        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name + \
-            "/tpg" + @current_tpg.fetch_tpg_number + "/acls/" + @initiator_name + "/ get auth userid"
-        @cmd_out = `#{@cmd}`
-        @current_acl_rule.store_userid(@cmd_out[7 , @cmd.length])
-        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name + \
-            "/tpg" + @current_tpg.fetch_tpg_number + "/acls/" + @initiator_name + "/ get auth password"
-        @cmd_out = `#{@cmd}`
-        @current_acl_rule.store_password(@cmd_out[9 , @cmd.length])
-        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name + \
-            "/tpg" + @current_tpg.fetch_tpg_number + "/acls/" + @initiator_name + "/ get auth mutual_userid"
-        @cmd_out = `#{@cmd}`
-        @current_acl_rule.store_mutual_userid(@cmd_out[14 , @cmd.length])
-        @cmd = "targetcli iscsi/" + @current_target.fetch_target_name + \
-            "/tpg" + @current_tpg.fetch_tpg_number + "/acls/" + @initiator_name + "/ get auth mutual_password"
-        @cmd_out = `#{@cmd}`
-        @current_acl_rule.store_mutual_password(@cmd_out[16 , @cmd.length])
+
+        save_current_acl_rule
       end
 
       # handle mapped luns here
@@ -504,6 +491,27 @@ class TargetData
     list
   end
 
+private
+
+  # Saves acl authentication information
+  def save_current_acl_rule
+    @current_acl_rule = @current_acls_group.fetch_rule(@initiator_name)
+
+    @current_acl_rule.store_userid(acl_auth_info("userid"))
+    @current_acl_rule.store_password(acl_auth_info("password"))
+    @current_acl_rule.store_mutual_userid(acl_auth_info("mutual_userid"))
+    @current_acl_rule.store_mutual_password(acl_auth_info("mutual_password"))
+  end
+
+  # Runs a targetcli command to get specific acl authentication information
+  #
+  # @param data [String] e.g., "userid", "password", "mutual_userid" or "mutual_password"
+  # @return [String]
+  def acl_auth_info(data)
+    acl = "iscsi/#{@current_target.fetch_target_name}/tpg#{@current_tpg.fetch_tpg_number}/acls/#{@initiator_name}/"
+
+    Yast::Execute.locally!.stdout("targetcli", acl, "get", "auth", data).split("=").last
+  end
 end
 
 class DiscoveryAuth
