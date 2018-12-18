@@ -510,7 +510,7 @@ private
   def acl_auth_info(data)
     acl = "iscsi/#{@current_target.fetch_target_name}/tpg#{@current_tpg.fetch_tpg_number}/acls/#{@initiator_name}/"
 
-    Yast::Execute.locally!.stdout("targetcli", acl, "get", "auth", data).split("=").last
+    Yast::Execute.locally!.stdout("targetcli", acl, "get", "auth", data).split("=", 2).last
   end
 end
 
