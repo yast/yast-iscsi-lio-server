@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Feb 20 13:09:38 UTC 2019 - snwint@suse.com
+
+- accept symlinks to block devices and files in dialogs (bsc#1123316)
+- 4.0.12
+
+-------------------------------------------------------------------
 Wed Jun 27 15:21:50 CEST 2018 - schubi@suse.de
 
 - Added additional searchkeys to desktop file (fate#321043).
