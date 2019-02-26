@@ -84,13 +84,13 @@ module Yast
     end
 
     def EnableDiscoveryAuth()
-      cmd ="lio_node --setchapdiscenforce=1"
-      LogExecCmd("#{cmd}", do_log: true)
+        cmd ="lio_node --setchapdiscenforce=1"
+        ret = LogExecCmd("#{cmd}", do_log: true)
     end
 
     def DisableDiscoveryAuth()
       cmd ="lio_node --setchapdiscenforce=0"
-      LogExecCmd("#{cmd}", do_log: true)
+      ret = LogExecCmd("#{cmd}", do_log: true)
     end
 
     def FindTcmKey(p)
@@ -401,7 +401,7 @@ module Yast
       ) do |n|
         ip = n["ip"] || ""
         port = n["port"] || 3260
-        FormatIpPort(ip, port)
+        ipp = FormatIpPort(ip, port)
       end
       deep_copy(ret)
     end
