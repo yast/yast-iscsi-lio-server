@@ -485,7 +485,6 @@ module Yast
         VStretch()
       )
 
-      help = CWM.MergeHelps(w)
       contents = CWM.PrepareDialog(contents, w)
       Wizard.SetContentsButtons(
         caption,
@@ -554,7 +553,6 @@ module Yast
         VStretch()
       )
 
-      help = CWM.MergeHelps(w)
       contents = CWM.PrepareDialog(contents, w)
       Wizard.SetContentsButtons(
         caption,
@@ -587,7 +585,6 @@ module Yast
         VStretch()
       )
 
-      help = CWM.MergeHelps(w)
       contents = CWM.PrepareDialog(contents, w)
       Wizard.SetContentsButtons(
         caption,

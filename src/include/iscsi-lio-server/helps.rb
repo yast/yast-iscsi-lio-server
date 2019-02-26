@@ -161,7 +161,7 @@ module Yast
             "<p>Under <b>Ip Address</b> and <b>Port Number</b> you specify under which address\n" +
               "and port the service will be available. Default for port number is 3260.\n" +
               "Only ip addresses assigned to one of the network cards are possible."
-          ) + "</p>" +"<p>" + use_login_auth + "</p>",
+          ) + "</p>" + "<p>" + use_login_auth + "</p>",
         # add target
         "target-add"         => _(
           "<h1>iSCSI Target IP/Port and LUN setup</h1>"
