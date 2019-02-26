@@ -31,3 +31,4 @@ testsuite/*.sum
 testsuite/*.test
 test-driver
 package/*.bz2
+/.yardoc/

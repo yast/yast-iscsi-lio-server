@@ -25,8 +25,10 @@ Source0:        %{name}-%{version}.tar.bz2
 
 Group:          System/YaST
 License:        GPL-2.0
-BuildRequires:  docbook-xsl-stylesheets doxygen libxslt popt-devel sgml-skel update-desktop-files yast2 yast2-packagemanager-devel yast2-testsuite
+BuildRequires:  docbook-xsl-stylesheets doxygen libxslt popt-devel sgml-skel update-desktop-files yast2 yast2-packagemanager-devel
 BuildRequires:  yast2-devtools >= 3.1.10
+BuildRequires:  rubygem(%rb_default_ruby_abi:rspec)
+BuildRequires:  rubygem(%rb_default_ruby_abi:yast-rake)
 BuildRequires:  rubygem(rspec)
 Requires:       lio-utils
 
@@ -47,21 +49,27 @@ This package contains configuration of iSCSI LIO target
 %prep
 %setup -n %{name}-%{version}
 
+%check
+rake test:unit
+
 %build
-%yast_build
 
 %install
-%yast_install
+rake install DESTDIR="%{buildroot}"
 
 
 %files
 %defattr(-,root,root)
 %dir %{yast_yncludedir}/iscsi-lio-server
 %{yast_yncludedir}/iscsi-lio-server/*
-%{yast_clientdir}/iscsi-lio-server.rb
-%{yast_clientdir}/iscsi-lio-server_*.rb
-%{yast_moduledir}/IscsiLioServer*
-%{yast_moduledir}/IscsiLioData*
+%dir %{yast_clientdir}/
+%{yast_clientdir}/*.rb
+%dir %{yast_moduledir}
+%{yast_moduledir}/*
+%dir %{yast_desktopdir}
 %{yast_desktopdir}/iscsi-lio-server.desktop
+%dir %{yast_scrconfdir}
 %{yast_scrconfdir}/ietd.scr
 %doc %{yast_docdir}
+
+%license COPYING
