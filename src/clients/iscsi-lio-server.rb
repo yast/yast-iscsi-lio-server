@@ -26,7 +26,7 @@ module Yast
     def installed_packages
       if !PackageSystem.PackageInstalled("python3-targetcli-fb")
         confirm = Popup.AnyQuestionRichText(
-            "",
+          "",
             _("Yast iscsi-lio-server can't run without installing targetcli-fb package. Do you want to install?"),
             40,
             10,
@@ -108,7 +108,6 @@ module Yast
     end
   end
 end
-
 
 iscsi_target_server = Yast::ISCSILioServer.new
 ret = iscsi_target_server.is_root

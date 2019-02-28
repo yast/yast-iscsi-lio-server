@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Feb 28 11:49:48 CET 2019 - aschnell@suse.com
+
+- enable rubocop
+- 4.1.4
+
+-------------------------------------------------------------------
 Wed Feb 20 12:55:07 UTC 2019 - snwint@suse.com
 
 - accept symlinks to block devices and files in dialogs (bsc#1123316)

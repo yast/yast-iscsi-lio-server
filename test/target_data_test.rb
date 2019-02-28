@@ -69,7 +69,7 @@ describe TargetData do
 
         target_name = "iqn.2018-01.suse.com.lszhu.target"
         tpg_num = "5"
-        lun_info = {"lun0 "=>["0 ", "var-tmp-target.raw", "/var/tmp/target.raw", "file"]}
+        lun_info = { "lun0 "=>["0 ", "var-tmp-target.raw", "/var/tmp/target.raw", "file"] }
         portals = ["192.168.100.12", "1234"], ["192.168.101.12", "1234"]
         acl_initiator_names = ["iqn.2018-01.suse.com.lszhu.init"]
         user_id = "teddybear"
