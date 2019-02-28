@@ -45,7 +45,7 @@ class Backstores
     @backstores_list
   end
 
-  # This function will return whether the backstore(path) already exsited
+  # This function will return whether the backstore(path) already existed
   def validate_backstore_exist(str)
     @backstores_list.each do |backstore|
       if backstore == str
