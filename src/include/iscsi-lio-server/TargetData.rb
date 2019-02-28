@@ -296,6 +296,7 @@ class TargetList
     @target_hash_list.fetch(target_name)
   end
 
+  # FIXME missing documentation, function name suggest different return value
   def get_keys
     test = nil
     @target_hash_list.each do |key, value|
