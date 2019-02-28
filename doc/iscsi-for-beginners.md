@@ -41,7 +41,7 @@ Check that things work: `systemctl status target`.
 
 Instead of yast: use `targetcli` for config. `targetcli` is a rather
 peculiar tool. You basically navigate through a virtual filesystem (Use `ls` often!).
-Basic syntax is `[RELATIVE_PATH] CMD`. Just watch examples below.
+Basic syntax is `[PATH] CMD ARGS`. Just watch examples below.
 
 Here's how to setup a target with it. Run `targetcli`, then
 
@@ -71,6 +71,12 @@ acls/ create iqn.1996-04.de.suse:01:ded3a83a491
 # then, export it
 # Note that this uses your current ip address!
 portals/ create
+
+# to enhance your testing experience it is very helpful to turn off authentication
+set attribute authentication=0
+
+# ... and also for the discovery process
+/iscsi set discovery_auth enable=0
 ```
 
 At this point the iscsi initiator should see the device (check with `iscsiadm -m discovery ...`).
@@ -81,6 +87,20 @@ To make changes persistent, stop the `target` service. This will `update /etc/ta
 systemctl stop target
 systemctl start target
 ```
+
+### multipath setup
+
+A multipath setup uses several servers but the same WWN
+(`iqn.2003-01.org.linux-iscsi.e111.x8664:sn.18436556ef11` in the example above).
+Note that `create` accepts a WWN as argument.
+
+If you decide to simply clone the virtual machine don't forget that the
+config is stored in `/etc/target/lio_setup.sh` and contains the IP address of the
+server. Replace it with the real IP address before starting the `target` service.
+
+> If you inadvertently started with the wrong IP still in the config the `target` service will fail. Do **NOT**
+> stop the service as that will overwrite `lio_setup.sh` with the half-done broken setup. Instead make a backup copy
+> of `lio_setup.sh` before stopping the service.
 
 ## iscsi initiator setup
 
