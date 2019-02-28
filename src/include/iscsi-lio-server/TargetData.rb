@@ -45,7 +45,7 @@ class Backstores
     @backstores_list
   end
 
-  #This function will return whether the backstore(path) already exsited
+  # This function will return whether the backstore(path) already exsited
   def validate_backstore_exist(str)
     @backstores_list.each do |backstore|
       if backstore == str
@@ -76,7 +76,7 @@ class ACL_group
     all_acls
   end
 
-  #This function is used in unit tests
+  # This function is used in unit tests
   def get_acl_intitiator_names
     names = []
     @initiator_rules_hash_list.each do |key, value|
@@ -137,13 +137,12 @@ class ACL_rule
   end
 
   def fetch_mapped_lun(mapping_lun_number)
-     @mapped_luns_hash_list.fetch(mapping_lun_number)
+    @mapped_luns_hash_list.fetch(mapping_lun_number)
   end
 
   def get_mapped_lun
     @mapped_luns_hash_list
   end
-
 end
 
 class Mapped_LUN
@@ -198,7 +197,7 @@ class TPG
   end
 
   def fetch_acls(acls_name)
-     @acls_hash_list.fetch("acls")
+    @acls_hash_list.fetch("acls")
   end
 
   def fetch_lun(lun_num)
@@ -209,7 +208,7 @@ class TPG
     @luns_list.store(lun_num, lun_name)
   end
 
-  #This function is used in unit test
+  # This function is used in unit test
   def get_luns_info
     info = @luns_list.dup
     info.each do |key, value|
@@ -254,10 +253,10 @@ class Target
   end
 
   def fetch_tpg(tpg_number)
-     @tpg_hash_list.fetch(tpg_number)
+    @tpg_hash_list.fetch(tpg_number)
   end
 
-  #For now, Yast only support the case that only has one TPG, this function will return the only TPG,
+  # For now, Yast only support the case that only has one TPG, this function will return the only TPG,
   # if there are more than one TPG in the target, it will return the first one.
   def get_default_tpg()
     if @tpg_hash_list.empty?
@@ -267,7 +266,6 @@ class Target
         return value
       end
     end
-
   end
 
   def fetch_target_name
@@ -277,7 +275,7 @@ end
 
 class TargetList
   @target_hash_list = nil
-#This function will return a array of target names
+  # This function will return a array of target names
   def get_target_names()
     target_names_array = []
     @target_hash_list.each do |key, value|
@@ -301,11 +299,10 @@ class TargetList
   def get_keys
     test = nil
     @target_hash_list.each do |key, value|
-       test = key
+      test = key
     end
     return test
   end
-
 end
 
 class TargetData
@@ -326,47 +323,47 @@ class TargetData
   RE_ACL_IQN_RULE = /iqn\.\d{4}\-\d{2}\.[\w\.:\-]+\s\.+\s\[[\w\-\s\,]*Mapped\sLUNs\:\s\d+\]/
   RE_ACL_EUI_RULE = /eui\.\w+\s\.+\s\[[\w\-\s\,]*Mapped\sLUNs\:\s\d+\]/
 
-  #match a line like this:
-  #mapped_lun1 .......................................................................... [lun2 fileio/iscsi_file1 (rw)]
+  # match a line like this:
+  # mapped_lun1 .......................................................................... [lun2 fileio/iscsi_file1 (rw)]
   RE_MAPPED_LUN_LINE = /mapped_lun\d+\s\.+\s\[lun\d+\s/
 
   # match the mapped lun like "mapped_lun1", we matched one more \s here to aovid bugs in configfs / targetcli
   # mismatch, need to strip when use
   RE_MAPPING_LUN = /mapped_lun\d+\s/
 
-  #match the mapped lun, like "[lun2" in "[lun2 fileio/iscsi_file1 (rw)]", we matched one more \s to avoid bugs.
+  # match the mapped lun, like "[lun2" in "[lun2 fileio/iscsi_file1 (rw)]", we matched one more \s to avoid bugs.
   RE_MAPPED_LUN = /\[lun\d+\s/
 
-  #match a line like "| | | | o- lun2 ...................... [fileio/iscsi_file1 (/home/lszhu/target1.raw) (default_tg_pt_gp)]"
-  #or "o- lun0 .................................................................. [block/iscsi_sdb (/dev/sdb) (default_tg_pt_gp)]"
+  # match a line like "| | | | o- lun2 ...................... [fileio/iscsi_file1 (/home/lszhu/target1.raw) (default_tg_pt_gp)]"
+  # or "o- lun0 .................................................................. [block/iscsi_sdb (/dev/sdb) (default_tg_pt_gp)]"
   RE_LUN = /\-\slun\d+\s\.+\s\[(fileio|block)\//
-  #match lun number like lun0, lun1, lun2....
+  # match lun number like lun0, lun1, lun2....
   RE_LUN_NUM = /\-\slun\d+\s/
-  #match lun name like [fileio/iscsi_file1 or [block/iscsi_sdb
+  # match lun name like [fileio/iscsi_file1 or [block/iscsi_sdb
   RE_LUN_NAME = /\[(fileio|block)\/[\w\_\-\d]+\s/
-  #match lun patch like:(/home/lszhu/target1.raw) or (/dev/sdb)
+  # match lun patch like:(/home/lszhu/target1.raw) or (/dev/sdb)
   RE_LUN_PATH = /\(\/.+\)\ /
   # match portal like 0.12.121.121:3260
   RE_PORTAL = /(\d{1,3}\.){3}\d{1,3}:\d{1,5}/
 
   def initialize
     textdomain "iscsi-lio-server"
-    #iqn_name or eui_name would be a MatchData, but target_name would be a string.
+    # iqn_name or eui_name would be a MatchData, but target_name would be a string.
     @iqn_name= nil
     @eui_name= nil
     @target_name = nil
-    @initiator_name =  nil
+    @initiator_name = nil
 
-    #tgp_name would be a MatchData, but tgp_num should be a string.
+    # tgp_name would be a MatchData, but tgp_num should be a string.
     @tpg_name = nil
     @tpg_num = nil
 
-    #the string for a mapping lun, like mapped_lun1
+    # the string for a mapping lun, like mapped_lun1
     @mapping_lun_name = nil
-    #the string for a mapped lun, like "lun2" in "[lun2 fileio/iscsi_file1 (rw)]"
+    # the string for a mapped lun, like "lun2" in "[lun2 fileio/iscsi_file1 (rw)]"
     @mapped_lun_name = nil
 
-    #will store anything match our regexp
+    # will store anything match our regexp
     @match = nil
 
     # A pointer points to the target in the list that we are handling.
@@ -375,7 +372,7 @@ class TargetData
     @current_tpg = nil
     # A pointer points to the acls group
     @current_acls_group = nil
-    #A pointer points to the acl rule for a specific initiator we are handling
+    # A pointer points to the acl rule for a specific initiator we are handling
     @current_acl_rule = nil
 
     @targets_list = TargetList.new
@@ -387,30 +384,30 @@ class TargetData
     @targets_list = TargetList.new
     @target_outout = Yast::Execute.locally!.stdout("targetcli", "ls").split("\n")
     @target_outout.each do |line|
-      #handle iqn targets here.
+      # handle iqn targets here.
       if RE_IQN_TARGET.match(line)
-         if @iqn_name = RE_IQN_NAME.match(line)
-           @target_name=@iqn_name.to_s
-           @targets_list.store_target(@target_name)
-           @current_target = @targets_list.fetch_target(@target_name)
-         end
+        if @iqn_name = RE_IQN_NAME.match(line)
+          @target_name=@iqn_name.to_s
+          @targets_list.store_target(@target_name)
+          @current_target = @targets_list.fetch_target(@target_name)
+        end
       end
 
       # handle eui targets here.
       if RE_EUI_TARGET.match(line)
-         if @eui_name = RE_EUI_NAME.match(line)
-           @target_name=@eui_name.to_s
-           @targets_list.store_target(@target_name)
-           @current_target = @targets_list.fetch_target(@target_name)
-         end
+        if @eui_name = RE_EUI_NAME.match(line)
+          @target_name=@eui_name.to_s
+          @targets_list.store_target(@target_name)
+          @current_target = @targets_list.fetch_target(@target_name)
+        end
       end
 
       # handle TPGs here.
       if @tpg_name = RE_TPG.match(line)
-         #find the tpg number
-         @tpg_num = /\d+/.match(@tpg_name.to_s.strip)
-         @current_target.store_tpg(@tpg_num.to_s.strip)
-         @current_tpg = @current_target.fetch_tpg(@tpg_num.to_s.strip)
+        # find the tpg number
+        @tpg_num = /\d+/.match(@tpg_name.to_s.strip)
+        @current_target.store_tpg(@tpg_num.to_s.strip)
+        @current_tpg = @current_target.fetch_tpg(@tpg_num.to_s.strip)
       end
 
       # handle ACLs group here
@@ -477,10 +474,9 @@ class TargetData
       end
 
     end # end of @target_outout.each do |line|
-
   end # end of the function
 
- # this function will return are created target names.
+  # this function will return are created target names.
   def get_target_names_array
     @targets_list.get_target_names
   end
@@ -592,7 +588,6 @@ class DiscoveryAuth
   end
 end
 
-
 class Global
   def initialize
     @show_del_lun_warning = true
@@ -601,8 +596,8 @@ class Global
   def execute_init_commands
     cmd = "targetcli"
     commands = [
-        "set global auto_add_mapped_luns=false",
-        "set global auto_add_default_portal=false"
+      "set global auto_add_mapped_luns=false",
+      "set global auto_add_default_portal=false"
     ]
     commands.each do |p1|
       begin
@@ -612,13 +607,12 @@ class Global
         end
       end
     end
-
   end
 
   def execute_exit_commands
     cmd = "targetcli"
     commands = [
-        "saveconfig",
+      "saveconfig",
     ]
     commands.each do |p1|
       begin
@@ -628,7 +622,6 @@ class Global
         end
       end
     end
-
   end
 
   def disable_warning_del_lun
@@ -640,7 +633,7 @@ class Global
   end
 end
 
-#This class used for setup unit test env.
+# This class used for setup unit test env.
 class Test_Utils
   def setup
     commands = [["dd", "if=/dev/zero", "of=/var/tmp/target.raw", "bs=1M", "count=1"]]

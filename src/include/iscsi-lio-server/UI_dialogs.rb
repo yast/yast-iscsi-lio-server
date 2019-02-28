@@ -229,7 +229,7 @@ class UserName < CWM::InputField
       end
       err_msg = _("Can not use ")
       illegal_chars = ""
-      chars = ["`", "'", "[", "]", "{", "}", "=", "&", "*", "?", "^", "$", "#" ,"|", " "]
+      chars = ["`", "'", "[", "]", "{", "}", "=", "&", "*", "?", "^", "$", "#", "|", " "]
       chars.each do |char|
         if self.value.include?(char)
           illegal_chars += char
@@ -281,7 +281,7 @@ class Password < CWM::InputField
       end
       err_msg = _("Can not use ")
       illegal_chars = ""
-      chars = ["`", "'", "[", "]", "{", "}", "=", "&", "*", "?", "^", "$", "#" ,"|", " "]
+      chars = ["`", "'", "[", "]", "{", "}", "=", "&", "*", "?", "^", "$", "#", "|", " "]
       chars.each do |char|
         if self.value.include?(char)
           illegal_chars += char
@@ -333,7 +333,7 @@ class MutualUserName < CWM::InputField
       end
       err_msg = _("Can not use ")
       illegal_chars = ""
-      chars = ["`", "'", "[", "]", "{", "}", "=", "&", "*", "?", "^", "$", "#" ,"|", " "]
+      chars = ["`", "'", "[", "]", "{", "}", "=", "&", "*", "?", "^", "$", "#", "|", " "]
       chars.each do |char|
         if self.value.include?(char)
           illegal_chars += char
@@ -385,7 +385,7 @@ class MutualPassword < CWM::InputField
       end
       err_msg = _("Can not use ")
       illegal_chars = ""
-      chars = ["`", "'", "[", "]", "{", "}", "=", "&", "*", "?", "^", "$", "#" ,"|", " "]
+      chars = ["`", "'", "[", "]", "{", "}", "=", "&", "*", "?", "^", "$", "#", "|", " "]
       chars.each do |char|
         if self.value.include?(char)
           illegal_chars += char
@@ -468,7 +468,6 @@ module Yast
   end
 end
 
-
 class TargetAuthDiscovery < CWM::CustomWidget
   include Yast
   include Yast::I18n
@@ -486,16 +485,16 @@ class TargetAuthDiscovery < CWM::CustomWidget
 
   def contents
     HBox(
-        HSpacing(25),
+      HSpacing(25),
         VBox(
-            Left(@auth_by_target,),
+          Left(@auth_by_target,),
             HBox(
-                @user_name_input,
+              @user_name_input,
                 @password_input,
-                ),
             ),
+        ),
         HSpacing(25),
-        )
+    )
   end
 
   def disable_checkbox
@@ -550,7 +549,6 @@ class TargetAuthDiscovery < CWM::CustomWidget
   end
 
   def help
-
   end
 end
 
@@ -571,17 +569,16 @@ class InitiatorAuthDiscovery < CWM::CustomWidget
 
   def contents
     HBox(
-        HSpacing(25),
+      HSpacing(25),
         VBox(
-            Left(@auth_by_initiator,),
+          Left(@auth_by_initiator,),
             HBox(
-                @mutual_user_name_input,
+              @mutual_user_name_input,
                 @mutual_password_input,
-                ),
             ),
+        ),
         HSpacing(25),
-        )
-
+    )
   end
 
   def disable_checkbox
@@ -677,23 +674,23 @@ class DiscoveryAuthWidget < CWM::CustomWidget
 
   def contents
     HBox(
-        VSpacing(5),
+      VSpacing(5),
         VBox(
-            VSpacing(2),
+          VSpacing(2),
             Left(
-                HBox(
-                    HSpacing(25),
-                    @no_discovery_auth_checkbox,
-                    HSpacing(25),
-                    )
+              HBox(
+                HSpacing(25),
+                  @no_discovery_auth_checkbox,
+                  HSpacing(25),
+              )
             ),
             VSpacing(1),
             @target_discovery_auth,
             @initiator_discovery_auth,
             VSpacing(2),
-            ),
+        ),
         VSpacing(5),
-        )
+    )
   end
 
   def opt
@@ -726,10 +723,10 @@ class GlobalTab < ::CWM::Tab
 
   def contents
     VBox(
-        HStretch(),
+      HStretch(),
         VStretch(),
         @discovery_auth,
-        )
+    )
   end
 
   def label
@@ -756,7 +753,7 @@ class TargetsTab < ::CWM::Tab
 
   def contents
     VBox(
-        HStretch(),
+      HStretch(),
         VStretch(),
         @target_table_widget
     )
@@ -1000,7 +997,7 @@ class ACLTable < CWM::Table
     target_list = $target_data.get_target_list
     target = target_list.fetch_target(@target_name)
     tpg = target.get_default_tpg
-    #we only has one acl group called "acls"
+    # we only has one acl group called "acls"
     if tpg != nil
       acls_group_hash = tpg.fetch_acls("acls")
     else
@@ -1035,7 +1032,7 @@ class ACLTable < CWM::Table
     lun_mappig_str = ""
     mapped_lun = acl_rule.get_mapped_lun
     mapped_lun.each do |key, value|
-      lun_mappig_str += value.fetch_mapped_lun_number  + "->" + value.fetch_mapping_lun_number + ","
+      lun_mappig_str += value.fetch_mapped_lun_number + "->" + value.fetch_mapping_lun_number + ","
     end
     lun_mappig_str
   end
@@ -1056,7 +1053,6 @@ class ACLTable < CWM::Table
     end
     auth_str
   end
-
 
   def get_selected
     @acls.each do |item|
@@ -1095,7 +1091,6 @@ class ACLTable < CWM::Table
       @acls.push(item)
       self.change_items(@acls)
     end
-
   end
 
   def delete_item(item)
@@ -1156,7 +1151,6 @@ class ACLTable < CWM::Table
     end
   end
 end
-
 
 class InitiatorNameInput < CWM::InputField
   def initialize
@@ -1219,7 +1213,6 @@ class ImportLUNsCheckbox < ::CWM::CheckBox
     @config
   end
 
-
   def opt
     [:notify]
   end
@@ -1246,13 +1239,13 @@ class AddAclDialog < CWM::Dialog
 
   def contents
     VBox(
-        @initiator_name_input,
+      @initiator_name_input,
         @import_luns,
         HBox(
-            PushButton(Id(:cancel), _('Cancel')),
+          PushButton(Id(:cancel), _('Cancel')),
             PushButton(Id(:ok), _('OK')),
-            ),
-        )
+        ),
+    )
   end
 
   def should_open_dialog?
@@ -1261,9 +1254,9 @@ class AddAclDialog < CWM::Dialog
 
   def layout
     VBox(
-        Left(Heading(Id(:title), title)),
+      Left(Heading(Id(:title), title)),
         MinSize(70, 10, ReplacePoint(Id(:contents), Empty())),
-        )
+    )
   end
 
   def run
@@ -1274,7 +1267,6 @@ class AddAclDialog < CWM::Dialog
     info
   end
 end
-
 
 class LUNMappingTable < CWM::Table
   def initialize(initiator_name, target_name)
@@ -1426,7 +1418,6 @@ class TargetLUNNumInput < CWM::IntField
   end
 end
 
-
 class AddLUNMappingDialog < CWM::Dialog
   def initialize
     @initiator_lun_num = InitiatorLUNNumInput.new(-1)
@@ -1446,15 +1437,15 @@ class AddLUNMappingDialog < CWM::Dialog
 
   def contents
     VBox(
+      HBox(
+        @initiator_lun_num = InitiatorLUNNumInput.new(-1),
+          @target_lun_num = TargetLUNNumInput.new(-1),
+      ),
         HBox(
-            @initiator_lun_num = InitiatorLUNNumInput.new(-1),
-            @target_lun_num = TargetLUNNumInput.new(-1),
-            ),
-        HBox(
-            PushButton(Id(:ok), _('OK')),
+          PushButton(Id(:ok), _('OK')),
             PushButton(Id(:abort), _('Abort')),
-            ),
-        )
+        ),
+    )
   end
 
   def should_open_dialog?
@@ -1463,7 +1454,7 @@ class AddLUNMappingDialog < CWM::Dialog
 
   def layout
     VBox(
-        HSpacing(50),
+      HSpacing(50),
         Left(Heading(Id(:title), title)),
         VStretch(),
         VSpacing(1),
@@ -1502,14 +1493,14 @@ class EditLUNMappingWidget < CWM::CustomWidget
 
   def contents
     VBox(
-        @lun_mapping_table,
+      @lun_mapping_table,
         HBox(
-            PushButton(Id(:add), _('Add')),
+          PushButton(Id(:add), _('Add')),
             PushButton(Id(:delete), _('Delete')),
             PushButton(Id(:ok), _('OK')),
             PushButton(Id(:abort), _('Abort')),
-            ),
-        )
+        ),
+    )
   end
 
   def opt
@@ -1522,28 +1513,25 @@ class EditLUNMappingWidget < CWM::CustomWidget
 
   def handle(event)
     case event['ID']
-      when :add
-        mapping_lun_pair = @add_lun_mapping_dialog.run
-        initiator_lun_num = mapping_lun_pair[0]
-        target_lun_num = mapping_lun_pair[1]
-        if (initiator_lun_num < 0) || (target_lun_num < 0)
-          return nil
-        else
-          @lun_mapping_table.add_item(initiator_lun_num, target_lun_num)
-        end
+    when :add
+      mapping_lun_pair = @add_lun_mapping_dialog.run
+      initiator_lun_num = mapping_lun_pair[0]
+      target_lun_num = mapping_lun_pair[1]
+      if (initiator_lun_num < 0) || (target_lun_num < 0)
+        return nil
+      else
+        @lun_mapping_table.add_item(initiator_lun_num, target_lun_num)
+      end
     end
     nil
   end
 end
-
-
 
 class EditLUNMappingDialog < CWM::Dialog
   def initialize(initiator_name, target_name)
     textdomain "iscsi-lio-server"
     @lun_mapping_widget = EditLUNMappingWidget.new(initiator_name, target_name)
   end
-
 
   def wizard_create_dialog
     Yast::UI.OpenDialog(layout)
@@ -1558,8 +1546,8 @@ class EditLUNMappingDialog < CWM::Dialog
 
   def contents
     VBox(
-        @lun_mapping_widget,
-        )
+      @lun_mapping_widget,
+    )
   end
 
   def should_open_dialog?
@@ -1568,9 +1556,9 @@ class EditLUNMappingDialog < CWM::Dialog
 
   def layout
     VBox(
-        Left(Heading(Id(:title), title)),
+      Left(Heading(Id(:title), title)),
         MinSize(50, 20, ReplacePoint(Id(:contents), Empty())),
-        )
+    )
   end
 
   def run
@@ -1612,12 +1600,12 @@ class ACLInitiatorAuth < CWM::CustomWidget
 
   def contents
     VBox(
-        @auth_by_initiator,
+      @auth_by_initiator,
         HBox(
-            @mutual_user_name_input,
+          @mutual_user_name_input,
             @mutual_password_input,
-            ),
-        )
+        ),
+    )
   end
 
   def disable_input_fields
@@ -1722,12 +1710,12 @@ class ACLTargetAuth < CWM::CustomWidget
 
   def contents
     VBox(
-        @auth_by_target,
+      @auth_by_target,
         HBox(
-            @user_name_input,
+          @user_name_input,
             @password_input,
-            ),
-        )
+        ),
+    )
   end
 
   def disable_input_fields
@@ -1748,7 +1736,6 @@ class ACLTargetAuth < CWM::CustomWidget
     nil
   end
 
-
   def validate()
     username = @user_name_input.get_value.gsub(/\s+/,'')
     password = @password_input.get_value.gsub(/\s+/,'')
@@ -1757,7 +1744,7 @@ class ACLTargetAuth < CWM::CustomWidget
     initiator_name = @info[2]
     cmd = "targetcli"
     if @auth_by_target.value
-      p1 = "iscsi/" +  target_name + "/tpg" + tpg_num + "/acls/" + initiator_name + \
+      p1 = "iscsi/" + target_name + "/tpg" + tpg_num + "/acls/" + initiator_name + \
          "/ set auth userid=" + username + " password=" + password
       begin
         Cheetah.run(cmd, p1)
@@ -1840,13 +1827,13 @@ class EditAuthWidget < CWM::CustomWidget
 
   def contents
     VBox(
-        @acl_initiator_auth,
+      @acl_initiator_auth,
         @acl_target_auth,
         HBox(
-            PushButton(Id(:ok), _('OK')),
+          PushButton(Id(:ok), _('OK')),
             PushButton(Id(:abort), _('Abort')),
-            ),
-        )
+        ),
+    )
   end
 
   def opt
@@ -1881,8 +1868,8 @@ class EditAuthDialog < CWM::Dialog
 
   def contents
     VBox(
-        @edit_auth_widget,
-        )
+      @edit_auth_widget,
+    )
   end
 
   def should_open_dialog?
@@ -1891,9 +1878,9 @@ class EditAuthDialog < CWM::Dialog
 
   def layout
     VBox(
-        Left(Heading(Id(:title), title)),
+      Left(Heading(Id(:title), title)),
         MinSize(70, 15, ReplacePoint(Id(:contents), Empty())),
-        )
+    )
   end
 
   def run
@@ -1901,7 +1888,7 @@ class EditAuthDialog < CWM::Dialog
   end
 end
 
-#Class to handle initiator acls, will shown after creating or editing targets.
+# Class to handle initiator acls, will shown after creating or editing targets.
 class InitiatorACLs < CWM::CustomWidget
   def initialize(target_name, tpg_num)
     textdomain "iscsi-lio-server"
@@ -1925,17 +1912,17 @@ class InitiatorACLs < CWM::CustomWidget
 
   def contents
     VBox(
-        HBox(
-            @target_name_input,
-            @target_portal_input,
-            ),
+      HBox(
+        @target_name_input,
+          @target_portal_input,
+      ),
         @acls_table,
         HBox(
-            PushButton(Id(:add), _('Add')),
+          PushButton(Id(:add), _('Add')),
             PushButton(Id(:edit_lun), _('Edit LUN')),
             PushButton(Id(:edit_auth), _('Edit Auth')),
             PushButton(Id(:delete), _('Delete')),
-            )
+        )
     )
   end
 
@@ -1958,38 +1945,38 @@ class InitiatorACLs < CWM::CustomWidget
 
   def handle(event)
     case event["ID"]
-      when :add
-        info = @add_acl_dialog.run
-        initiator_name = info[0]
-        mapped_all_luns = info[1]
-        if (!initiator_name.empty?) &&  (initiator_name != nil)
-          item = []
-          # item[0] < 5000 means we will map all luns, item[0] > 5000 means we don't map all luns
-          if mapped_all_luns == true
-            item.push(rand(0..4999))
-          else
-            item.push(rand(5001..9999))
-          end
-          item.push(initiator_name)
-          item.push("")
-          item.push("None")
-          @acls_table.add_item(item)
+    when :add
+      info = @add_acl_dialog.run
+      initiator_name = info[0]
+      mapped_all_luns = info[1]
+      if (!initiator_name.empty?) && (initiator_name != nil)
+        item = []
+        # item[0] < 5000 means we will map all luns, item[0] > 5000 means we don't map all luns
+        if mapped_all_luns == true
+          item.push(rand(0..4999))
+        else
+          item.push(rand(5001..9999))
         end
-      when :edit_lun
-        item = @acls_table.get_selected
+        item.push(initiator_name)
+        item.push("")
+        item.push("None")
+        @acls_table.add_item(item)
+      end
+    when :edit_lun
+      item = @acls_table.get_selected
+      initiator_name = item[1]
+      edit_lun_mapping_dialog = EditLUNMappingDialog.new(initiator_name, @target_name)
+      ret = edit_lun_mapping_dialog.run
+    when :edit_auth
+      item = @acls_table.get_selected
+      if item != nil
         initiator_name = item[1]
-        edit_lun_mapping_dialog = EditLUNMappingDialog.new(initiator_name, @target_name)
-        ret = edit_lun_mapping_dialog.run
-      when :edit_auth
-        item = @acls_table.get_selected
-        if item != nil
-          initiator_name = item[1]
-          @edit_auth_dialog = EditAuthDialog.new(initiator_name, @target_name, @target_tpg)
-          @edit_auth_dialog.run
-        end
-      when :delete
-        item = @acls_table.get_selected
-        @acls_table.delete_item(item)
+        @edit_auth_dialog = EditAuthDialog.new(initiator_name, @target_name, @target_tpg)
+        @edit_auth_dialog.run
+      end
+    when :delete
+      item = @acls_table.get_selected
+      @acls_table.delete_item(item)
     end
     nil
   end
@@ -2068,7 +2055,7 @@ class AddTargetWidget < CWM::CustomWidget
     end
 
     if @mode == 'edit'
-      cmd = "targetcli iscsi/" + @target_name + "/tpg" + tpg_num   + "/ get attribute authentication"
+      cmd = "targetcli iscsi/" + @target_name + "/tpg" + tpg_num + "/ get attribute authentication"
       cmd_out = `#{cmd}`
       ret = cmd_out[15, cmd_out.length]
       if ret == "1 \n"
@@ -2085,43 +2072,43 @@ class AddTargetWidget < CWM::CustomWidget
 
   def contents
     VBox(
-        VSpacing(2),
+      VSpacing(2),
         HBox(
-            HSpacing(15),
+          HSpacing(15),
             @target_name_input_field,
             @target_identifier_input_field,
             @target_portal_group_field,
             HSpacing(15),
-            ),
+        ),
         HBox(
-            HSpacing(15),
+          HSpacing(15),
             @IP_selsection_box,
             @target_port_num_field,
             HSpacing(15),
-            ),
+        ),
         VBox(
-            HBox(
-                HSpacing(15),
-                VBox(
-                    Left(@target_bind_all_ip_checkbox,),
-                    ),
-                HSpacing(15),
-                ),
-            HBox(
-                HSpacing(15),
-                VBox(
-                    Left(@use_login_auth,),
-                    ),
-                HSpacing(15),
-                ),
-            ),
-        HBox(
+          HBox(
             HSpacing(15),
+              VBox(
+                Left(@target_bind_all_ip_checkbox,),
+              ),
+              HSpacing(15),
+          ),
+            HBox(
+              HSpacing(15),
+                VBox(
+                  Left(@use_login_auth,),
+                ),
+                HSpacing(15),
+            ),
+        ),
+        HBox(
+          HSpacing(15),
             @lun_table_widget,
             HSpacing(15),
-            ),
+        ),
         VSpacing(2),
-        )
+    )
   end
 
   def validate
@@ -2293,7 +2280,6 @@ class AddTargetWidget < CWM::CustomWidget
                    for this target. If <b>Use Login Authentication</b> is disabled, this target will work in \
                    <b>Demo Mode</b>, this means any initiators can access this target without any authentications </p>")
   end
-
 end
 
 class TargetTable < CWM::Table
@@ -2309,7 +2295,7 @@ class TargetTable < CWM::Table
     item_array = nil
     @targets = []
     @targets_names.each do |elem|
-      #We only support only one Portal Group for now.
+      # We only support only one Portal Group for now.
       @targets.push([rand(9999), elem, 1, 'Enabled'])
     end
     item_array = @targets
@@ -2361,10 +2347,10 @@ class TargetsTableWidget < CWM::CustomWidget
 
   def contents
     VBox(
-        Id(:targets_table),
+      Id(:targets_table),
         @target_table,
         HBox(
-            PushButton(Id(:add), _('Add')),
+          PushButton(Id(:add), _('Add')),
             PushButton(Id(:edit), _('Edit')),
             PushButton(Id(:delete), _('Delete'))
         )
@@ -2388,58 +2374,58 @@ class TargetsTableWidget < CWM::CustomWidget
 
   def handle(event)
     case event['ID']
-      when :add
-        @add_target_page = AddTargetWidget.new(nil)
-        contents = VBox(@add_target_page, HStretch(), VStretch())
+    when :add
+      @add_target_page = AddTargetWidget.new(nil)
+      contents = VBox(@add_target_page, HStretch(), VStretch())
+      Yast::Wizard.CreateDialog
+      ret = CWM.show(contents, caption: _('Add iSCSI Target'))
+      Yast::Wizard.CloseDialog
+      @target_table.update_table
+      info = @add_target_page.get_target_info
+      create_ACLs_dialog(info)
+    when :edit
+      target = @target_table.get_selected
+      if target != nil
+        @edit_target_page = AddTargetWidget.new(target[1])
+        contents = VBox(@edit_target_page, HStretch(), VStretch())
         Yast::Wizard.CreateDialog
-        ret = CWM.show(contents, caption: _('Add iSCSI Target'))
+        CWM.show(contents, caption: _('Edit iSCSI Target'))
         Yast::Wizard.CloseDialog
-        @target_table.update_table
-        info = @add_target_page.get_target_info
-        create_ACLs_dialog(info)
-      when :edit
-        target = @target_table.get_selected
-        if target != nil
-          @edit_target_page = AddTargetWidget.new(target[1])
-          contents = VBox(@edit_target_page, HStretch(), VStretch())
-          Yast::Wizard.CreateDialog
-          CWM.show(contents, caption: _('Edit iSCSI Target'))
-          Yast::Wizard.CloseDialog
+      end
+      @target_table.update_table
+      info = @edit_target_page.get_target_info
+      create_ACLs_dialog(info)
+    when :delete
+      cmd = 'targetcli'
+      target = @target_table.get_selected
+      if target == nil
+        return nil
+      end
+      luns_list = $target_data.get_target_list.fetch_target(target[1]).get_default_tpg.get_luns_list
+      luns_list.each do |key, value|
+        p1 = "backstores/"
+        if value[4] == "file"
+          p1 += "fileio delete " + value[2]
         end
-        @target_table.update_table
-        info = @edit_target_page.get_target_info
-        create_ACLs_dialog(info)
-      when :delete
-        cmd = 'targetcli'
-        target = @target_table.get_selected
-        if target == nil
-          return nil
+        if value[4] == "blockSpecial"
+          p1 += "block delete " + value[2]
         end
-        luns_list = $target_data.get_target_list.fetch_target(target[1]).get_default_tpg.get_luns_list
-        luns_list.each do |key, value|
-          p1 = "backstores/"
-          if value[4] == "file"
-            p1 += "fileio delete " + value[2]
-          end
-          if value[4] == "blockSpecial"
-            p1 += "block delete " + value[2]
-          end
-          Cheetah.run(cmd, p1)
+        Cheetah.run(cmd, p1)
+      end
+      p2 = 'iscsi/ delete ' + target[1]
+      begin
+        Cheetah.run(cmd, p2)
+      rescue Cheetah::ExecutionFailed => e
+        err_msg = ""
+        if e.stderr != nil
+          err_msg = _("Failed to delete target: ")
+          err_msg += (target[1] + " .")
+          err_msg += e.stderr
         end
-        p2 = 'iscsi/ delete ' + target[1]
-        begin
-          Cheetah.run(cmd, p2)
-        rescue Cheetah::ExecutionFailed => e
-          err_msg = ""
-          if e.stderr != nil
-            err_msg = _("Failed to delete target: ")
-            err_msg += (target[1] + " .")
-            err_msg += e.stderr
-          end
-          Yast::Popup.Error(err_msg)
-        end
-        $target_data.analyze
-        @target_table.update_table
+        Yast::Popup.Error(err_msg)
+      end
+      $target_data.analyze
+      @target_table.update_table
     end
     nil
   end
@@ -2520,21 +2506,20 @@ class LUNTable < CWM::Table
     self.change_items(@luns)
   end
 
-
   def validate
     failed_storage = ""
     @luns_added.each do |lun|
       cmd = 'targetcli'
       if !lun[2].empty?
         case lun[4]
-          when "file"
-            p1 = 'backstores/fileio create name=' + lun[2] + ' file_or_dev=' + lun[3]
-            p2 = 'iscsi/' + @target_name + '/tpg' + @target_tpg + "/luns/ create " + \
-                 'storage_object=/backstores/fileio/' + lun[2]
-          when "blockSpecial"
-            p1 = 'backstores/block create name=' + lun[2] + ' dev=' + lun[3]
-            p2 = 'iscsi/' + @target_name + '/tpg' + @target_tpg + "/luns/ create " + \
-                 'storage_object=/backstores/block/' + lun[2]
+        when "file"
+          p1 = 'backstores/fileio create name=' + lun[2] + ' file_or_dev=' + lun[3]
+          p2 = 'iscsi/' + @target_name + '/tpg' + @target_tpg + "/luns/ create " + \
+               'storage_object=/backstores/fileio/' + lun[2]
+        when "blockSpecial"
+          p1 = 'backstores/block create name=' + lun[2] + ' dev=' + lun[3]
+          p2 = 'iscsi/' + @target_name + '/tpg' + @target_tpg + "/luns/ create " + \
+               'storage_object=/backstores/block/' + lun[2]
         end
         # create backstores using the backstore provided in lun[4]  if lun[2] is not empty.
         begin
@@ -2563,7 +2548,7 @@ class LUNTable < CWM::Table
         end
       end
     end
-    #Pop up messages if any failures.
+    # Pop up messages if any failures.
     if !failed_storage.empty?
       err_msg = _("Failed to create LUNs with such backstores:\n") + failed_storage + \
                   _("Please check whether the backstore or LUN number is in use, name is valid.") + \
@@ -2580,7 +2565,6 @@ class LUNTable < CWM::Table
     luns = generate_items
     change_items(luns)
   end
-
 end
 
 class LunNumInput < CWM::IntField
@@ -2688,7 +2672,7 @@ class LUNPathEdit < CWM::CustomWidget
 
   def contents
     VBox(
-        @lun_path_input,
+      @lun_path_input,
         PushButton(Id(:browse), _('Browse')),
     )
   end
@@ -2734,11 +2718,11 @@ class LUNPathEdit < CWM::CustomWidget
 
   def handle(event)
     case event['ID']
-      when :browse
-        file = UI.AskForExistingFile('/', '', _('Select a file or device'))
-        unless file.nil?
-          @lun_path_input.set_value(file)
-        end
+    when :browse
+      file = UI.AskForExistingFile('/', '', _('Select a file or device'))
+      unless file.nil?
+        @lun_path_input.set_value(file)
+      end
     end
     nil
   end
@@ -2756,11 +2740,11 @@ class LUNConfig < CWM::CustomWidget
 
   def contents
     VBox(
-        @lun_num_input,
+      @lun_num_input,
         @lun_path_edit,
         @lun_name_input,
         HBox(
-            PushButton(Id(:cancel), _('Cancel')),
+          PushButton(Id(:cancel), _('Cancel')),
             PushButton(Id(:ok), _('OK'))
         )
     )
@@ -2800,7 +2784,7 @@ class LUNDetailsWidget < CWM::Dialog
 
   def contents
     VBox(
-        @lun_config
+      @lun_config
     )
   end
 
@@ -2810,7 +2794,7 @@ class LUNDetailsWidget < CWM::Dialog
 
   def layout
     VBox(
-        HSpacing(50),
+      HSpacing(50),
         Left(Heading(Id(:title), title)),
         VStretch(),
         VSpacing(1),
@@ -2842,9 +2826,9 @@ class LUNsTableWidget < CWM::CustomWidget
 
   def contents
     VBox(
-        @lun_table,
+      @lun_table,
         HBox(
-            PushButton(Id(:add), _('Add')),
+          PushButton(Id(:add), _('Add')),
             PushButton(Id(:delete), _('Delete'))
         )
     )
@@ -2874,67 +2858,67 @@ class LUNsTableWidget < CWM::CustomWidget
 
   def handle(event)
     case event['ID']
-      when :add
-        ret = @lun_details.run
-        if ret != nil
-          lun_number = ret[0]
-          lun_name = ret[1]
-          file = ret[2]
-          if !file.nil? && (File.exist?(file))
-            @lun_table.add_lun_item([rand(9999), lun_number, lun_name, file, File.stat(file).ftype])
-          end
+    when :add
+      ret = @lun_details.run
+      if ret != nil
+        lun_number = ret[0]
+        lun_name = ret[1]
+        file = ret[2]
+        if !file.nil? && (File.exist?(file))
+          @lun_table.add_lun_item([rand(9999), lun_number, lun_name, file, File.stat(file).ftype])
         end
-      when :delete
-        lun_array = @lun_table.get_selected
-        lun = lun_array[0]
-        if lun[1] == -1
-          @lun_table.table_remove_lun(lun[3])
-          return nil
-        end
-        cmd = "targetcli"
-        p1 = "backstores/"
-        if lun[4] == "file"
-          p1 += "fileio delete " + lun[2]
-        end
-        if lun[4] == "blockSpecial"
-          p1 += "block delete " + lun[2]
-        end
-        p2 = "iscsi/" + @target_name + "/tpg" + @tpg_num + "/luns/ delete lun=" + lun[1]
-        ret = nil
-        if $global_data.del_lun_warning_enable?
-          msg = _("This will immediately delete LUNs. ") + \
-              _("Please confim all initiators have logged out this target to avoid IO errors") + \
-              -("Do you want to proceed now?")
-          ret = Yast::Popup.ErrorAnyQuestion(_("Confirm"), msg, _("Yes and Don't show this again"), _("No"), :focus_yes)
-          if ret
-            $global_data.disable_warning_del_lun
-          end
-        end
-        # we will delete luns when ret == nil(not shown the warning dialog) or ret == true
+      end
+    when :delete
+      lun_array = @lun_table.get_selected
+      lun = lun_array[0]
+      if lun[1] == -1
+        @lun_table.table_remove_lun(lun[3])
+        return nil
+      end
+      cmd = "targetcli"
+      p1 = "backstores/"
+      if lun[4] == "file"
+        p1 += "fileio delete " + lun[2]
+      end
+      if lun[4] == "blockSpecial"
+        p1 += "block delete " + lun[2]
+      end
+      p2 = "iscsi/" + @target_name + "/tpg" + @tpg_num + "/luns/ delete lun=" + lun[1]
+      ret = nil
+      if $global_data.del_lun_warning_enable?
+        msg = _("This will immediately delete LUNs. ") + \
+            _("Please confim all initiators have logged out this target to avoid IO errors") + \
+            -("Do you want to proceed now?")
+        ret = Yast::Popup.ErrorAnyQuestion(_("Confirm"), msg, _("Yes and Don't show this again"), _("No"), :focus_yes)
         if ret
-          begin
-            Cheetah.run(cmd, p2)
-          rescue Cheetah::ExecutionFailed => e
-            if e.stderr != nil
-              err_msg = _("Failed to delete backstore of lun") + lun[1] + \
-                      _("Please check whether someone already did it.\n")
-              err_msg += e.stderr
-              Yast::Popup.Error(err_msg)
-            end
-          end
-
-          begin
-            Cheetah.run(cmd, p1)
-          rescue Cheetah::ExecutionFailed => e
-            if e.stderr != nil
-              err_msg = _("Failed to delete lun") + lun[1] + \
-                      _("Please check whether someone already did it.\n")
-              err_msg += e.stderr
-              Yast::Popup.Error(err_msg)
-            end
-          end
-          @lun_table.table_remove_lun(lun[3])
+          $global_data.disable_warning_del_lun
         end
+      end
+      # we will delete luns when ret == nil(not shown the warning dialog) or ret == true
+      if ret
+        begin
+          Cheetah.run(cmd, p2)
+        rescue Cheetah::ExecutionFailed => e
+          if e.stderr != nil
+            err_msg = _("Failed to delete backstore of lun") + lun[1] + \
+                    _("Please check whether someone already did it.\n")
+            err_msg += e.stderr
+            Yast::Popup.Error(err_msg)
+          end
+        end
+
+        begin
+          Cheetah.run(cmd, p1)
+        rescue Cheetah::ExecutionFailed => e
+          if e.stderr != nil
+            err_msg = _("Failed to delete lun") + lun[1] + \
+                    _("Please check whether someone already did it.\n")
+            err_msg += e.stderr
+            Yast::Popup.Error(err_msg)
+          end
+        end
+        @lun_table.table_remove_lun(lun[3])
+      end
     end
     nil
   end
