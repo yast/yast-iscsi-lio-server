@@ -190,6 +190,8 @@ module Yast
     #	**************** Target Auth	*******************
     # handle the status of discovery authentication, enable or disable, enforce = 1 or 0.
     def handleDiscAuthStatus()
+      return unless UI.WidgetExists(Id(:auth_none))
+
       no_discovery_auth = UI.QueryWidget(Id(:auth_none), :Value)
       if no_discovery_auth
         IscsiLioData.DisableDiscoveryAuth()
@@ -197,6 +199,7 @@ module Yast
         IscsiLioData.EnableDiscoveryAuth()
       end
     end
+
     # handle authentication dialog
     def handleAuth(key, event)
       event = deep_copy(event)

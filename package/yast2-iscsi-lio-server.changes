@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Feb 26 13:34:36 UTC 2019 - kanderssen@suse.com
+
+- Do not touch target discovery authentication in case the widget
+  is not present (bsc#1123381)
+- 3.2.2
+
+-------------------------------------------------------------------
 Tue May 16 10:09:07 UTC 2017 - lszhu@suse.de
 
 - fix bsc#1037819, add translation markers in adding LUN page
