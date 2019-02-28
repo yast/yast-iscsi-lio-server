@@ -260,14 +260,6 @@ Style/SpaceAroundOperators:
 
 # Offense count: 2
 # Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces, SupportedStyles.
-# SupportedStyles: space, no_space, compact
-Style/SpaceInsideHashLiteralBraces:
-  Exclude:
-    - 'test/target_data_test.rb'
-
-# Offense count: 2
-# Cop supports --auto-correct.
 Style/SpaceInsideRangeLiteral:
   Exclude:
     - 'src/include/iscsi-lio-server/TargetData.rb'
