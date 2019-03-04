@@ -18,7 +18,7 @@ Yast.import 'CWMFirewallInterfaces'
 Yast.import 'UI'
 
 class NoDiscoveryAuth_CheckBox < ::CWM::CheckBox
-  def initialize(container,value)
+  def initialize(container, value)
     textdomain "iscsi-lio-server"
     @config = value
     @container_class = container
@@ -156,7 +156,7 @@ class Auth_by_Targets_CheckBox < ::CWM::CheckBox
   end
 
   def label
-    _('Autnentication by Targets')
+    _('Authentication by Targets')
   end
 
   def init
@@ -700,8 +700,8 @@ class DiscoveryAuthWidget < CWM::CustomWidget
   def validate
     if !@no_discovery_auth_checkbox.value
       if (!@target_discovery_auth.get_status) || (!@initiator_discovery_auth.get_status)
-        err_msg = _("When Discovery Authentication is enabled.")
-        err_msg += _("Plese use Authentication by initiator and Authentication by targets together.")
+        err_msg = _("When Discovery Authentication is enabled.") + "\n"
+        err_msg += _("Please use Authentication by initiator and Authentication by targets together.")
         Yast::Popup.Error(err_msg)
         return false
       end
@@ -906,7 +906,7 @@ class IpSelectionComboBox < CWM::ComboBox
     ip_list = []
     re_ipv4 = Regexp.new(/[\d+\.]+\//)
     re_ipv6 = Regexp.new(/[\w+\:]+\//)
-    ret = Yast::Execute.locally('ip', 'a', stdout: :capture)
+    ret = Yast::Execute.locally('/sbin/ip', 'a', stdout: :capture)
     ip = ret.split("\n")
     ip.each do |line|
       line = line.strip
@@ -1065,7 +1065,7 @@ class ACLTable < CWM::Table
 
   def add_item(item)
     failed = false
-    cmd = "targetcli"
+    cmd = "/usr/bin/targetcli"
     p1 = "iscsi/" + @target_name + "/tpg" + @tpg_num.to_s + "/acls create " + item[1]
     if item[0] < 5000
       enable_auto_add_mapped_luns
@@ -1095,7 +1095,7 @@ class ACLTable < CWM::Table
 
   def delete_item(item)
     failed = false
-    cmd = "targetcli"
+    cmd = "/usr/bin/targetcli"
     p1 = "iscsi/" + @target_name + "/tpg" + @tpg_num.to_s + "/acls delete " + item[1]
     begin
       Cheetah.run(cmd, p1)
@@ -1128,7 +1128,7 @@ class ACLTable < CWM::Table
   end
 
   def enable_auto_add_mapped_luns
-    cmd = "targetcli"
+    cmd = "/usr/bin/targetcli"
     p1 = "set global auto_add_mapped_luns=true"
     begin
       Cheetah.run(cmd, p1)
@@ -1140,7 +1140,7 @@ class ACLTable < CWM::Table
   end
 
   def disable_auto_add_mapped_luns
-    cmd = "targetcli"
+    cmd = "/usr/bin/targetcli"
     p1 = "set global auto_add_mapped_luns=false"
     begin
       Cheetah.run(cmd, p1)
@@ -1332,7 +1332,7 @@ class LUNMappingTable < CWM::Table
       return false
     end
     failed_mapping_luns = []
-    cmd = 'targetcli'
+    cmd = '/usr/bin/targetcli'
     @mapping_luns_added.each do |elem|
       p1 = 'iscsi/' + @target_name + "/tpg" + @tpg_num + "/acls/" + @initiator_name + "/ create mapped_lun=" + \
       elem[1].to_s + " tpg_lun_or_backstore=" + elem[2].to_s
@@ -1632,7 +1632,7 @@ class ACLInitiatorAuth < CWM::CustomWidget
     target_name = @info[0]
     tpg_num = @info[1]
     initiator_name = @info[2]
-    cmd = "targetcli"
+    cmd = "/usr/bin/targetcli"
     if @auth_by_initiator.value
       p1 = "iscsi/" +  target_name + "/tpg" + tpg_num + "/acls/" + initiator_name + \
          "/ set auth mutual_userid=" + mutual_username + " mutual_password=" + mutual_password
@@ -1742,7 +1742,7 @@ class ACLTargetAuth < CWM::CustomWidget
     target_name = @info[0]
     tpg_num = @info[1]
     initiator_name = @info[2]
-    cmd = "targetcli"
+    cmd = "/usr/bin/targetcli"
     if @auth_by_target.value
       p1 = "iscsi/" + target_name + "/tpg" + tpg_num + "/acls/" + initiator_name + \
          "/ set auth userid=" + username + " password=" + password
@@ -1927,7 +1927,7 @@ class InitiatorACLs < CWM::CustomWidget
   end
 
   def validate
-    cmd = "targetcli iscsi/" + @target_name + "/tpg" + @target_tpg + "/ get attribute authentication"
+    cmd = "/usr/bin/targetcli iscsi/" + @target_name + "/tpg" + @target_tpg + "/ get attribute authentication"
     cmd_out = `#{cmd}`
     ret = cmd_out[15, cmd_out.length]
     if ret == "1 \n"
@@ -2055,7 +2055,7 @@ class AddTargetWidget < CWM::CustomWidget
     end
 
     if @mode == 'edit'
-      cmd = "targetcli iscsi/" + @target_name + "/tpg" + tpg_num + "/ get attribute authentication"
+      cmd = "/usr/bin/targetcli iscsi/" + @target_name + "/tpg" + tpg_num + "/ get attribute authentication"
       cmd_out = `#{cmd}`
       ret = cmd_out[15, cmd_out.length]
       if ret == "1 \n"
@@ -2115,7 +2115,7 @@ class AddTargetWidget < CWM::CustomWidget
     portal_addr = @IP_selsection_box.get_addr
     port = @target_port_num_field.get_value.to_s
     bind_all = @target_bind_all_ip_checkbox.get_value
-    cmd = 'targetcli'
+    cmd = '/usr/bin/targetcli'
     if @mode == 'new'
       p1 = 'iscsi/ create'
       if @target_name_input_field.get_value.bytesize > @iscsi_name_length_max
@@ -2359,7 +2359,7 @@ class TargetsTableWidget < CWM::CustomWidget
 
   def create_ACLs_dialog(info)
     if !info.empty?
-      cmd = "targetcli iscsi/" + info[0] + "/tpg" + info[1] + "/ get attribute authentication"
+      cmd = "/usr/bin/targetcli iscsi/" + info[0] + "/tpg" + info[1] + "/ get attribute authentication"
       cmd_out = `#{cmd}`
       ret = cmd_out[15, cmd_out.length]
       if ret == "1 \n"
@@ -2396,7 +2396,7 @@ class TargetsTableWidget < CWM::CustomWidget
       info = @edit_target_page.get_target_info
       create_ACLs_dialog(info)
     when :delete
-      cmd = 'targetcli'
+      cmd = '/usr/bin/targetcli'
       target = @target_table.get_selected
       if target == nil
         return nil
@@ -2509,7 +2509,7 @@ class LUNTable < CWM::Table
   def validate
     failed_storage = ""
     @luns_added.each do |lun|
-      cmd = 'targetcli'
+      cmd = '/usr/bin/targetcli'
       if !lun[2].empty?
         case lun[4]
         when "file"
@@ -2875,7 +2875,7 @@ class LUNsTableWidget < CWM::CustomWidget
         @lun_table.table_remove_lun(lun[3])
         return nil
       end
-      cmd = "targetcli"
+      cmd = "/usr/bin/targetcli"
       p1 = "backstores/"
       if lun[4] == "file"
         p1 += "fileio delete " + lun[2]

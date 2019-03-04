@@ -29,7 +29,7 @@ describe TargetData do
     before do
       allow(Yast::Execute).to receive(:locally!).and_return(execute_object)
 
-      allow(execute_object).to receive(:stdout).with("targetcli", "ls").and_return(output)
+      allow(execute_object).to receive(:stdout).with("/usr/bin/targetcli", "ls").and_return(output)
     end
 
     let(:execute_object) { Yast::Execute.new }
@@ -46,16 +46,16 @@ describe TargetData do
       let(:output) { fixture("ls-typical") }
 
       before do
-        allow(execute_object).to receive(:stdout).with("targetcli", acl, "get", "auth", "userid")
+        allow(execute_object).to receive(:stdout).with("/usr/bin/targetcli", acl, "get", "auth", "userid")
           .and_return("userid=teddybear")
 
-        allow(execute_object).to receive(:stdout).with("targetcli", acl, "get", "auth", "password")
+        allow(execute_object).to receive(:stdout).with("/usr/bin/targetcli", acl, "get", "auth", "password")
           .and_return("password=plush")
 
-        allow(execute_object).to receive(:stdout).with("targetcli", acl, "get", "auth", "mutual_userid")
+        allow(execute_object).to receive(:stdout).with("/usr/bin/targetcli", acl, "get", "auth", "mutual_userid")
           .and_return("mutual_userid=foo")
 
-        allow(execute_object).to receive(:stdout).with("targetcli", acl, "get", "auth", "mutual_password")
+        allow(execute_object).to receive(:stdout).with("/usr/bin/targetcli", acl, "get", "auth", "mutual_password")
           .and_return("mutual_password=bar")
       end
 
