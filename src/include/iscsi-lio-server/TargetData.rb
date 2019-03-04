@@ -512,6 +512,8 @@ private
 end
 
 class DiscoveryAuth
+  include Yast::Logger
+
   def initialize
     @discovery_auth = {}
   end
@@ -521,12 +523,7 @@ class DiscoveryAuth
   end
 
   def fetch_status
-    ret = @discovery_auth.fetch("status")
-    if ret == "False \n"
-      false
-    else
-      true
-    end
+    @discovery_auth.fetch("status")
   end
 
   def store_userid(userid)
@@ -561,31 +558,47 @@ class DiscoveryAuth
     @discovery_auth.fetch("mutual_password")
   end
 
+  # Query discovery authentication data from the system and store the
+  # data in the object.
   def analyze
-    cmd = "targetcli iscsi/ get discovery_auth enable"
-    cmd_out = `#{cmd}`
-    status = cmd_out[7,cmd_out.length]
-    store_status(status)
+    restricted_recorder = RestrictedRecorder.new(Yast::Y2Logger.instance)
+    output = Yast::Execute.locally!("/usr/bin/targetcli", "iscsi/ get discovery_auth enable userid "\
+      "password mutual_userid mutual_password", stdout: :capture, recorder: restricted_recorder)
 
-    cmd = "targetcli iscsi/ get discovery_auth userid"
-    cmd_out = `#{cmd}`
-    userid = cmd_out[7,cmd_out.length]
-    store_userid(userid)
+    lines = output.split("\n")
 
-    cmd = "targetcli iscsi/ get discovery_auth password"
-    cmd_out = `#{cmd}`
-    password = cmd_out[9,cmd_out.length]
-    store_password(password)
+    analyze_lines(lines, "enable=") { |value| store_status(value.strip == "True") }
+    analyze_lines(lines, "userid=") { |value| store_userid(value) }
+    analyze_lines(lines, "password=") { |value| store_password(value) }
+    analyze_lines(lines, "mutual_userid=") { |value| store_mutual_userid(value) }
+    analyze_lines(lines, "mutual_password=") { |value| store_mutual_password(value) }
+  end
 
-    cmd = "targetcli iscsi/ get discovery_auth mutual_userid"
-    cmd_out = `#{cmd}`
-    mutual_userid = cmd_out[14,cmd_out.length]
-    store_mutual_userid(mutual_userid)
+private
 
-    cmd = "targetcli iscsi/ get discovery_auth mutual_password"
-    cmd_out = `#{cmd}`
-    mutual_password = cmd_out[16,cmd_out.length]
-    store_mutual_password(mutual_password)
+  # A recorder for Cheetah that does not record stdout. Useful if stdout
+  # contains passwords.
+  class RestrictedRecorder < Cheetah::DefaultRecorder
+    def initialize(logger)
+      super(logger)
+    end
+
+    def record_stdout(stdout)
+    end
+  end
+
+  # Analyze the discovery authentication lines by searching for a line
+  # starting with needle and execute block for the value found in that
+  # line. If the needle is not found raises an exception.
+  def analyze_lines(lines, needle, &block)
+    line = lines.find { |tmp| tmp.start_with?(needle) }
+    if line.nil?
+      log.error "needle '#{needle}' not found"
+      raise "Failed to locate discovery authentication information in targetcli output."
+    end
+
+    value = line[needle.length, line.length - needle.length]
+    block.call(value)
   end
 end
 
