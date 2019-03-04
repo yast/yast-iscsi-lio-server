@@ -32,7 +32,7 @@ class Backstores
   end
 
   def analyze
-    @output = Yast::Execute.locally("targetcli", "backstores/ ls", stdout: :capture)
+    @output = Yast::Execute.locally("/usr/bin/targetcli", "backstores/ ls", stdout: :capture)
     @backstores_output = @output.split("\n")
     @backstores_output.each do |line|
       if @backstore_path = RE_BACKSTORE_PATH.match(line)
@@ -383,7 +383,7 @@ class TargetData
   def analyze
     # We need to re-new @target_list, because something may be deleted
     @targets_list = TargetList.new
-    @target_outout = Yast::Execute.locally!.stdout("targetcli", "ls").split("\n")
+    @target_outout = Yast::Execute.locally!.stdout("/usr/bin/targetcli", "ls").split("\n")
     @target_outout.each do |line|
       # handle iqn targets here.
       if RE_IQN_TARGET.match(line)
@@ -507,7 +507,7 @@ private
   def acl_auth_info(data)
     acl = "iscsi/#{@current_target.fetch_target_name}/tpg#{@current_tpg.fetch_tpg_number}/acls/#{@initiator_name}/"
 
-    Yast::Execute.locally!.stdout("targetcli", acl, "get", "auth", data).split("=", 2).last
+    Yast::Execute.locally!.stdout("/usr/bin/targetcli", acl, "get", "auth", data).split("=", 2).last
   end
 end
 
@@ -608,7 +608,7 @@ class Global
   end
 
   def execute_init_commands
-    cmd = "targetcli"
+    cmd = "/usr/bin/targetcli"
     commands = [
       "set global auto_add_mapped_luns=false",
       "set global auto_add_default_portal=false"
@@ -624,7 +624,7 @@ class Global
   end
 
   def execute_exit_commands
-    cmd = "targetcli"
+    cmd = "/usr/bin/targetcli"
     commands = [
       "saveconfig",
     ]
