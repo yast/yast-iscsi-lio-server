@@ -563,11 +563,12 @@ class DiscoveryAuth
   def analyze
     restricted_recorder = RestrictedRecorder.new(Yast::Y2Logger.instance)
     output = Yast::Execute.locally!("/usr/bin/targetcli", "iscsi/ get discovery_auth enable userid "\
-      "password mutual_userid mutual_password", stdout: :capture, recorder: restricted_recorder)
+      "password mutual_userid mutual_password", stdout: :capture, recorder: restricted_recorder,
+      env: { "LC_ALL" => "C", "LANGUAGE" => "C" })
 
     lines = output.split("\n")
 
-    analyze_lines(lines, "enable=") { |value| store_status(value.strip == "True") }
+    analyze_lines(lines, "enable=") { |value| store_status(value.strip.casecmp("true") == 0) }
     analyze_lines(lines, "userid=") { |value| store_userid(value) }
     analyze_lines(lines, "password=") { |value| store_password(value) }
     analyze_lines(lines, "mutual_userid=") { |value| store_mutual_userid(value) }
