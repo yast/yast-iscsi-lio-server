@@ -17,6 +17,7 @@ missing
 *.ami
 .dep
 doc/autodocs/*.html
+doc/autodocs/*/*.html
 doc/autodocs/*.tmp
 doc/autodocs/.yardoc
 doc/autodocs/css
