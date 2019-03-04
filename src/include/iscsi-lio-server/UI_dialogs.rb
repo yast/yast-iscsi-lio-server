@@ -18,7 +18,7 @@ Yast.import 'CWMFirewallInterfaces'
 Yast.import 'UI'
 
 class NoDiscoveryAuth_CheckBox < ::CWM::CheckBox
-  def initialize(container,value)
+  def initialize(container, value)
     textdomain "iscsi-lio-server"
     @config = value
     @container_class = container
@@ -156,7 +156,7 @@ class Auth_by_Targets_CheckBox < ::CWM::CheckBox
   end
 
   def label
-    _('Autnentication by Targets')
+    _('Authentication by Targets')
   end
 
   def init
@@ -700,8 +700,8 @@ class DiscoveryAuthWidget < CWM::CustomWidget
   def validate
     if !@no_discovery_auth_checkbox.value
       if (!@target_discovery_auth.get_status) || (!@initiator_discovery_auth.get_status)
-        err_msg = _("When Discovery Authentication is enabled.")
-        err_msg += _("Plese use Authentication by initiator and Authentication by targets together.")
+        err_msg = _("When Discovery Authentication is enabled.") + "\n"
+        err_msg += _("Please use Authentication by initiator and Authentication by targets together.")
         Yast::Popup.Error(err_msg)
         return false
       end
