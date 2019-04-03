@@ -9,13 +9,15 @@ environment.
 Best seems to be to setup a dedicated vm to serve as target and to use another one
 as initiator.
 
-On the target, install `yast2-iscsi-lio-server` and `targetcli`.
+On the target, install packages `yast2-iscsi-lio-server` and `targetcli` (SLE-12)
+resp. `python3-targetcli-fb` (SLE-15).
 
 The initiator needs `open-iscsi` (and `yast2-iscsi-client`); both should
 be installed by default.
 
-Read the SLES12 documentation on how to setup things
-[Mass Storage over IP Networks: iSCSI](https://www.suse.com/documentation/sles-12/stor_admin/data/cha_iscsi.html)
+Read the documentation on how to setup things: 'Mass Storage over IP Networks: iSCSI' for
+[SLE-12](https://www.suse.com/documentation/sles-12/stor_admin/data/cha_iscsi.html) or
+[SLE-15](https://www.suse.com/documentation/sles-15/book_storage/data/cha_iscsi.html).
 
 *Note that you must know the initiator name when creating the target config.
 You can't just connect 'something' to the target. So look it up on your
@@ -27,21 +29,36 @@ For first steps, use `yast2 iscsi-lio-server`.
 
 *Disable firewall or open the iscsi port (3260).*
 
-*When you setup a vm with dhcp, make sure you have a stable ip address, else it
-will drive you mad, as the target ip is part of the config - see last step in the
-`targetcli` example below.*
+> SLE-12 only
+>
+> When you setup a vm with dhcp, make sure you have a stable ip address, else it
+> will drive you mad, as the target ip is part of the config - see last step in the
+> `targetcli` example below.
+>
+> *For me, `/etc/target/lio_setup.sh` always failed when run the very first time
+> (the initial `mkdir` in the script fails), restarting the `target` service helped.*
 
 The iscsi target is handled by kernel modules. Config goes to `/sys/kernel/config/target/iscsi/`.
-But `/etc/target/` holds generated scripts that take care of kernel space modifications. 
 
-[*For me, `/etc/target/lio_setup.sh` always failed when run the very first time
-(the initial `mkdir` in the script fails), restarting the `target` service helped.*]
+On SLE-12 `/etc/target/lio_setup.sh` is a generated shell script that takes
+care of kernel space modifications.
 
-Check that things work: `systemctl status target`.
+On SLE-15 the config is stored in a JSON file `/etc/target/saveconfig.json`. Old (up to 10)
+versions of this file are kept in `/etc/target/backup/`.
 
-Instead of yast: use `targetcli` for config. `targetcli` is a rather
+Check that things work: `systemctl status target` (SLE-12) resp. `systemctl status targetcli` (SLE-15).
+
+Instead of `yast2 iscsi-lio-server` you can use `targetcli` for config. `targetcli` is a rather
 peculiar tool. You basically navigate through a virtual filesystem (Use `ls` often!).
-Basic syntax is `[PATH] CMD ARGS`. Just watch examples below.
+Basic syntax is `[PATH] COMMAND ARGS`. Just watch examples below.
+
+> Note that not all COMMANDs are available in all PATHs.
+
+Alternatively you can supply arguments to `targetcli` directly, like
+
+```sh
+targetcli /iscsi set discovery_auth enable=0
+```
 
 Here's how to setup a target with it. Run `targetcli`, then
 
@@ -81,9 +98,20 @@ set attribute authentication=0
 
 At this point the iscsi initiator should see the device (check with `iscsiadm -m discovery ...`).
 
-To make changes persistent, stop the `target` service. This will `update /etc/target/lio_setup.sh`.
+> Note SLE-15
+>
+> While you have to set boolean config variables with `set xxx enable=0|1`, `targetcli` reports the setting
+> with `'True'` or `'False'`.
+
+To make changes persistent, on SLE-12 you have to stop the `target` service.
+This will update `/etc/target/lio_setup.sh`.
+
+On SLE-15, the config is auto-updated when you `exit` from `targetcli` or
+call `targetcli / saveconfig` directly.
 
 ``` sh
+# only needed for SLE-12
+#
 systemctl stop target
 systemctl start target
 ```
@@ -94,13 +122,15 @@ A multipath setup uses several servers but the same WWN
 (`iqn.2003-01.org.linux-iscsi.e111.x8664:sn.18436556ef11` in the example above).
 Note that `create` accepts a WWN as argument.
 
-If you decide to simply clone the virtual machine don't forget that the
-config is stored in `/etc/target/lio_setup.sh` and contains the IP address of the
-server. Replace it with the real IP address before starting the `target` service.
-
-> If you inadvertently started with the wrong IP still in the config the `target` service will fail. Do **NOT**
+> Note SLE-12
+>
+> If you decide to simply clone the virtual machine don't forget that the
+> config is stored in `/etc/target/lio_setup.sh` and contains the IP address of the
+> server. Replace it with the real IP address before starting the `target` service.
+>
+> *If you inadvertently started with the wrong IP still in the config the `target` service will fail. Do **NOT**
 > stop the service as that will overwrite `lio_setup.sh` with the half-done broken setup. Instead make a backup copy
-> of `lio_setup.sh` before stopping the service.
+> of `lio_setup.sh` before stopping the service.*
 
 ## iscsi initiator setup
 

@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue Apr  2 12:48:33 UTC 2019 - snwint@suse.com
+
+- update iscsi config changes between SLE-12 and SLE-15 (bsc#1129971)
+
+-------------------------------------------------------------------
 Mon Mar 04 10:34:15 CET 2019 - aschnell@suse.com
 
 - added error handling for loading discovery authentication data
