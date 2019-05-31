@@ -12,15 +12,18 @@
 # license that conforms to the Open Source Definition (Version 1.9)
 # published by the Open Source Initiative.
 
-# Please submit bugfixes or comments via http://bugs.opensuse.org/
+# Please submit bugfixes or comments via https://bugs.opensuse.org/
 #
 
 
 Name:           yast2-iscsi-lio-server
 Version:        4.1.6
 Release:        0
+Summary:        Configuration of iSCSI LIO target
+License:        GPL-2.0-only
+Group:          System/YaST
+Url:            https://github.com/yast/yast-iscsi-lio-server
 
-BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Source0:        %{name}-%{version}.tar.bz2
 
 BuildRequires:  update-desktop-files
@@ -29,41 +32,36 @@ BuildRequires:  yast2 >= 4.1.42
 BuildRequires:  yast2-devtools >= 3.1.10
 BuildRequires:  rubygem(%rb_default_ruby_abi:rspec)
 BuildRequires:  rubygem(%rb_default_ruby_abi:yast-rake)
+
 Requires:       python3-configshell-fb
 Requires:       python3-rtslib-fb
 Requires:       python3-targetcli-fb
-
 # Yast2::Execute.stdout
 Requires:       yast2 >= 4.1.42
-
-BuildArch:      noarch
-
 Requires:       yast2-ruby-bindings >= 1.0.0
 
-Summary:        Configuration of iSCSI LIO target
-License:        GPL-2.0-only
-Group:          System/YaST
+BuildArch:      noarch
 
 %description
 This package contains configuration of iSCSI LIO target
 
 %prep
-%setup -n %{name}-%{version}
+%setup -q
 
 %build
 
 %check
-rake test:unit
+%yast_check
 
 %install
-rake install DESTDIR="%{buildroot}"
+%yast_install
+%yast_metainfo
 
 %files
-%defattr(-,root,root)
-%dir %{yast_yncludedir}/iscsi-lio-server
-%{yast_yncludedir}/iscsi-lio-server/*
-%{yast_clientdir}/iscsi-lio-server.rb
-%{yast_desktopdir}/iscsi-lio-server.desktop
+%{yast_yncludedir}
+%{yast_clientdir}
+%{yast_desktopdir}
+%{yast_metainfodir}
 %doc %{yast_docdir}
 %{yast_icondir}
 %license COPYING
