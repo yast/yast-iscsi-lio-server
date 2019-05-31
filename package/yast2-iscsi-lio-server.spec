@@ -17,7 +17,7 @@
 
 
 Name:           yast2-iscsi-lio-server
-Version:        4.1.6
+Version:        4.2.0
 Release:        0
 Summary:        Configuration of iSCSI LIO target
 License:        GPL-2.0-only
