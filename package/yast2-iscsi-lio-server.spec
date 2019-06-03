@@ -29,7 +29,7 @@ Source0:        %{name}-%{version}.tar.bz2
 BuildRequires:  update-desktop-files
 # Yast2::Execute.stdout
 BuildRequires:  yast2 >= 4.1.42
-BuildRequires:  yast2-devtools >= 3.1.10
+BuildRequires:  yast2-devtools >= 4.2.2
 BuildRequires:  rubygem(%rb_default_ruby_abi:rspec)
 BuildRequires:  rubygem(%rb_default_ruby_abi:yast-rake)
 
