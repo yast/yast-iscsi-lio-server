@@ -18,7 +18,8 @@ X-SuSE-YaST-Keywords=iscsi,lio,network,system
 
 Icon=yast-iscsi-server
 Exec=xdg-su -c "/sbin/yast2 iscsi-lio-server" 
-Name=iSCSI LIO Target
-GenericName=Configure an iSCSI target via LIO
+Name=YaST iSCSI LIO Target
+GenericName=iSCSI LIO Target
+Comment=Configure an iSCSI target via LIO
 X-KDE-SubstituteUID=true
 StartupNotify=true
