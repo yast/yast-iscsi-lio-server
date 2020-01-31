@@ -808,6 +808,7 @@ end
 
 class TargetIdentifierInput < CWM::InputField
   def initialize(str)
+    textdomain "iscsi-lio-server"
     @config = str.downcase
   end
 
@@ -891,6 +892,7 @@ end
 
 class IpSelectionComboBox < CWM::ComboBox
   def initialize
+    textdomain "iscsi-lio-server"
     @addr = generate_items
     @config = "0.0.0.0"
   end
@@ -1420,6 +1422,7 @@ end
 
 class AddLUNMappingDialog < CWM::Dialog
   def initialize
+    textdomain "iscsi-lio-server"
     @initiator_lun_num = InitiatorLUNNumInput.new(-1)
     @target_lun_num = TargetLUNNumInput.new(-1)
   end
@@ -1852,6 +1855,7 @@ end
 # This class used to edit initiator / target auth, not global
 class EditAuthDialog < CWM::Dialog
   def initialize(initiator_name, target_name, tpg)
+    textdomain "iscsi-lio-server"
     @edit_auth_widget = EditAuthWidget.new(initiator_name, target_name, tpg)
   end
 
@@ -2596,6 +2600,7 @@ end
 
 class LUNPathInput < CWM::InputField
   def initialize(str)
+    textdomain "iscsi-lio-server"
     @config = str
   end
 
