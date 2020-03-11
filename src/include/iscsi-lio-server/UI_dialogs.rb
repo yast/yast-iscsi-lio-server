@@ -413,6 +413,7 @@ module Yast
       self.initial = true
       @service = Yast2::SystemService.find("targetcli")
       @service_widget = ::CWM::ServiceWidget.new(@service)
+      @service_widget.default_action = :restart if @service.currently_active?
       @firewall_widget = ::CWM::WrapperWidget.new(
         CWMFirewallInterfaces.CreateOpenFirewallWidget("services" => ["iscsi-target"]),
       )
