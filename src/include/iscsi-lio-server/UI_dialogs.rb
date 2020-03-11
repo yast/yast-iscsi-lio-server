@@ -18,9 +18,8 @@ Yast.import 'CWMFirewallInterfaces'
 Yast.import 'UI'
 
 class DiscoveryAuth_CheckBox < ::CWM::CheckBox
-  def initialize(container, value)
+  def initialize(container)
     textdomain "iscsi-lio-server"
-    @config = value
     @container_class = container
   end
 
@@ -29,15 +28,16 @@ class DiscoveryAuth_CheckBox < ::CWM::CheckBox
   end
 
   def init
-    self.value = @config
+    self.value = $discovery_auth.fetch_status
+    handle
   end
 
   def store
-    $discovery_auth.store_status(!self.value)
+    $discovery_auth.store_status(value)
   end
 
   def handle
-    if self.value
+    if value
       @container_class.enable_discovery_auth_widgets
     else
       @container_class.disable_discovery_auth_widgets
@@ -516,6 +516,14 @@ class TargetAuthDiscovery < CWM::CustomWidget
     true
   end
 
+  def init
+    username = $discovery_auth.fetch_userid().gsub(/\s+/,'')
+    password = $discovery_auth.fetch_password().gsub(/\s+/,'')
+    @user_name_input.value = username
+    @password_input.value = password
+  end
+
+
   def store
     username = @user_name_input.get_value.gsub(/\s+/,'')
     password = @password_input.get_value.gsub(/\s+/,'')
@@ -566,6 +574,13 @@ class InitiatorAuthDiscovery < CWM::CustomWidget
     @mutual_password_input.enable
   end
 
+  def init
+    mutual_username = $discovery_auth.fetch_mutual_userid().gsub(/\s+/,'')
+    mutual_password = $discovery_auth.fetch_mutual_password().gsub(/\s+/,'')
+    @mutual_user_name_input.value = mutual_username
+    @mutual_password_input.value = mutual_password
+  end
+
   def opt
     [:notify]
   end
@@ -604,16 +619,9 @@ class DiscoveryAuthWidget < CWM::CustomWidget
     textdomain "iscsi-lio-server"
     $discovery_auth.analyze
     @status = $discovery_auth.fetch_status
-    @discovery_auth_checkbox = DiscoveryAuth_CheckBox.new(self, @status)
+    @discovery_auth_checkbox = DiscoveryAuth_CheckBox.new(self)
     @target_discovery_auth = TargetAuthDiscovery.new(@status)
     @initiator_discovery_auth = InitiatorAuthDiscovery.new(@status)
-    self.handle_all_events = true
-  end
-
-  def init
-    if @status == false
-      disable_discovery_auth_widgets
-    end
   end
 
   def disable_discovery_auth_widgets
@@ -644,10 +652,6 @@ class DiscoveryAuthWidget < CWM::CustomWidget
         ),
         VSpacing(5),
     )
-  end
-
-  def opt
-    [:notify]
   end
 end
 
