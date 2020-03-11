@@ -1968,9 +1968,11 @@ class InitiatorACLs < CWM::CustomWidget
       end
     when :edit_lun
       item = @acls_table.get_selected
-      initiator_name = item[1]
-      edit_lun_mapping_dialog = EditLUNMappingDialog.new(initiator_name, @target_name)
-      ret = edit_lun_mapping_dialog.run
+      if item
+        initiator_name = item[1]
+        edit_lun_mapping_dialog = EditLUNMappingDialog.new(initiator_name, @target_name)
+        ret = edit_lun_mapping_dialog.run
+      end
     when :edit_auth
       item = @acls_table.get_selected
       if item != nil
@@ -2389,13 +2391,13 @@ class TargetsTableWidget < CWM::CustomWidget
       create_ACLs_dialog(info)
     when :edit
       target = @target_table.get_selected
-      if target != nil
-        @edit_target_page = AddTargetWidget.new(target[1])
-        contents = VBox(@edit_target_page, HStretch(), VStretch())
-        Yast::Wizard.CreateDialog
-        CWM.show(contents, caption: _('Edit iSCSI Target'))
-        Yast::Wizard.CloseDialog
-      end
+      return unless target
+
+      @edit_target_page = AddTargetWidget.new(target[1])
+      contents = VBox(@edit_target_page, HStretch(), VStretch())
+      Yast::Wizard.CreateDialog
+      CWM.show(contents, caption: _('Edit iSCSI Target'))
+      Yast::Wizard.CloseDialog
       @target_table.update_table
       info = @edit_target_page.get_target_info
       create_ACLs_dialog(info)
