@@ -485,15 +485,14 @@ class TargetAuthDiscovery < CWM::CustomWidget
 
   def contents
     HBox(
-      HSpacing(25),
         VBox(
-          Left(@auth_by_target,),
-            HBox(
-              @user_name_input,
-                @password_input,
-            ),
+          Left(@auth_by_target),
+          HBox(
+            @user_name_input,
+            HSpacing(2),
+            @password_input,
+          ),
         ),
-        HSpacing(25),
     )
   end
 
@@ -569,15 +568,14 @@ class InitiatorAuthDiscovery < CWM::CustomWidget
 
   def contents
     HBox(
-      HSpacing(25),
-        VBox(
-          Left(@auth_by_initiator,),
-            HBox(
-              @mutual_user_name_input,
-                @mutual_password_input,
-            ),
+      VBox(
+        Left(@auth_by_initiator),
+        HBox(
+          @mutual_user_name_input,
+          HSpacing(2),
+          @mutual_password_input,
         ),
-        HSpacing(25),
+      ),
     )
   end
 
@@ -677,17 +675,15 @@ class DiscoveryAuthWidget < CWM::CustomWidget
       VSpacing(5),
         VBox(
           VSpacing(2),
-            Left(
-              HBox(
-                HSpacing(25),
-                  @no_discovery_auth_checkbox,
-                  HSpacing(25),
-              )
-            ),
-            VSpacing(1),
-            @target_discovery_auth,
-            @initiator_discovery_auth,
-            VSpacing(2),
+          Left(
+            HBox(
+              @no_discovery_auth_checkbox,
+            )
+          ),
+          VSpacing(1),
+          @target_discovery_auth,
+          @initiator_discovery_auth,
+          VSpacing(2),
         ),
         VSpacing(5),
     )
@@ -723,9 +719,12 @@ class GlobalTab < ::CWM::Tab
 
   def contents
     VBox(
-      HStretch(),
-        VStretch(),
+      HBox(
+        HSpacing(1),
         @discovery_auth,
+        HSpacing(1)
+      ),
+      VStretch(),
     )
   end
 
@@ -754,8 +753,8 @@ class TargetsTab < ::CWM::Tab
   def contents
     VBox(
       HStretch(),
-        VStretch(),
-        @target_table_widget
+      VStretch(),
+      @target_table_widget
     )
   end
 
@@ -1242,11 +1241,11 @@ class AddAclDialog < CWM::Dialog
   def contents
     VBox(
       @initiator_name_input,
-        @import_luns,
-        HBox(
-          PushButton(Id(:cancel), _('Cancel')),
-            PushButton(Id(:ok), _('OK')),
-        ),
+      @import_luns,
+      HBox(
+        PushButton(Id(:cancel), _('Cancel')),
+        PushButton(Id(:ok), _('OK'))
+      )
     )
   end
 
@@ -1604,10 +1603,10 @@ class ACLInitiatorAuth < CWM::CustomWidget
   def contents
     VBox(
       @auth_by_initiator,
-        HBox(
-          @mutual_user_name_input,
-            @mutual_password_input,
-        ),
+      HBox(
+        @mutual_user_name_input,
+        @mutual_password_input
+      )
     )
   end
 
@@ -1714,10 +1713,10 @@ class ACLTargetAuth < CWM::CustomWidget
   def contents
     VBox(
       @auth_by_target,
-        HBox(
-          @user_name_input,
-            @password_input,
-        ),
+      HBox(
+        @user_name_input,
+        @password_input
+      )
     )
   end
 
@@ -1831,11 +1830,11 @@ class EditAuthWidget < CWM::CustomWidget
   def contents
     VBox(
       @acl_initiator_auth,
-        @acl_target_auth,
-        HBox(
-          PushButton(Id(:ok), _('OK')),
-            PushButton(Id(:abort), _('Abort')),
-        ),
+      @acl_target_auth,
+      HBox(
+        PushButton(Id(:ok), _('OK')),
+        PushButton(Id(:abort), _('Abort'))
+      )
     )
   end
 
