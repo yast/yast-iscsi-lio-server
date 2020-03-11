@@ -17,7 +17,7 @@ Yast.import 'Wizard'
 Yast.import 'CWMFirewallInterfaces'
 Yast.import 'UI'
 
-class NoDiscoveryAuth_CheckBox < ::CWM::CheckBox
+class DiscoveryAuth_CheckBox < ::CWM::CheckBox
   def initialize(container, value)
     textdomain "iscsi-lio-server"
     @config = value
@@ -25,7 +25,7 @@ class NoDiscoveryAuth_CheckBox < ::CWM::CheckBox
   end
 
   def label
-    _('No Discovery Authentication')
+    _('Discovery Authentication')
   end
 
   def init
@@ -33,14 +33,14 @@ class NoDiscoveryAuth_CheckBox < ::CWM::CheckBox
   end
 
   def store
-    $discovery_auth.store_status(self.value)
+    $discovery_auth.store_status(!self.value)
   end
 
   def handle
     if self.value
-      @container_class.disable_discovery_auth_widgets
-    else
       @container_class.enable_discovery_auth_widgets
+    else
+      @container_class.disable_discovery_auth_widgets
     end
     nil
   end
@@ -477,33 +477,20 @@ class TargetAuthDiscovery < CWM::CustomWidget
     textdomain "iscsi-lio-server"
     username = $discovery_auth.fetch_userid.gsub(/\s+/,'')
     password = $discovery_auth.fetch_password.gsub(/\s+/,'')
-    @auth_by_target = Auth_by_Targets_CheckBox.new(self, value)
     @user_name_input = UserName.new(username)
     @password_input = Password.new(password)
     self.handle_all_events = true
   end
 
   def contents
-    HBox(
-        VBox(
-          Left(@auth_by_target),
-          HBox(
-            @user_name_input,
-            HSpacing(2),
-            @password_input,
-          ),
-        ),
+    Frame(
+      _('Authentication by Targets'),
+      HBox(
+        @user_name_input,
+        HSpacing(2),
+        @password_input,
+      )
     )
-  end
-
-  def disable_checkbox
-    @auth_by_target.set_value(false)
-    @auth_by_target.disable
-  end
-
-  def enable_checkbox
-    @auth_by_target.enable
-    @auth_by_target.value = true
   end
 
   def disable_input_fields
@@ -516,22 +503,15 @@ class TargetAuthDiscovery < CWM::CustomWidget
     @password_input.enable
   end
 
-  def get_status
-    @auth_by_target.value
-  end
-
   def opt
     [:notify]
   end
 
   def validate
-    status = @auth_by_target.get_value
-    if status
-      if (@user_name_input.get_value == " \n") || (@password_input.get_value == " \n")
-        err_msg = _("Please use username and password in pair.")
-        Yast::Popup.Error(err_msg)
-        return false
-      end
+    if (@user_name_input.get_value == " \n") || (@password_input.get_value == " \n")
+      err_msg = _("Please use username and password in pair.")
+      Yast::Popup.Error(err_msg)
+      return false
     end
     true
   end
@@ -558,7 +538,6 @@ class InitiatorAuthDiscovery < CWM::CustomWidget
   include Yast::Logger
   def initialize(value)
     textdomain "iscsi-lio-server"
-    @auth_by_initiator = Auth_by_Initiators_CheckBox.new(self, value)
     mutual_username = $discovery_auth.fetch_mutual_userid().gsub(/\s+/,'')
     mutual_password = $discovery_auth.fetch_mutual_password().gsub(/\s+/,'')
     @mutual_user_name_input = MutualUserName.new(mutual_username)
@@ -567,26 +546,14 @@ class InitiatorAuthDiscovery < CWM::CustomWidget
   end
 
   def contents
-    HBox(
-      VBox(
-        Left(@auth_by_initiator),
-        HBox(
-          @mutual_user_name_input,
-          HSpacing(2),
-          @mutual_password_input,
-        ),
-      ),
+    Frame(
+      _("Authentication by Initiators"),
+      HBox(
+        @mutual_user_name_input,
+        HSpacing(2),
+        @mutual_password_input,
+      )
     )
-  end
-
-  def disable_checkbox
-    @auth_by_initiator.set_value(false)
-    @auth_by_initiator.disable
-  end
-
-  def enable_checkbox
-    @auth_by_initiator.enable
-    @auth_by_initiator.value = true
   end
 
   def disable_input_fields
@@ -599,22 +566,15 @@ class InitiatorAuthDiscovery < CWM::CustomWidget
     @mutual_password_input.enable
   end
 
-  def get_status
-    @auth_by_initiator.value
-  end
-
   def opt
     [:notify]
   end
 
   def validate
-    status = @auth_by_initiator.get_value
-    if status
-      if (@mutual_user_name_input.get_value == " \n") || (@mutual_password_input.get_value == " \n")
-        err_msg = _("Please use mutual_username and mutual_password in pair.")
-        Yast::Popup.Error(err_msg)
-        return false
-      end
+    if (@mutual_user_name_input.get_value == " \n") || (@mutual_password_input.get_value == " \n")
+      err_msg = _("Please use mutual_username and mutual_password in pair.")
+      Yast::Popup.Error(err_msg)
+      return false
     end
     true
   end
@@ -644,7 +604,7 @@ class DiscoveryAuthWidget < CWM::CustomWidget
     textdomain "iscsi-lio-server"
     $discovery_auth.analyze
     @status = $discovery_auth.fetch_status
-    @no_discovery_auth_checkbox = NoDiscoveryAuth_CheckBox.new(self, !@status)
+    @discovery_auth_checkbox = DiscoveryAuth_CheckBox.new(self, @status)
     @target_discovery_auth = TargetAuthDiscovery.new(@status)
     @initiator_discovery_auth = InitiatorAuthDiscovery.new(@status)
     self.handle_all_events = true
@@ -657,16 +617,12 @@ class DiscoveryAuthWidget < CWM::CustomWidget
   end
 
   def disable_discovery_auth_widgets
-    @target_discovery_auth.disable_checkbox
     @target_discovery_auth.disable_input_fields
-    @initiator_discovery_auth.disable_checkbox
     @initiator_discovery_auth.disable_input_fields
   end
 
   def enable_discovery_auth_widgets
-    @target_discovery_auth.enable_checkbox
     @target_discovery_auth.enable_input_fields
-    @initiator_discovery_auth.enable_checkbox
     @initiator_discovery_auth.enable_input_fields
   end
 
@@ -677,7 +633,8 @@ class DiscoveryAuthWidget < CWM::CustomWidget
           VSpacing(2),
           Left(
             HBox(
-              @no_discovery_auth_checkbox,
+              # TODO: It should use checkbox frame
+              @discovery_auth_checkbox,
             )
           ),
           VSpacing(1),
@@ -691,22 +648,6 @@ class DiscoveryAuthWidget < CWM::CustomWidget
 
   def opt
     [:notify]
-  end
-
-  def validate
-    if !@no_discovery_auth_checkbox.value
-      if (!@target_discovery_auth.get_status) || (!@initiator_discovery_auth.get_status)
-        err_msg = _("When Discovery Authentication is enabled.") + "\n"
-        err_msg += _("Please use Authentication by initiator and Authentication by targets together.")
-        Yast::Popup.Error(err_msg)
-        return false
-      end
-    end
-    true
-  end
-
-  def handle(event)
-    nil
   end
 end
 
@@ -735,8 +676,8 @@ class GlobalTab < ::CWM::Tab
   def help
     help_msg = _("<h1>iSCSI Target</h1>")
     help_msg += _("This tab intends to configure authentication for discovery session. ")
-    help_msg += _("Use <b>No Discovery Authentication</b> to disable discovery authentication.")
-    help_msg += _(" Or you need to fill both <b>Authentication by Targets</b> and <b>Authentication by Initiators</b>.")
+    help_msg += _("Use <b>Discovery Authentication</b> to enable discovery authentication.")
+    help_msg += _(" It is needed to fill both <b>Authentication by Targets</b> and <b>Authentication by Initiators</b>.")
     help_msg += _("<p>Note: <b>Username / Password can not be the same for initiators and targets! \
                   Or there may be a CHAP error</b></p>")
     help_msg
