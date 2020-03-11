@@ -524,7 +524,6 @@ class TargetAuthDiscovery < CWM::CustomWidget
     @password_input.value = password
   end
 
-
   def store
     username = @user_name_input.get_value.gsub(/\s+/,'')
     password = @password_input.get_value.gsub(/\s+/,'')
