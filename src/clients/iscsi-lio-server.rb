@@ -75,8 +75,8 @@ module Yast
         mutual_password = $discovery_auth.fetch_mutual_password
         cmd = '/usr/bin/targetcli'
         p1 = "iscsi/ set discovery_auth "
-        # status == false means "No discovery auth" is not checked, means we need enable discovery auth
-        if !status
+        # status == true means "Discovery auth" is checked, means we need enable discovery auth
+        if status
           unless userid.empty?
             p1 += ("userid=" + userid + " ")
           end
