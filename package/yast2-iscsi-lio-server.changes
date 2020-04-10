@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Fri Apr 24 14:33:34 UTC 2020 - Knut Anderssen <kanderssen@suse.com>
+
+- Save service changes after writing the target config and not
+  before preventing the lost of target changes
+  (bsc#1166707, bsc#1162514)
+- 4.1.8
+
+-------------------------------------------------------------------
 Wed Mar 11 09:13:07 UTC 2020 - Knut Anderssen <kanderssen@suse.com>
 
 - Propose to restart the targetcli service as the default action
