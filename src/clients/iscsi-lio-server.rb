@@ -67,7 +67,6 @@ module Yast
       ret = CWM.show(contents, caption: _("Yast iSCSI Targets"),next_button: _("Finish"))
       if ret == :next
         firewalld.write
-        service_tab.write
         status = $discovery_auth.fetch_status
         userid = $discovery_auth.fetch_userid
         password = $discovery_auth.fetch_password
@@ -103,6 +102,7 @@ module Yast
           end
         end
         $global_data.execute_exit_commands
+        service_tab.write
       end
       Yast::Wizard.CloseDialog
     end
