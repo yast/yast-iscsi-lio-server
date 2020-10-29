@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Oct 29 11:09:57 UTC 2020 - Josef Reidinger <jreidinger@suse.com>
+
+- fix initialize of lun table and do not crash if table is empty
+  (bsc#1178197) 
+- 4.2.6
+
+-------------------------------------------------------------------
 Fri Apr 10 09:33:34 UTC 2020 - Knut Anderssen <kanderssen@suse.com>
 
 - Save service changes after writing the target config and not
