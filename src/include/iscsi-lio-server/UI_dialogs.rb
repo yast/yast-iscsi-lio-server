@@ -921,7 +921,7 @@ class IpSelectionComboBox < CWM::ComboBox
       addr_temp.push(item)
     end
     @addr = addr_temp
-    self.change_items(@addr) if Yast::UI.WidgetExist(Id(widget_id))
+    self.change_items(@addr) if Yast::UI.WidgetExists(Id(widget_id))
   end
 
   def opt
