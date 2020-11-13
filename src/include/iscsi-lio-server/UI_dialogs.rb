@@ -846,6 +846,8 @@ class IpSelectionComboBox < CWM::ComboBox
   end
 
   def init
+    # items can change after later with set_addr but when UI is not yet set.
+    change_items(@addr)
   end
 
   def GetNetConfig
@@ -919,7 +921,7 @@ class IpSelectionComboBox < CWM::ComboBox
       addr_temp.push(item)
     end
     @addr = addr_temp
-    self.change_items(@addr)
+    self.change_items(@addr) if Yast::UI.WidgetExists(Id(widget_id))
   end
 
   def opt
@@ -2821,6 +2823,8 @@ class LUNsTableWidget < CWM::CustomWidget
       end
     when :delete
       lun_array = @lun_table.get_selected
+      return unless lun_array # do not crash if table is empty (bsc#1178197)
+
       lun = lun_array[0]
       if lun[1] == -1
         @lun_table.table_remove_lun(lun[3])
