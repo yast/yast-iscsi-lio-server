@@ -150,7 +150,7 @@ Important commands:
 
 - `iscsiadm -m node -n <node_name> --logout`: disconnect the device
 
-Connections (with config) you have made are stored (cached) in /etc/iscsi/{send_targets,nodes}.
+Connections (with config) you have made are stored (cached) in `/etc/iscsi/{send_targets,nodes}`.
 
 `/etc/iscsi/iscsid.conf` is a red herring and not used for anything.
 
