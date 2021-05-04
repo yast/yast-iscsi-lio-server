@@ -23,33 +23,6 @@ module Yast
       Confirm.MustBeRoot
     end
 
-    def installed_packages
-      if !PackageSystem.PackageInstalled("python3-targetcli-fb")
-        confirm = Popup.AnyQuestionRichText(
-          "",
-            _("Yast iscsi-lio-server can't run without installing targetcli-fb package. Do you want to install?"),
-            40,
-            10,
-            Label.InstallButton,
-            Label.CancelButton,
-            :focus_yes
-        )
-
-        if confirm
-          PackageSystem.DoInstall(["python3-targetcli-fb"])
-          if PackageSystem.PackageInstalled("python3-targetcli-fb")
-            return true
-          else
-            err_msg = _("Failed to install targetcli-fb and related packages.")
-            Yast::Popup.Error(err_msg)
-            false
-          end
-        end
-      else
-        true
-      end
-    end
-
     def firewalld
       Y2Firewall::Firewalld.instance
     end
@@ -114,11 +87,9 @@ ret = iscsi_target_server.is_root
 if !ret
   exit
 end
-ret = iscsi_target_server.installed_packages
-if ret
-  $target_data = TargetData.new
-  $global_data = Global.new
-  $global_data.execute_init_commands
-  $discovery_auth = DiscoveryAuth.new
-  iscsi_target_server.run
-end
+
+$target_data = TargetData.new
+$global_data = Global.new
+$global_data.execute_init_commands
+$discovery_auth = DiscoveryAuth.new
+iscsi_target_server.run
