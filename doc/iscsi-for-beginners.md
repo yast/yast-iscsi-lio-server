@@ -19,6 +19,10 @@ Read the documentation on how to setup things: 'Mass Storage over IP Networks: i
 [SLE-12](https://www.suse.com/documentation/sles-12/stor_admin/data/cha_iscsi.html) or
 [SLE-15](https://www.suse.com/documentation/sles-15/book_storage/data/cha_iscsi.html).
 
+For more in-depth documentation read
+- http://linux-iscsi.org/wiki/ISCSI
+- http://linux-iscsi.org/wiki/LIO
+
 *Note that you must know the initiator name when creating the target config.
 You can't just connect 'something' to the target. So look it up on your
 initiator first.*
@@ -109,12 +113,32 @@ This will update `/etc/target/lio_setup.sh`.
 On SLE-15, the config is auto-updated when you `exit` from `targetcli` or
 call `targetcli / saveconfig` directly.
 
-``` sh
+```sh
 # only needed for SLE-12
 #
 systemctl stop target
 systemctl start target
 ```
+
+### demo mode
+
+If the setup is used only for testing and not for production, you might
+consider granting access to all initiators. This saves you all the hassle
+with getting the initiator IQN right.
+
+For this, create the target portal group as descibed in the last section. Then do:
+
+```sh
+# change into the newly created target portal group (Note the final '/tpg1'!)
+# (the name is just an example)
+cd iqn.2003-01.org.linux-iscsi.e111.x8664:sn.18436556ef11/tpg1
+
+# enable demo mode (generate_node_acls=1)
+set attribute authentication=0 generate_node_acls=1 demo_mode_write_protect=0 cache_dynamic_acls=1
+```
+
+And that's it. Setting `generate_node_acls=1` is called 'demo mode'.
+
 
 ### multipath setup
 
