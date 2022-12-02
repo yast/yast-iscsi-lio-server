@@ -731,7 +731,7 @@ class TargetNameInput < CWM::InputField
       Yast::Popup.Error(_('Target name cannot be empty.'))
       return false
     elsif value.bytesize > @iscsi_name_length_max
-      Yast::Popup.Error(_('Target name cannot be longger than 223 bytes.'))
+      Yast::Popup.Error(_('Target name cannot be longer than 223 bytes.'))
       return false
     end
     true
@@ -1125,7 +1125,7 @@ class InitiatorNameInput < CWM::InputField
     end
 
     if value.bytesize > iscsi_name_max_length
-      err_msg = _("Initiator name can not be longger than 233 bytes!")
+      err_msg = _("Initiator name can not be longer than 233 bytes!")
       Yast::Popup.Error(err_msg)
       false
     end
