@@ -731,7 +731,7 @@ class TargetNameInput < CWM::InputField
       Yast::Popup.Error(_('Target name cannot be empty.'))
       return false
     elsif value.bytesize > @iscsi_name_length_max
-      Yast::Popup.Error(_('Target name cannot be longger than 223 bytes.'))
+      Yast::Popup.Error(_('Target name cannot be longer than 223 bytes.'))
       return false
     end
     true
@@ -1023,7 +1023,7 @@ class ACLTable < CWM::Table
     rescue Cheetah::ExecutionFailed => e
       if e.stderr != nil
         failed = true
-        err_msg = _("Failed to create ACL with initaitor name: ") + item[1]
+        err_msg = _("Failed to create ACL with initiator name: ") + item[1]
         err_msg += _("\nPlease check whether initiator names are valid.\n")
         err_msg += e.stderr
         Yast::Popup.Error(err_msg)
@@ -1048,7 +1048,7 @@ class ACLTable < CWM::Table
     rescue Cheetah::ExecutionFailed => e
       if e.stderr != nil
         failed = true
-        err_msg = _("Failed to delete ACL with initaitor name: ") + item[1]
+        err_msg = _("Failed to delete ACL with initiator name: ") + item[1]
         err_msg += _("\nPlease check whether the ACL still exists.\n")
         err_msg += e.stderr
         Yast::Popup.Error(err_msg)
@@ -1125,7 +1125,7 @@ class InitiatorNameInput < CWM::InputField
     end
 
     if value.bytesize > iscsi_name_max_length
-      err_msg = _("Initiator name can not be longger than 233 bytes!")
+      err_msg = _("Initiator name can not be longer than 233 bytes!")
       Yast::Popup.Error(err_msg)
       false
     end
@@ -1273,7 +1273,7 @@ class LUNMappingTable < CWM::Table
 
   def validate
     if @tpg_num == nil
-      err_msg = _("There are not TPGs in this target.")
+      err_msg = _("There are no TPGs in this target.")
       Yast::Popup.Error(err_msg)
       return false
     end
@@ -1299,7 +1299,7 @@ class LUNMappingTable < CWM::Table
         @mapping_luns_added.delete_if { |elem| elem[0] == item[0] }
       end
       err_msg = err_msg[0, err_msg.length - 1]
-      err_msg += _("\nPlease check whether the both LUN numbers in use and the LUNs still exists.")
+      err_msg += _("\nPlease check whether both the LUN numbers in use and the LUNs still exist.")
       Yast::Popup.Error(err_msg)
       self.change_items(@mapping_luns)
       false
@@ -1880,7 +1880,7 @@ class InitiatorACLs < CWM::CustomWidget
     ret = cmd_out[15, cmd_out.length]
     if ret == "1 \n"
       msg = _("Use Login Authentication is enabled. Please make sure proper ACLs has been added.") + \
-          _("Or the target may not be accsessible. Do you want to proceed?")
+          _("Or the target may not be accessible. Do you want to proceed?")
       ret = Yast::Popup.ErrorAnyQuestion(_("Warning"), msg, _("Yes"), _("No"), :focus_yes)
       if ret
         return true
@@ -2078,7 +2078,7 @@ class AddTargetWidget < CWM::CustomWidget
       rescue Cheetah::ExecutionFailed => e
         if e.stderr != nil
           err_msg = _('Can not create the target with target name: ') + \
-                    @target_name + _(", plese check target name.\n") + \
+                    @target_name + _(", please check target name.\n") + \
                     _('Additional information: ') + e.stderr
           Yast::Popup.Error(err_msg)
           return false
@@ -2094,7 +2094,7 @@ class AddTargetWidget < CWM::CustomWidget
           Cheetah.run(cmd, p1)
         rescue Cheetah::ExecutionFailed => e
           unless e.stderr.nil?
-            err_msg = _('Target Portal Group number ') + target_tpg + _(' is provided to replace the defalult tpg') \
+            err_msg = _('Target Portal Group number ') + target_tpg + _(' is provided to replace the default tpg') \
             + _('Failed to delete the default tpg, please consider to re-create the target and check') \
             + _('whether someone called targetcli manually')
             Yast::Popup.Error(err_msg)
@@ -2107,7 +2107,7 @@ class AddTargetWidget < CWM::CustomWidget
           unless e.stderr.nil?
             err_msg = _('Failed to create Target Portal Group ') + target_tpg \
             + _('The target is create, in the meanwhile, please delete it if needed.') \
-            + _('Or a defalut target portal group 1 will be added to the target when you edit it.')
+            + _('Or a default target portal group 1 will be added to the target when you edit it.')
             err_msg +=("\n Note: 0.0.0.0(Bind all IP address) with a port may conflict with other IPs with the same port")
             Yast::Popup.Error(err_msg)
             return false
@@ -2126,7 +2126,7 @@ class AddTargetWidget < CWM::CustomWidget
       rescue Cheetah::ExecutionFailed => e
         if e.stderr != nil
           err_msg = _("The target is created, but failed to create a portal with selected address and port. ")
-          err_msg += _("Are they alredy in use?")
+          err_msg += _("Are they already in use?")
           err_msg += _(" You can edit the targets again to change that.\n")
           err_msg += e.stderr
           Yast::Popup.Error(err_msg)
@@ -2207,7 +2207,7 @@ class AddTargetWidget < CWM::CustomWidget
     true
   end
 
-  # used to return target info like target name, portal number to caller, for example, to craete ACLs
+  # used to return target info like target name, portal number to caller, for example, to create ACLs
   def get_target_info
     info = @target_info
     info
@@ -2224,7 +2224,7 @@ class AddTargetWidget < CWM::CustomWidget
     help_msg += _("<p>Under <b>Ip Address</b> and <b>Port Number</b> you specify under which address and port \
                   the service will be available. Default for port number is 3260. Only ip addresses \
                   assigned to one of the network cards are possible.</p>")
-    help_msg += _("<p><b>Bind all IP addresses</b> means the service will be avaiable under all IPs this \
+    help_msg += _("<p><b>Bind all IP addresses</b> means the service will be available under all IPs this \
                    target server has.</p>")
     help_msg += _("<p>When <b>Use Login Authentication</b> is enabled, you need to add <b>ACL</b> rules \
                    for this target. If <b>Use Login Authentication</b> is disabled, this target will work in \
@@ -2245,7 +2245,7 @@ class TargetTable < CWM::Table
     item_array = nil
     @targets = []
     @targets_names.each do |elem|
-      # We only support only one Portal Group for now.
+      # We support only one Portal Group for now.
       @targets.push([rand(9999), elem, 1, 'Enabled'])
     end
     item_array = @targets
@@ -2384,9 +2384,9 @@ end
 class LUNTable < CWM::Table
   def initialize(init_luns)
     textdomain "iscsi-lio-server"
-    # @luns will store all luns exsisted and will be created
+    # @luns will store all existing luns and to be created luns
     @luns = init_luns
-    # @luns_add will store the luns will be created, will not store any exsisted luns.
+    # @luns_add will store the to be created luns, will not store any existing luns.
     @luns_added = []
     @luns_removed = []
     @luns = generate_items
@@ -2838,7 +2838,7 @@ class LUNsTableWidget < CWM::CustomWidget
       ret = nil
       if $global_data.del_lun_warning_enable?
         msg = _("This will immediately delete LUNs. ") + \
-            _("Please confim all initiators have logged out this target to avoid IO errors") + \
+            _("Please confirm all initiators have logged out this target to avoid IO errors") + \
             -("Do you want to proceed now?")
         ret = Yast::Popup.ErrorAnyQuestion(_("Confirm"), msg, _("Yes and Don't show this again"), _("No"), :focus_yes)
         if ret
