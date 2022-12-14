@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 Fri Dec  2 22:01:33 UTC 2022 - Kristijan Velkovski <me@krisfremen.com>
 
-- Fix misspellings and syntax of UI text
+- Fix misspellings and syntax of UI text (bsc#1206409)
 - 4.5.1
 
 -------------------------------------------------------------------
