@@ -1,7 +1,7 @@
 #
 # spec file for package yast2-iscsi-lio-server
 #
-# Copyright (c) 2017 SUSE LINUX GmbH, Nuernberg, Germany.
+# Copyright (c) 2023 SUSE LLC
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -22,7 +22,7 @@ Release:        0
 Summary:        Configuration of iSCSI LIO target
 License:        GPL-2.0-only
 Group:          System/YaST
-Url:            https://github.com/yast/yast-iscsi-lio-server
+URL:            https://github.com/yast/yast-iscsi-lio-server
 
 Source0:        %{name}-%{version}.tar.bz2
 
