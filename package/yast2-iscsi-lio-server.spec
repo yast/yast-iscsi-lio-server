@@ -17,7 +17,7 @@
 
 
 Name:           yast2-iscsi-lio-server
-Version:        5.0.0
+Version:        5.0.1
 Release:        0
 Summary:        Configuration of iSCSI LIO target
 License:        GPL-2.0-only
@@ -26,7 +26,6 @@ Url:            https://github.com/yast/yast-iscsi-lio-server
 
 Source0:        %{name}-%{version}.tar.bz2
 
-BuildRequires:  update-desktop-files
 # Yast2::Execute.stdout
 BuildRequires:  yast2 >= 4.1.42
 BuildRequires:  yast2-devtools >= 4.2.2
